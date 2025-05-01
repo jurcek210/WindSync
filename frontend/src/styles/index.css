@@ -1,0 +1,10 @@
+body {
+    background-color: rgb(59, 59, 59);
+    color: antiquewhite;
+
+    form input,button{
+        background-color: black;
+        color: antiquewhite;
+        border: 0;
+    }
+}
