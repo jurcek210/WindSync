@@ -17,14 +17,14 @@ app.get('/', (req, res) => {
 
 app.use(
     cors({
-      origin: ["http://localhost:3000"],
+      origin: ["http://localhost:5173"],
       methods: ["GET", "POST", "PUT", "DELETE"],
       credentials: true,
     })
   );
   app.use(cookieParser());
   
-  app.use("/", authRoute);
+  app.use("/api", authRoute);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
