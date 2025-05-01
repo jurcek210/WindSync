@@ -2,19 +2,32 @@ import dotenv from 'dotenv'
 import express from 'express'
 import cors from 'cors'
 import connectDB from './config/db.js'
+import cookieParser from "cookie-parser"
+import authRoute from "./routes/authRoutes.js"
 
 dotenv.config();
 connectDB();
 
 const app = express()
-app.use(cors())
 app.use(express.json())
 
 app.get('/', (req, res) => {
     res.send("API WORKS")
 });
 
+app.use(
+    cors({
+      origin: ["http://localhost:3000"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
+    })
+  );
+  app.use(cookieParser());
+  
+  app.use("/", authRoute);
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`)
 })
+
