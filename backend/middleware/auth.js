@@ -1,22 +1,37 @@
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import User from "../models/User.js";
-import dotenv from 'dotenv'
-import jwt from "jsonwebtoken"
 
-dotenv.config()
+dotenv.config();
 
-export const userVerify = (req,res) => {
-    const token = req.cookies.token
+export const userVerify = async (req, res) => {
+  try {
+    const token = req.cookies.token;
     if (!token) {
-        return res.json({status: false})
+      return res.status(401).json({ status: false, message: "No token" });
     }
-    jwt.verify(token, process.env.TOKEN_KEY, async (err, data) => {
-        if (err) {
-            return res.json({status: false})
-        }else {
-            const user = await User.findById(data.id) 
-            if (user) return res.json({status: true, user: user.username})
-            else return res.json({status:false})
 
-        }
-    })
-}
+    const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ status: false, message: "User not found" });
+    }
+
+    return res.status(200).json({ status: true, user: user.username });
+  } catch (err) {
+    return res.status(401).json({ status: false, message: "Token invalid" });
+  }
+};
+export const protect = async (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Ni prijavljen" });
+  
+    try {
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      req.user = await User.findById(decoded.id).select("-password");
+      next(); 
+    } catch (err) {
+      return res.status(401).json({ message: "Token neveljaven" });
+    }
+  };

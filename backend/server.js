@@ -4,6 +4,8 @@ import cors from 'cors'
 import connectDB from './config/db.js'
 import cookieParser from "cookie-parser"
 import authRoute from "./routes/authRoutes.js"
+import stationRoute from "./routes/stationRoutes.js";
+
 
 dotenv.config();
 connectDB();
@@ -26,8 +28,11 @@ app.use(
   
   app.use("/api", authRoute);
 
+  app.use("/api/stations", stationRoute);
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`)
 })
+
 
