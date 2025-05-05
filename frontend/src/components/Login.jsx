@@ -23,7 +23,7 @@ const Login = () => {
           setMessage(data.message);
     
           if (data.success) {
-            navigate("/"); 
+            navigate("/home"); 
           }
         } catch (err) {
           setMessage("Napaka pri prijavi");
