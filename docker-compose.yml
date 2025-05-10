@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      # dodaš še npr. DB povezave ipd.
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"  # usklajeno s tem, kar uporabljaš
+    volumes:
+      - ./frontend:/app  # opcijsko, za hot-reload
