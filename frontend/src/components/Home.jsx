@@ -1,8 +1,12 @@
+import "../styles/Home.css";
+import Map from "./Map.jsx";
+
 const Home = () => {
-    return (
-        <div>
-            <>test</>
-        </div>
-    )
-}
-export default Home
+  return (
+  
+        <Map />
+      
+  );
+};
+
+export default Home;

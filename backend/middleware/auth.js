@@ -35,3 +35,19 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Token neveljaven" });
     }
   };
+
+  export const getMe = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ status: false, message: "Ni prijavljen" });
+
+    const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) return res.status(404).json({ status: false, message: "Uporabnik ne obstaja" });
+
+    res.status(200).json({ status: true, user });
+  } catch (err) {
+    res.status(401).json({ status: false, message: "Token neveljaven" });
+  }
+};
