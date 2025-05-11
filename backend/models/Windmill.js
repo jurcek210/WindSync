@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const stationSchema = new mongoose.Schema({
+const windmillSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -10,7 +10,7 @@ const stationSchema = new mongoose.Schema({
       type: String,
       enum: ["Point"],
       required: true,
-      default: "Point"
+      default: () => "Point",
     },
     coordinates: {
       type: [Number],
@@ -33,6 +33,6 @@ const stationSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-stationSchema.index({ location: "2dsphere" });
+windmillSchema.index({ location: "2dsphere" });
 
-export default mongoose.model("Station", stationSchema);
+export default mongoose.model("Windmill", windmillSchema);
