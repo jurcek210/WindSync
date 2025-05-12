@@ -1,5 +1,6 @@
 import { useState } from "react"
 import {useNavigate} from "react-router-dom"
+import "../styles/auth.css"
 
 const Register = () => {
     const [email, setEmail] = useState("")
@@ -31,35 +32,35 @@ const Register = () => {
         }
     }
 
-    return (
-        <div>
-        <h2>Registracija</h2>
-        <form onSubmit={handleRegister}>
+      return (
+    <div className="auth-container">
+      <h2>Registracija</h2>
+      <form onSubmit={handleRegister} className="auth-form">
         <input
-            type="text"
-            placeholder="uporabnisko ime"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-          <input
-            type="email"
-            placeholder="E-pošta"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          /><br />
-          <input
-            type="password"
-            placeholder="Geslo"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          /><br />
-          <button type="submit">Registracija</button>
-        </form>
-        {message && <p>{message}</p>}
-      </div>
-    )
-}
+          type="email"
+          placeholder="E-pošta"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Uporabniško ime"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Geslo"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Registriraj se</button>
+      </form>
+      {message && <p className="auth-message">{message}</p>}
+    </div>
+  );
+};
 export default Register;

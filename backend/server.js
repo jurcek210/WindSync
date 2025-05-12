@@ -4,7 +4,7 @@ import cors from 'cors'
 import connectDB from './config/db.js'
 import cookieParser from "cookie-parser"
 import authRoute from "./routes/authRoutes.js"
-import stationRoute from "./routes/stationRoutes.js";
+import windmillRoute from "./routes/windmillRoutes.js";
 
 
 dotenv.config();
@@ -28,7 +28,7 @@ app.use(
   
   app.use("/api", authRoute);
 
-  app.use("/api/stations", stationRoute);
+  app.use("/api/windmills", windmillRoute);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
