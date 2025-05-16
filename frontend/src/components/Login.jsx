@@ -1,6 +1,6 @@
 import { useState } from "react"
 import {useNavigate} from "react-router-dom"
-import "../styles/auth.css"
+import "../styles/Auth.css"
 
 const Login = ({setUser, setLoggedIn}) => {
     const [email, setEmail] = useState("")
