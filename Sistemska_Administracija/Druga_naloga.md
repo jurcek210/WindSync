@@ -4,7 +4,7 @@
 ## Namestitev Dockerja
 
 Najprej sem na svoj računalnik namestil Docker aplikacijo.
-![Slika konzole](slike/image.png)
+![Slika konzole](Slike/image.png)
 
 ## Priprava Dockerfile za frontend
 
@@ -92,7 +92,7 @@ sudo apt install docker-compose -y
 docker --version
 docker info
 ```
-![Diagram omrežja](slike/image8.png)
+![Diagram omrežja](Slike/image8.png)
 
 ## Kloniranje projekta iz GitHub-a
 Nato sem se lotil kloniranja našega projekta na virtualno mašino. Ker je projekt zaseben, sem moral ustvariti osebni dostopni žeton (token), kjer sem določil dostop do določenega repozitorija in dovoljenja.
@@ -114,8 +114,8 @@ Po dodajanju .env datoteke je povezava delovala pravilno.
 - Uspešno sem ustvaril profil na **Azure**.
 - Nato sem uspešno ustvaril **virtualno mašino** (VM).
 - Mašino sem ustvaril po predloženih navodilih in zahtevanih specifikacijah.
-![Slika domače strani Azure](slike/image1.png)
-![Slika specifikacij za VM](slike/image2.png)
+![Slika domače strani Azure](Slike/image1.png)
+![Slika specifikacij za VM](Slike/image2.png)
 
 
 ---
@@ -135,7 +135,7 @@ Po dodajanju .env datoteke je povezava delovala pravilno.
    - **Name:** poljubno ime pravila
 5. Klikni **"Add"**.
 
-![Slika Portov](slike/image3.png)
+![Slika Portov](Slike/image3.png)
 
 
 ---
@@ -151,7 +151,7 @@ Po dodajanju .env datoteke je povezava delovala pravilno.
 - **Tip:** Premium SSD LRS
 - **Kapaciteta:** 30 GiB
 
-![Slika diska](slike/image4.png)
+![Slika diska](Slike/image4.png)
 
 
 ---
@@ -171,7 +171,7 @@ Na portalu **Azure**:
 - Top izdelki po strošku (npr. Premium SSD, IP naslov)
 - Znesek za plačilo (v mojem primeru še vedno **€0.00**)
 
-![DSlika Cost Managmenta](slike/image9.png)
+![DSlika Cost Managmenta](Slike/image9.png)
 
 
 ---
@@ -179,13 +179,13 @@ Na portalu **Azure**:
 ## Prikaz povezave na virtualni stroj
 
 - ✅ Uspešna prijava na VM **Jurij**
-![Slika konzole od jurija](slike/image5.png)
+![Slika konzole od jurija](Slike/image5.png)
 
 - ✅ Uspešna prijava: **Matica**
-![Slika konzole od matica](slike/image6.png)
+![Slika konzole od matica](Slike/image6.png)
 
 - ✅ Uspešna prijava: **Jaka**
-![Slika konzole od jake](slike/image7.png)
+![Slika konzole od jake](Slike/image7.png)
 Za prijavo pa smo uporabli komando 
 
 ```bash
