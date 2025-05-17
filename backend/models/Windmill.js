@@ -28,6 +28,10 @@ const windmillSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
+   measurements: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "WindmillData" //placeholder ko se bo dalje dodajalo
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
