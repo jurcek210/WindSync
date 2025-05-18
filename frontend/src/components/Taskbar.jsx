@@ -20,14 +20,15 @@ const Taskbar = ({ loggedIn, setLoggedIn, user, setUser }) => {
               onClick={async () => {
                 await fetch("http://localhost:3001/api/logout", {
                   method: "POST",
-                  credentials: "include",
                 });
+                localStorage.removeItem("token"); 
                 setUser(null);
                 setLoggedIn(false);
               }}
             >
               LOGOUT
             </button>
+
           </>
         )}
       </nav>

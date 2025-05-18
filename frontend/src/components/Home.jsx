@@ -1,11 +1,14 @@
 import "../styles/Home.css";
 import Map from "./Map.jsx";
 import NearbyWindmills from "./NearbyWindmills.jsx";
+import { useEffect, useState } from "react";
 
-const Home = () => {
+const Home = ({loggedIn}) => {
+  
   return (
   <div className="home-container">
-    <Map />
+    <Map loggedIn={loggedIn} />
+
     <NearbyWindmills />
     </div>
         
