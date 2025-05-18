@@ -1,38 +1,40 @@
 import { useState } from "react"
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import "../styles/Auth.css"
 
-const Login = ({setUser, setLoggedIn}) => {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [message, setMessage] = useState("")
-    const navigate= useNavigate()
+const Login = ({ setUser, setLoggedIn }) => {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [message, setMessage] = useState("")
+  const navigate = useNavigate()
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-          const res = await fetch("http://localhost:3001/api/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include", 
-            body: JSON.stringify({ email, password }),
-          });
-    
-          const data = await res.json();
-          setMessage(data.message);
-    
-          if (data.success) {
-            setUser(data.user);
-            setLoggedIn(true);
-            navigate("/"); 
-          }
-        } catch (err) {
-          setMessage("Napaka pri prijavi");
-        }
-      };
-    return (
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:3001/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      setMessage(data.message);
+
+      if (data.success) {
+        localStorage.setItem("token", data.token); 
+        setUser(data.user);
+        setLoggedIn(true);
+        navigate("/");
+      }
+
+    } catch (err) {
+      setMessage("Napaka pri prijavi");
+    }
+  };
+  return (
     <div className="auth-container">
       <h2>Prijava</h2>
       <form onSubmit={handleLogin} className="auth-form">
@@ -56,5 +58,5 @@ const Login = ({setUser, setLoggedIn}) => {
     </div>
   );
 };
-    
-    export default Login;
+
+export default Login;

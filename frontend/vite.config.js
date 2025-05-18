@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://backend:3001",
+        target: "http://localhost:3001", 
+        // target: "http://backend:3001", //za docker na virtualki
         changeOrigin: true,
       },
     },
