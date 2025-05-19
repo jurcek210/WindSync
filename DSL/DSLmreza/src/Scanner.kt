@@ -1,8 +1,5 @@
 import java.io.InputStream
 
-
-
-
 class Scanner(inputStream: InputStream) {
 
     private val reader = inputStream.bufferedReader()
@@ -137,6 +134,5 @@ class Scanner(inputStream: InputStream) {
             if (c.toChar().isWhitespace()) readChar() else break
         }
     }
-
 
 }
