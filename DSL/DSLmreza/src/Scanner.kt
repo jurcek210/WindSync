@@ -1,8 +1,5 @@
 import java.io.InputStream
 
-
-
-
 class Scanner(inputStream: InputStream) {
 
     private val reader = inputStream.bufferedReader()
@@ -29,13 +26,13 @@ class Scanner(inputStream: InputStream) {
         return peekedChar!!
     }
 
-    fun nextToken(): Token {
+    fun getToken(): Token {
         skipWhitespace()
 
         val startColumn = column
         val startRow = row
         val c = peekChar()
-        if (c == -1) return Token(SymbolType.EOF, "", startRow, startColumn)
+        if (c == -1) return Token(Symbol.EOF, "", startRow, startColumn)
 
         val ch = c.toChar()
 
@@ -47,22 +44,22 @@ class Scanner(inputStream: InputStream) {
             }
             val lexeme = buffer.toString()
             val keyword = when (lexeme) {
-                "true" -> SymbolType.TRUE
-                "false" -> SymbolType.FALSE
-                "set" -> SymbolType.SET
-                "bend" -> SymbolType.BEND
-                "circle" -> SymbolType.CIRCLE
-                "connect" -> SymbolType.CONNECT
-                "box" -> SymbolType.BOX
-
-                "get" -> SymbolType.GET
-                "marker" -> SymbolType.MARKER
-                "line" -> SymbolType.LINE
-                "area" -> SymbolType.AREA
-                "count" -> SymbolType.COUNT
-                "zelenamreza" -> SymbolType.ZELENAMREZA
-                "link" -> SymbolType.LINK
-                else -> SymbolType.VARIABLE
+                "true" -> Symbol.TRUE
+                "false" -> Symbol.FALSE
+                "set" -> Symbol.SET
+                "bend" -> Symbol.BEND
+                "circle" -> Symbol.CIRCLE
+                "connect" -> Symbol.CONNECT
+                "box" -> Symbol.BOX
+                "point" -> Symbol.POINT
+                "get" -> Symbol.GET
+                "marker" -> Symbol.MARKER
+                "line" -> Symbol.LINE
+                "area" -> Symbol.AREA
+                "count" -> Symbol.COUNT
+                "zelenamreza" -> Symbol.ZELENAMREZA
+                "link" -> Symbol.LINK
+                else -> Symbol.VARIABLE
             }
             return Token(keyword, lexeme, startRow, startColumn)
         }
@@ -79,7 +76,7 @@ class Scanner(inputStream: InputStream) {
                 }
                 buffer.append(readChar().toChar())
             }
-            return Token(SymbolType.STRING, buffer.toString(), startRow, startColumn)
+            return Token(Symbol.STRING, buffer.toString(), startRow, startColumn)
         }
 
         // === REALNO ŠTEVILO ===
@@ -97,33 +94,35 @@ class Scanner(inputStream: InputStream) {
                     break
                 }
             }
-            return Token(SymbolType.REAL, buffer.toString(), startRow, startColumn)
+            return Token(Symbol.REAL, buffer.toString(), startRow, startColumn)
         }
 
         // === ENOZNAČNI SIMBOLI ===
         when (readChar().toChar()) {
-            '+' -> return Token(SymbolType.PLUS, "+", startRow, startColumn)
+            '+' -> return Token(Symbol.PLUS, "+", startRow, startColumn)
             '-' -> {
                 // Preverimo ali je to sladkorček --
                 if (peekChar().toChar() == '-') {
                     readChar()
-                    return Token(SymbolType.LINK, "--", startRow, startColumn)
+                    return Token(Symbol.LINK, "--", startRow, startColumn)
                 }
-                return Token(SymbolType.MINUS, "-", startRow, startColumn)
+                return Token(Symbol.MINUS, "-", startRow, startColumn)
             }
-            '*' -> return Token(SymbolType.TIMES, "*", startRow, startColumn)
-            '/' -> return Token(SymbolType.DIVIDES, "/", startRow, startColumn)
-            ':' -> return Token(SymbolType.COLON, ":", startRow, startColumn)
-            '=' -> return Token(SymbolType.ASSIGN, "=", startRow, startColumn)
-            '(' -> return Token(SymbolType.LPAREN, "(", startRow, startColumn)
-            ')' -> return Token(SymbolType.RPAREN, ")", startRow, startColumn)
-            '{' -> return Token(SymbolType.LBRACE, "{", startRow, startColumn)
-            '}' -> return Token(SymbolType.RBRACE, "}", startRow, startColumn)
-            '.' -> return Token(SymbolType.POINT, ".", startRow, startColumn)
-            ';' -> return Token(SymbolType.SEMICOLON, ";", startRow, startColumn)
+            '*' -> return Token(Symbol.TIMES, "*", startRow, startColumn)
+            '/' -> return Token(Symbol.DIVIDES, "/", startRow, startColumn)
+            ':' -> return Token(Symbol.COLON, ":", startRow, startColumn)
+            '=' -> return Token(Symbol.ASSIGN, "=", startRow, startColumn)
+            '(' -> return Token(Symbol.LPAREN, "(", startRow, startColumn)
+            ')' -> return Token(Symbol.RPAREN, ")", startRow, startColumn)
+            '{' -> return Token(Symbol.BEGIN, "{", startRow, startColumn)
+            '}' -> return Token(Symbol.END, "}", startRow, startColumn)
+            '.' -> return Token(Symbol.POINT, ".", startRow, startColumn)
+            ';' -> return Token(Symbol.SEMICOLON, ";", startRow, startColumn)
+            ',' -> return Token(Symbol.TO, ";", startRow, startColumn)
+
         }
 
-        return Token(SymbolType.VARIABLE, readChar().toChar().toString(), startRow, startColumn)
+        return Token(Symbol.VARIABLE, readChar().toChar().toString(), startRow, startColumn)
     }
 
 
@@ -134,6 +133,5 @@ class Scanner(inputStream: InputStream) {
             if (c.toChar().isWhitespace()) readChar() else break
         }
     }
-
 
 }
