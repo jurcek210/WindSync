@@ -1,0 +1,22 @@
+zelenamreza "dela" {
+    a=count("asd");
+    set("asd",asd);
+    kabel "asd"{
+        bend((123,123),(123,123),23);
+    };
+    proizvajalci "veternica"{
+        box((123,123),(123,123));
+    };
+    senzor "dela"{
+        marker(123,123) (color = red, label = "dela", value =123);
+
+    };
+    kabel "dd"{
+        connect(asd, "krog");
+    };
+        kabel "ff"{
+            (1,1)--bend 30 (2,2);
+        };
+};
+
+

@@ -1,0 +1,1 @@
+data class Token(val symbol: Symbol, val lexeme: String, val row: Int, val column: Int)

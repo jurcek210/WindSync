@@ -1,4 +1,4 @@
-enum class SymbolType {
+enum class Symbol {
     EOF,
     VARIABLE,
     STRING,
@@ -26,9 +26,31 @@ enum class SymbolType {
     LINK, //to je za sladkorček --
     REAL,
     ASSIGN,
-    LBRACE,// {
-    RBRACE, // }
+    BEGIN,// {
+    END, // }
     COLON,
-    SEMICOLON
-
+    SEMICOLON,
+    TO,
+    KABEL,
+    PROIZVAJALCI,
+    SENZOR,
+    BATERIJA,
+    LET,
+    COLOR,
+    RED,
+    GREEN,
+    BLUE,
+    YELLOW,
+    BLACK,
+    WHITE,
+    GRAY,
+    PURPLE,
+    ORANGE,
+    PINK,
+    BROWN,
+    CYAN,
+    MAGENTA,
+    RGB,
+    LABEL,
+    VALUE
 }
