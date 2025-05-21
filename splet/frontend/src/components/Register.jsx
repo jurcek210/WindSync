@@ -1,38 +1,45 @@
 import { useState } from "react"
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import "../styles/Auth.css"
 
 const Register = () => {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [username, setUsername] = useState("")
-    const [message, setMessage] = useState("")
-    const navigate= useNavigate()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [username, setUsername] = useState("")
+  const [message, setMessage] = useState("")
+  const navigate = useNavigate()
 
-    const handleRegister = async (e) => {
-        e.preventDefault()
+  const handleRegister = async (e) => {
+    e.preventDefault()
 
-        try {
-        const res = await fetch("http://localhost:3001/api/register", {
-            method: "POST",
-            headers: {
-                "Content-Type":"application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({username, email,password})
-        }) 
-        const data = await res.json() 
-        setMessage(data.message) 
+    try {
+      const res = await fetch("http://localhost:3001/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: username.trim(),
+          email: email.trim(),
+          password: password.trim()
+        })
 
-        if (data.success) {
-            navigate("/login")
-        }
-    }catch (err) {
-            setMessage("napaka pri registraciji")
-        }
+      })
+      const data = await res.json()
+      setMessage(data.message)
+
+      if (data.success) {
+        navigate("/login")
+        console.log("Ustvarjen uporabnik:", user);
+
+      }
+    } catch (err) {
+      setMessage("napaka pri registraciji")
     }
+  }
 
-      return (
+  return (
     <div className="auth-container">
       <h2>Registracija</h2>
       <form onSubmit={handleRegister} className="auth-form">
