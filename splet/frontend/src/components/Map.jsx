@@ -44,15 +44,13 @@ const fetchAverageWindSpeed = async (lat, lng) => {
   }
 };
 
-
-
-
 const Map = ({ loggedIn }) => {
   const [windmills, setWindmills] = useState([]);
   const [clickedLatLng, setClickedLatLng] = useState(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [name, setName] = useState("");
   const [windSpeed, setWindSpeed] = useState("");
+  const [showWindmills, setShowWindmills] = useState(true); 
 
   const windmillIcon = new L.Icon({
     iconUrl: "/photos/windmill.png",
@@ -81,18 +79,17 @@ const Map = ({ loggedIn }) => {
         height: "100vh",
       }}
     >
-        <MapContainer
-          center={[46.1512, 14.9955]}
-          zoom={9}
-          style={{ width: "100%", height: "100%" }}
-          dragging={true}
-          doubleClickZoom={false}
-          minZoom={8}
-          maxZoom={13} 
-          maxBounds={[[44.8, 12.9], [47.5, 17.0]]} // rahlo razširjene meje Slovenije
-          maxBoundsViscosity={1.0}
-   
-        >
+      <MapContainer
+        center={[46.1512, 14.9955]}
+        zoom={9}
+        style={{ width: "100%", height: "100%" }}
+        dragging={true}
+        doubleClickZoom={false}
+        minZoom={8}
+        maxZoom={13}
+        maxBounds={[[44.8, 12.9], [47.5, 17.0]]} // rahlo razširjene meje Slovenije
+        maxBoundsViscosity={1.0}
+      >
         <MapDoubleClickHandler
           onDoubleClick={async (latlng) => {
             if (!loggedIn) {
@@ -117,7 +114,8 @@ const Map = ({ loggedIn }) => {
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
-        {windmills.map((wm) => (
+        {/* Tukaj preverimo, ali je prikaz veternic omogočen */}
+        {showWindmills && windmills.map((wm) => (
           <Marker
             key={wm._id}
             position={[
@@ -145,103 +143,120 @@ const Map = ({ loggedIn }) => {
 
       {/* Sidebar meni */}
       {showSidebar && (
-  <div
-    style={{
-      position: "absolute",
-      top: 0,
-      right: 20,
-      width: "320px",
-      height: "100%",
-      backgroundColor: "white",
-      borderLeft: "1px solid #ccc",
-      boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
-      padding: "20px",
-      zIndex: 1000,
-      overflowY: "auto", 
-    }}
-  >
-        <button
-      onClick={() => setShowSidebar(false)}
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        background: "none",
-        border: "none",
-        fontSize: "24px", 
-        fontWeight: "bold",
-        cursor: "pointer",
-        color: "#333",
-      }}
-      aria-label="Zapri meni"
-    >
-      ×
-    </button>
-    
-    {/* ...tvoji inputi in gumbi ... */}
-    
-    <h2>Dodaj veternico</h2>
-    <input
-      placeholder="Ime"
-      value={name}
-      onChange={(e) => setName(e.target.value)}
-      style={{ width: "100%", marginBottom: "8px" }}
-    />
-    <input
-      type="number"
-      placeholder="Hitrost vetra"
-      value={windSpeed}
-      onChange={(e) => setWindSpeed(e.target.value)}
-      style={{ width: "100%", marginBottom: "8px" }}
-    />
-    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-      <button onClick={() => setShowSidebar(false)}>Prekliči</button>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 20,
+            width: "320px",
+            height: "100%",
+            backgroundColor: "white",
+            borderLeft: "1px solid #ccc",
+            boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
+            padding: "20px",
+            zIndex: 1000,
+            overflowY: "auto", 
+          }}
+        >
+          <button
+            onClick={() => setShowSidebar(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              background: "none",
+              border: "none",
+              fontSize: "24px", 
+              fontWeight: "bold",
+              cursor: "pointer",
+              color: "#333",
+            }}
+            aria-label="Zapri meni"
+          >
+            ×
+          </button>
+
+          <h2>Dodaj veternico</h2>
+          <input
+            placeholder="Ime"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ width: "100%", marginBottom: "8px" }}
+          />
+          <input
+            type="number"
+            placeholder="Hitrost vetra"
+            value={windSpeed}
+            onChange={(e) => setWindSpeed(e.target.value)}
+            style={{ width: "100%", marginBottom: "8px" }}
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+            <button onClick={() => setShowSidebar(false)}>Prekliči</button>
+            <button
+              onClick={async () => {
+                try {
+                  await axios.post(
+                    "/api/windmills",
+                    {
+                      name,
+                      windSpeed: parseFloat(windSpeed),
+                      location: {
+                        type: "Point",
+                        coordinates: [clickedLatLng.lng, clickedLatLng.lat],
+                      },
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                      },
+                    }
+                  );
+
+                  setShowSidebar(false);
+                  setClickedLatLng(null);
+                  setName("");
+                  setWindSpeed("");
+                  const { data } = await axios.get("/api/windmills");
+                  setWindmills(data);
+                } catch (err) {
+                  console.error("Napaka pri shranjevanju veternice", err);
+                  alert("Napaka pri shranjevanju veternice.");
+                }
+              }}
+              style={{
+                backgroundColor: "#4caf50",
+                color: "white",
+                padding: "4px 8px",
+              }}
+            >
+              Shrani
+            </button>
+          </div>
+
+
+          {clickedLatLng && <Wind lat={clickedLatLng.lat} lng={clickedLatLng.lng} />}
+        </div>
+      )}
+
+      {/* Gumb za preklop prikaza veternic */}
       <button
-  onClick={async () => {
-    try {
-      await axios.post(
-        "/api/windmills",
-        {
-          name,
-          windSpeed: parseFloat(windSpeed),
-          location: {
-            type: "Point",
-            coordinates: [clickedLatLng.lng, clickedLatLng.lat],
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      setShowSidebar(false);
-      setClickedLatLng(null);
-      setName("");
-      setWindSpeed("");
-      const { data } = await axios.get("/api/windmills");
-      setWindmills(data);
-    } catch (err) {
-      console.error("Napaka pri shranjevanju veternice", err);
-      alert("Napaka pri shranjevanju veternice.");
-    }
-  }}
-  style={{
-    backgroundColor: "#4caf50",
-    color: "white",
-    padding: "4px 8px",
-  }}
->
-  Shrani
-</button>
-    </div>
-
-    {/* TU DODAJ Wind komponento */}
-    {clickedLatLng && <Wind lat={clickedLatLng.lat} lng={clickedLatLng.lng} />}
-  </div>
-)}
-
+        onClick={() => setShowWindmills((prev) => !prev)}
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "20px",
+          backgroundColor: "#4caf50",
+          color: "white",
+          border: "none",
+          padding: "10px 20px",
+          fontSize: "16px",
+          borderRadius: "4px",
+          cursor: "pointer",
+          zIndex: 1001,
+        }}
+      >
+        {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
+      </button>
     </div>
   );
 };
