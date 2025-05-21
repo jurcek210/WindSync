@@ -152,7 +152,7 @@ const Map = ({ loggedIn }) => {
       boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
       padding: "20px",
       zIndex: 1000,
-      overflowY: "auto", // priporočam, da dodaš scroll če bo višina prevelika
+      overflowY: "auto", 
     }}
   >
         <button
@@ -163,7 +163,7 @@ const Map = ({ loggedIn }) => {
         right: "10px",
         background: "none",
         border: "none",
-        fontSize: "24px",
+        fontSize: "24px", 
         fontWeight: "bold",
         cursor: "pointer",
         color: "#333",
@@ -192,17 +192,44 @@ const Map = ({ loggedIn }) => {
     <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
       <button onClick={() => setShowSidebar(false)}>Prekliči</button>
       <button
-        onClick={async () => {
-          // tvoj klic API za shrani
-        }}
-        style={{
-          backgroundColor: "#4caf50",
-          color: "white",
-          padding: "4px 8px",
-        }}
-      >
-        Shrani
-      </button>
+  onClick={async () => {
+    try {
+      await axios.post(
+        "/api/windmills",
+        {
+          name,
+          windSpeed: parseFloat(windSpeed),
+          location: {
+            type: "Point",
+            coordinates: [clickedLatLng.lng, clickedLatLng.lat],
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      setShowSidebar(false);
+      setClickedLatLng(null);
+      setName("");
+      setWindSpeed("");
+      const { data } = await axios.get("/api/windmills");
+      setWindmills(data);
+    } catch (err) {
+      console.error("Napaka pri shranjevanju veternice", err);
+      alert("Napaka pri shranjevanju veternice.");
+    }
+  }}
+  style={{
+    backgroundColor: "#4caf50",
+    color: "white",
+    padding: "4px 8px",
+  }}
+>
+  Shrani
+</button>
     </div>
 
     {/* TU DODAJ Wind komponento */}
