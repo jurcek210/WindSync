@@ -155,6 +155,24 @@ const Map = ({ loggedIn }) => {
       overflowY: "auto", // priporočam, da dodaš scroll če bo višina prevelika
     }}
   >
+        <button
+      onClick={() => setShowSidebar(false)}
+      style={{
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        background: "none",
+        border: "none",
+        fontSize: "24px",
+        fontWeight: "bold",
+        cursor: "pointer",
+        color: "#333",
+      }}
+      aria-label="Zapri meni"
+    >
+      ×
+    </button>
+    
     {/* ...tvoji inputi in gumbi ... */}
     
     <h2>Dodaj veternico</h2>
