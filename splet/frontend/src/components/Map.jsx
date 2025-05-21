@@ -81,13 +81,18 @@ const Map = ({ loggedIn }) => {
         height: "100vh",
       }}
     >
-      <MapContainer
-        center={[46.1512, 14.9955]}
-        zoom={9}
-        style={{ width: "100%", height: "100%" }}
-        dragging={true}
-        doubleClickZoom={false}
-      >
+        <MapContainer
+          center={[46.1512, 14.9955]}
+          zoom={9}
+          style={{ width: "100%", height: "100%" }}
+          dragging={true}
+          doubleClickZoom={false}
+          minZoom={8}
+          maxZoom={13} 
+          maxBounds={[[44.8, 12.9], [47.5, 17.0]]} // rahlo razširjene meje Slovenije
+          maxBoundsViscosity={1.0}
+   
+        >
         <MapDoubleClickHandler
           onDoubleClick={async (latlng) => {
             if (!loggedIn) {
