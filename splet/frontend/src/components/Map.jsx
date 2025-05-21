@@ -3,6 +3,8 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import L from "leaflet";
+import Wind from "./Wind"; 
+
 
 const MapDoubleClickHandler = ({ onDoubleClick }) => {
   useMapEvents({
@@ -138,88 +140,103 @@ const Map = ({ loggedIn }) => {
 
       {/* Sidebar meni */}
       {showSidebar && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 20,
-            width: "320px",
-            height: "100%",
-            backgroundColor: "white",
-            borderLeft: "1px solid #ccc",
-            boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
-            padding: "20px",
-            zIndex: 1000,
-          }}
-        >
-          <button
-            onClick={() => setShowSidebar(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              background: "none",
-              border: "none",
-              fontSize: "20px",
-              cursor: "pointer",
-            }}
-          >
-            ×
-          </button>
+  <div
+    style={{
+      position: "absolute",
+      top: 0,
+      right: 20,
+      width: "320px",
+      height: "100%",
+      backgroundColor: "white",
+      borderLeft: "1px solid #ccc",
+      boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
+      padding: "20px",
+      zIndex: 1000,
+      overflowY: "auto", 
+    }}
+  >
+        <button
+      onClick={() => setShowSidebar(false)}
+      style={{
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        background: "none",
+        border: "none",
+        fontSize: "24px", 
+        fontWeight: "bold",
+        cursor: "pointer",
+        color: "#333",
+      }}
+      aria-label="Zapri meni"
+    >
+      ×
+    </button>
+    
+    {/* ...tvoji inputi in gumbi ... */}
+    
+    <h2>Dodaj veternico</h2>
+    <input
+      placeholder="Ime"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      style={{ width: "100%", marginBottom: "8px" }}
+    />
+    <input
+      type="number"
+      placeholder="Hitrost vetra"
+      value={windSpeed}
+      onChange={(e) => setWindSpeed(e.target.value)}
+      style={{ width: "100%", marginBottom: "8px" }}
+    />
+    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+      <button onClick={() => setShowSidebar(false)}>Prekliči</button>
+      <button
+  onClick={async () => {
+    try {
+      await axios.post(
+        "/api/windmills",
+        {
+          name,
+          windSpeed: parseFloat(windSpeed),
+          location: {
+            type: "Point",
+            coordinates: [clickedLatLng.lng, clickedLatLng.lat],
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-          <h2>Dodaj veternico</h2>
-          <input
-            placeholder="Ime"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{ width: "100%", marginBottom: "8px" }}
-          />
-          <input
-            type="number"
-            placeholder="Hitrost vetra"
-            value={windSpeed}
-            onChange={(e) => setWindSpeed(e.target.value)}
-            style={{ width: "100%", marginBottom: "8px" }}
-          />
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-            <button onClick={() => setShowSidebar(false)}>Prekliči</button>
-            <button
-              onClick={async () => {
-                try {
-                  await axios.post("/api/windmills", {
-                    name,
-                    windSpeed: parseFloat(windSpeed),
-                    location: {
-                      type: "Point",
-                      coordinates: [clickedLatLng.lng, clickedLatLng.lat],
-                    },
-                  }, {
-                    headers: {
-                      Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    }
-                  });
+      setShowSidebar(false);
+      setClickedLatLng(null);
+      setName("");
+      setWindSpeed("");
+      const { data } = await axios.get("/api/windmills");
+      setWindmills(data);
+    } catch (err) {
+      console.error("Napaka pri shranjevanju veternice", err);
+      alert("Napaka pri shranjevanju veternice.");
+    }
+  }}
+  style={{
+    backgroundColor: "#4caf50",
+    color: "white",
+    padding: "4px 8px",
+  }}
+>
+  Shrani
+</button>
+    </div>
 
-                  setShowSidebar(false);
-                  setClickedLatLng(null);
-                  setName("");
-                  setWindSpeed("");
-                  const { data } = await axios.get("/api/windmills");
-                  setWindmills(data);
-                } catch (err) {
-                  console.error("Napaka pri shranjevanju veternice", err);
-                }
-              }}
-              style={{
-                backgroundColor: "#4caf50",
-                color: "white",
-                padding: "4px 8px",
-              }}
-            >
-              Shrani
-            </button>
-          </div>
-        </div>
-      )}
+    {/* TU DODAJ Wind komponento */}
+    {clickedLatLng && <Wind lat={clickedLatLng.lat} lng={clickedLatLng.lng} />}
+  </div>
+)}
+
     </div>
   );
 };
