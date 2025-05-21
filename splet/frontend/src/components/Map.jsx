@@ -13,6 +13,38 @@ const MapDoubleClickHandler = ({ onDoubleClick }) => {
   return null;
 };
 
+//funkcija za pridobivanje povprečne vrednosti vetra
+const fetchAverageWindSpeed = async (lat, lng) => {
+  const today = new Date();
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+  const formatDate = (d) => d.toISOString().split("T")[0];
+  const start = formatDate(oneYearAgo);
+  const end = formatDate(today);
+
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${start}&end_date=${end}&daily=windspeed_10m_mean&timezone=auto`;
+
+  try {
+    const res = await axios.get(url);
+    const speeds = res.data?.daily?.windspeed_10m_mean || [];
+    if (speeds.length === 0) return null;
+
+    const sum = speeds.reduce((acc, val) => acc + val, 0);
+    const average = (sum / speeds.length).toFixed(2);
+    
+    console.log(`📈 Povprečna hitrost vetra na (${lat}, ${lng}) med ${start} in ${end}: ${average} m/s`);
+    
+    return average;
+  } catch (err) {
+    console.error("❌ Napaka pri pridobivanju vetra:", err);
+    return null;
+  }
+};
+
+
+
+
 const Map = ({ loggedIn }) => {
   const [windmills, setWindmills] = useState([]);
   const [clickedLatLng, setClickedLatLng] = useState(null);
@@ -55,12 +87,20 @@ const Map = ({ loggedIn }) => {
         doubleClickZoom={false}
       >
         <MapDoubleClickHandler
-          onDoubleClick={(latlng) => {
-            if (loggedIn) {
-              setClickedLatLng(latlng);
-              setShowSidebar(true);
-            } else {
+          onDoubleClick={async (latlng) => {
+            if (!loggedIn) {
               alert("Prijavi se, da lahko dodaš veternico.");
+              return;
+            }
+
+            setClickedLatLng(latlng);
+            setShowSidebar(true);
+
+            const avgWind = await fetchAverageWindSpeed(latlng.lat, latlng.lng);
+            if (avgWind !== null) {
+              setWindSpeed(avgWind); // Samodejno nastavi vrednost
+            } else {
+              alert("Napaka pri pridobivanju povprečne hitrosti vetra.");
             }
           }}
         />
