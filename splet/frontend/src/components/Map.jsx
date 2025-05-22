@@ -5,7 +5,6 @@ import axios from "axios";
 import L from "leaflet";
 import Wind from "./Wind"; 
 
-
 const MapDoubleClickHandler = ({ onDoubleClick }) => {
   useMapEvents({
     dblclick(e) {
@@ -15,7 +14,6 @@ const MapDoubleClickHandler = ({ onDoubleClick }) => {
   return null;
 };
 
-//funkcija za pridobivanje povprečne vrednosti vetra
 const fetchAverageWindSpeed = async (lat, lng) => {
   const today = new Date();
   const oneYearAgo = new Date();
@@ -34,12 +32,10 @@ const fetchAverageWindSpeed = async (lat, lng) => {
 
     const sum = speeds.reduce((acc, val) => acc + val, 0);
     const average = (sum / speeds.length).toFixed(2);
-    
-    console.log(`📈 Povprečna hitrost vetra na (${lat}, ${lng}) med ${start} in ${end}: ${average} m/s`);
-    
-    return average;
+
+    return parseFloat(average);
   } catch (err) {
-    console.error("❌ Napaka pri pridobivanju vetra:", err);
+    console.error("Napaka pri pridobivanju vetra:", err);
     return null;
   }
 };
@@ -51,6 +47,10 @@ const Map = ({ loggedIn }) => {
   const [name, setName] = useState("");
   const [windSpeed, setWindSpeed] = useState("");
   const [showWindmills, setShowWindmills] = useState(true); 
+
+  // Nova stanje za mrežo vetra
+  const [windGridData, setWindGridData] = useState([]);
+  const [loadingGrid, setLoadingGrid] = useState(false);
 
   const windmillIcon = new L.Icon({
     iconUrl: "/photos/windmill.png",
@@ -87,7 +87,7 @@ const Map = ({ loggedIn }) => {
         doubleClickZoom={false}
         minZoom={8}
         maxZoom={13}
-        maxBounds={[[44.8, 12.9], [47.5, 17.0]]} // rahlo razširjene meje Slovenije
+        maxBounds={[[44.8, 12.9], [47.5, 17.0]]}
         maxBoundsViscosity={1.0}
       >
         <MapDoubleClickHandler
@@ -102,7 +102,7 @@ const Map = ({ loggedIn }) => {
 
             const avgWind = await fetchAverageWindSpeed(latlng.lat, latlng.lng);
             if (avgWind !== null) {
-              setWindSpeed(avgWind); // Samodejno nastavi vrednost
+              setWindSpeed(avgWind);
             } else {
               alert("Napaka pri pridobivanju povprečne hitrosti vetra.");
             }
@@ -114,22 +114,30 @@ const Map = ({ loggedIn }) => {
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
-        {/* Tukaj preverimo, ali je prikaz veternic omogočen */}
+        {/* Prikaz veternic */}
         {showWindmills && windmills.map((wm) => (
           <Marker
             key={wm._id}
-            position={[
-              wm.location.coordinates[1],
-              wm.location.coordinates[0],
-            ]}
+            position={[wm.location.coordinates[1], wm.location.coordinates[0]]}
             icon={windmillIcon}
           >
             <Popup>
-              <strong>{wm.name}</strong>
-              <br />
-              Hitrost vetra: {wm.windSpeed ?? "ni podatka"} m/s
-              <br />
-              Status: {wm.status ? " Aktivna" : " Neaktivna"}
+              <strong>{wm.name}</strong><br />
+              Hitrost vetra: {wm.windSpeed ?? "ni podatka"} m/s<br />
+              Status: {wm.status ? "Aktivna" : "Neaktivna"}
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Prikaz mreže vetra */}
+        {windGridData.map(({ lat, lng, speed }, idx) => (
+          <Marker
+            key={`wind-grid-${idx}`}
+            position={[lat, lng]}
+            icon={windIcon(speed)}
+          >
+            <Popup>
+              Hitrost vetra: {speed} m/s
             </Popup>
           </Marker>
         ))}
@@ -155,7 +163,7 @@ const Map = ({ loggedIn }) => {
             boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
             padding: "20px",
             zIndex: 1000,
-            overflowY: "auto", 
+            overflowY: "auto",
           }}
         >
           <button
@@ -166,7 +174,7 @@ const Map = ({ loggedIn }) => {
               right: "10px",
               background: "none",
               border: "none",
-              fontSize: "24px", 
+              fontSize: "24px",
               fontWeight: "bold",
               cursor: "pointer",
               color: "#333",
@@ -233,7 +241,6 @@ const Map = ({ loggedIn }) => {
             </button>
           </div>
 
-
           {clickedLatLng && <Wind lat={clickedLatLng.lat} lng={clickedLatLng.lng} />}
         </div>
       )}
@@ -257,6 +264,7 @@ const Map = ({ loggedIn }) => {
       >
         {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
       </button>
+
     </div>
   );
 };
