@@ -31,6 +31,7 @@ const Taskbar = ({ loggedIn, setLoggedIn, user, setUser }) => {
 
           </>
         )}
+        <a href="/zanimivosti">ZANIMIVOSTI</a>
       </nav>
     </header>
   );

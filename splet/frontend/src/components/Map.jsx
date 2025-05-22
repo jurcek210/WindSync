@@ -43,14 +43,7 @@ const fetchAverageWindSpeed = async (lat, lng) => {
 };
 
 
-const getFeatureCenter = (feature) => {
-  const coords = feature.geometry.coordinates.flat(2); // flatten to [lng, lat]
-  const lats = coords.map(coord => coord[1]);
-  const lngs = coords.map(coord => coord[0]);
-  const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-  const avgLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
-  return [avgLng, avgLat];
-};
+
 const getRegionColor = (speed) => {
   if (speed < 1.0) return "#ffffff"; // Bela za manj kot 1.0
 
@@ -145,11 +138,8 @@ const Map = ({ loggedIn }) => {
   const [showWindmills, setShowWindmills] = useState(true); 
   const [regionData, setRegionData] = useState(null);
   const [regionWindSpeeds, setRegionWindSpeeds] = useState({});
+  const [showRegions, setShowRegions] = useState(true);
 
-
-
-  const [windGridData, setWindGridData] = useState([]);
-  const [loadingGrid, setLoadingGrid] = useState(false);
  
   const windmillIcon = new L.Icon({
     iconUrl: "/photos/windmill.png",
@@ -161,12 +151,10 @@ const Map = ({ loggedIn }) => {
 useEffect(() => {
   const fetchData = async () => {
     try {
-      // Naloži geojson, da dobimo geometrijo za prikaz občin/regij
       const resGeo = await fetch("/gadm41_SVN_2.json");
       const geoData = await resGeo.json();
       setRegionData(geoData);
 
-      // Naloži že obdelane povprečne hitrosti vetra za občine/regije
       const resSpeeds = await fetch("/municipalityWindSpeeds.json");
       const speedsData = await resSpeeds.json();
 
@@ -183,6 +171,7 @@ useEffect(() => {
 
   fetchData();
 }, []);
+
   useEffect(() => {
     const fetchWindmills = async () => {
       try {
@@ -252,38 +241,26 @@ useEffect(() => {
           </Popup>
           </Marker>
         ))}
-{regionData && (
-  <GeoJSON
-    data={regionData}
-    style={(feature) => {
-      const speed = regionWindSpeeds[feature.properties.NAME_2]; // prilagodi glede na ključe v tvojem JSON-u
-      return {
-        fillColor: speed ? getRegionColor(speed) : "#ccc", // siva za manjkajoče podatke
-        fillOpacity: 0.6,
-        color: "#444",
-        weight: 1,
-      };
-    }}
-    onEachFeature={(feature, layer) => {
-      const name = feature.properties.NAME_2;
-      const speed = regionWindSpeeds[name];
-      layer.bindPopup(`<strong>${name}</strong><br/>`);
-    }}
-  />
-)}
+        {regionData && showRegions && (
+          <GeoJSON
+            data={regionData}
+            style={(feature) => {
+              const speed = regionWindSpeeds[feature.properties.NAME_2]; // prilagodi glede na ključe v tvojem JSON-u
+              return {
+                fillColor: speed ? getRegionColor(speed) : "#ccc", // siva za manjkajoče podatke
+                fillOpacity: 0.6,
+                color: "#444",
+                weight: 1,
+              };
+            }}
+            onEachFeature={(feature, layer) => {
+              const name = feature.properties.NAME_2;
+              const speed = regionWindSpeeds[name];
+              layer.bindPopup(`<strong>${name}</strong><br/>`);
+            }}
+          />
+        )}
 
-        {/* Prikaz mreže vetra */}
-        {windGridData.map(({ lat, lng, speed }, idx) => (
-          <Marker
-            key={`wind-grid-${idx}`}
-            position={[lat, lng]}
-            icon={windIcon(speed)}
-          >
-            <Popup>
-              Hitrost vetra: {speed} m/s
-            </Popup>
-          </Marker>
-        ))}
 
         {clickedLatLng && (
           <Marker position={clickedLatLng}>
@@ -393,8 +370,8 @@ useEffect(() => {
         onClick={() => setShowWindmills((prev) => !prev)}
         style={{
           position: "absolute",
-          top: "20px",
-          right: "20px",
+          top: "0px",
+          right: "90px",
           backgroundColor: "#4caf50",
           color: "white",
           border: "none",
@@ -407,10 +384,25 @@ useEffect(() => {
       >
         {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
       </button>
-
-            <Legend />
-
-
+      <button
+      onClick={() => setShowRegions((prev) => !prev)}
+      style={{
+        position: "absolute",
+        top: "0px",
+        right: "240px",
+        backgroundColor: "#9c27b0",
+        color: "white",
+        border: "none",
+        padding: "10px 20px",
+        fontSize: "16px",
+        borderRadius: "4px",
+        cursor: "pointer",
+        zIndex: 1001,
+      }}
+      >
+        {showRegions ? "Skrij mapo" : "Pokaži mapo"}
+      </button>                
+      {showRegions && <Legend />}
     </div>
   );
 };
