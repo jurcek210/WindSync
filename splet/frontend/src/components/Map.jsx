@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import L from "leaflet";
 import Wind from "./Wind"; 
+import { GeoJSON } from "react-leaflet";
+
 
 const MapDoubleClickHandler = ({ onDoubleClick }) => {
   useMapEvents({
@@ -40,6 +42,98 @@ const fetchAverageWindSpeed = async (lat, lng) => {
   }
 };
 
+
+const getFeatureCenter = (feature) => {
+  const coords = feature.geometry.coordinates.flat(2); // flatten to [lng, lat]
+  const lats = coords.map(coord => coord[1]);
+  const lngs = coords.map(coord => coord[0]);
+  const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+  const avgLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+  return [avgLng, avgLat];
+};
+
+
+const getRegionColor = (speed) => {
+  if (speed >= 6.0) return "#004529";
+  if (speed >= 5.8) return "#006837";
+  if (speed >= 5.6) return "#238443";
+  if (speed >= 5.4) return "#41ab5d";
+  if (speed >= 5.2) return "#78c679";
+  if (speed >= 5.0) return "#addd8e";
+  if (speed >= 4.8) return "#d9f0a3";
+  if (speed >= 4.6) return "#e7f6c0";
+  if (speed >= 4.4) return "#f2fadc";
+  if (speed >= 4.2) return "#ffffe5";
+  if (speed >= 4.0) return "#fff7bc";
+  if (speed >= 3.8) return "#fee391";
+  if (speed >= 3.6) return "#fec44f";
+  if (speed >= 3.4) return "#fe9929";
+  if (speed >= 3.2) return "#ec7014";
+  if (speed >= 3.0) return "#cc4c02";
+  if (speed >= 2.8) return "#d9d9d9";
+  if (speed >= 2.6) return "#bdbdbd";
+  if (speed >= 2.4) return "#969696";
+  if (speed >= 2.2) return "#737373";
+  if (speed >= 2.0) return "#525252";
+  if (speed >= 1.8) return "#252525";
+  if (speed >= 1.6) return "#f7f7f7";
+  if (speed >= 1.4) return "#cccccc";
+  if (speed >= 1.2) return "#969696";
+  if (speed >= 1.0) return "#636363";
+  return "#ffffcc"; // pod 1.0
+};
+
+const Legend = () => {
+  // Intervali od 1.0 do 6.0 s korakom 0.2
+  const grades = [];
+  for (let i = 1.0; i <= 6.0 + 0.001; i += 0.2) {
+    grades.push(Number(i.toFixed(1)));
+  }
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: "20px",
+        left: "20px",
+        backgroundColor: "white",
+        padding: "10px",
+        borderRadius: "6px",
+        boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+        fontSize: "12px",
+        maxWidth: "180px",
+        zIndex: 1002,
+      }}
+    >
+      <strong>Legenda hitrosti vetra (m/s)</strong>
+      <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0 0" }}>
+        {grades.map((grade) => (
+          <li
+            key={grade}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "4px",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: "20px",
+                height: "14px",
+                backgroundColor: getRegionColor(grade),
+                marginRight: "8px",
+                border: "1px solid #999",
+              }}
+            ></span>
+            <span>{grade.toFixed(1)}+</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const Map = ({ loggedIn }) => {
   const [windmills, setWindmills] = useState([]);
   const [clickedLatLng, setClickedLatLng] = useState(null);
@@ -47,6 +141,10 @@ const Map = ({ loggedIn }) => {
   const [name, setName] = useState("");
   const [windSpeed, setWindSpeed] = useState("");
   const [showWindmills, setShowWindmills] = useState(true); 
+  const [regionData, setRegionData] = useState(null);
+  const [regionWindSpeeds, setRegionWindSpeeds] = useState({});
+
+
 
   // Nova stanje za mrežo vetra
   const [windGridData, setWindGridData] = useState([]);
@@ -59,6 +157,31 @@ const Map = ({ loggedIn }) => {
     popupAnchor: [0, -32],
   });
 
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      // Naloži geojson, da dobimo geometrijo za prikaz občin/regij
+      const resGeo = await fetch("/gadm41_SVN_2.json");
+      const geoData = await resGeo.json();
+      setRegionData(geoData);
+
+      // Naloži že obdelane povprečne hitrosti vetra za občine/regije
+      const resSpeeds = await fetch("/municipalityWindSpeeds.json");
+      const speedsData = await resSpeeds.json();
+
+      setRegionWindSpeeds(speedsData);
+
+      console.log("Povprečne hitrosti vetra za občine:");
+      Object.entries(speedsData).forEach(([name, speed]) => {
+        console.log(`${name}: ${speed} m/s`);
+      });
+    } catch (err) {
+      console.error("Napaka pri nalaganju podatkov:", err);
+    }
+  };
+
+  fetchData();
+}, []);
   useEffect(() => {
     const fetchWindmills = async () => {
       try {
@@ -121,13 +244,32 @@ const Map = ({ loggedIn }) => {
             position={[wm.location.coordinates[1], wm.location.coordinates[0]]}
             icon={windmillIcon}
           >
-            <Popup>
-              <strong>{wm.name}</strong><br />
-              Hitrost vetra: {wm.windSpeed ?? "ni podatka"} m/s<br />
-              Status: {wm.status ? "Aktivna" : "Neaktivna"}
-            </Popup>
+          <Popup>
+            <strong>{wm.name}</strong><br />
+            Status: {wm.status ? "Aktivna" : "Neaktivna"}<br />
+            Hitrost: {wm.windSpeed ?? "ni podatka"} m/s
+          </Popup>
           </Marker>
         ))}
+{regionData && (
+  <GeoJSON
+    data={regionData}
+    style={(feature) => {
+      const speed = regionWindSpeeds[feature.properties.NAME_2]; // prilagodi glede na ključe v tvojem JSON-u
+      return {
+        fillColor: speed ? getRegionColor(speed) : "#ccc", // siva za manjkajoče podatke
+        fillOpacity: 0.6,
+        color: "#444",
+        weight: 1,
+      };
+    }}
+    onEachFeature={(feature, layer) => {
+      const name = feature.properties.NAME_2;
+      const speed = regionWindSpeeds[name];
+      layer.bindPopup(`<strong>${name}</strong><br/>Hitrost vetra: ${speed ?? "ni podatka"} m/s`);
+    }}
+  />
+)}
 
         {/* Prikaz mreže vetra */}
         {windGridData.map(({ lat, lng, speed }, idx) => (
@@ -264,6 +406,9 @@ const Map = ({ loggedIn }) => {
       >
         {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
       </button>
+
+            <Legend />
+
 
     </div>
   );
