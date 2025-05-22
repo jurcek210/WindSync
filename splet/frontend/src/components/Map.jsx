@@ -51,37 +51,39 @@ const getFeatureCenter = (feature) => {
   const avgLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
   return [avgLng, avgLat];
 };
-
-
 const getRegionColor = (speed) => {
-  if (speed >= 6.0) return "#004529";
-  if (speed >= 5.8) return "#006837";
-  if (speed >= 5.6) return "#238443";
-  if (speed >= 5.4) return "#41ab5d";
-  if (speed >= 5.2) return "#78c679";
-  if (speed >= 5.0) return "#addd8e";
-  if (speed >= 4.8) return "#d9f0a3";
-  if (speed >= 4.6) return "#e7f6c0";
-  if (speed >= 4.4) return "#f2fadc";
-  if (speed >= 4.2) return "#ffffe5";
-  if (speed >= 4.0) return "#fff7bc";
-  if (speed >= 3.8) return "#fee391";
-  if (speed >= 3.6) return "#fec44f";
-  if (speed >= 3.4) return "#fe9929";
-  if (speed >= 3.2) return "#ec7014";
-  if (speed >= 3.0) return "#cc4c02";
-  if (speed >= 2.8) return "#d9d9d9";
-  if (speed >= 2.6) return "#bdbdbd";
-  if (speed >= 2.4) return "#969696";
-  if (speed >= 2.2) return "#737373";
-  if (speed >= 2.0) return "#525252";
-  if (speed >= 1.8) return "#252525";
-  if (speed >= 1.6) return "#f7f7f7";
-  if (speed >= 1.4) return "#cccccc";
-  if (speed >= 1.2) return "#969696";
-  if (speed >= 1.0) return "#636363";
-  return "#ffffcc"; // pod 1.0
+  if (speed < 1.0) return "#ffffff"; // Bela za manj kot 1.0
+
+  if (speed < 1.2) return "#e5f5e0";
+  if (speed < 1.4) return "#ccebc5";
+  if (speed < 1.6) return "#b2dfb3";
+  if (speed < 1.8) return "#99d8a4";
+  if (speed < 2.0) return "#80cfa9";
+  if (speed < 2.2) return "#66c2a4";
+  if (speed < 2.4) return "#4daf9c";
+  if (speed < 2.6) return "#3e9e88";
+  if (speed < 2.8) return "#2e8b57";
+  if (speed < 3.0) return "#26734d";
+  if (speed < 3.2) return "#1e633e";
+  if (speed < 3.4) return "#155832";
+  if (speed < 3.6) return "#0c4d28";
+  if (speed < 3.8) return "#094421";
+  if (speed < 4.0) return "#083d1b";
+  if (speed < 4.2) return "#063716";
+  if (speed < 4.4) return "#053212";
+  if (speed < 4.6) return "#042e0f";
+  if (speed < 4.8) return "#032a0c";
+  if (speed < 5.0) return "#022709";
+  if (speed < 5.2) return "#012406";
+  if (speed < 5.4) return "#012203";
+  if (speed < 5.6) return "#011f02";
+  if (speed < 5.8) return "#001d01";
+  if (speed < 6.0) return "#001b00";
+
+  return "#004529"; // Najtemnejša zelena za 6.0+
 };
+
+
 
 const Legend = () => {
   // Intervali od 1.0 do 6.0 s korakom 0.2
@@ -146,10 +148,9 @@ const Map = ({ loggedIn }) => {
 
 
 
-  // Nova stanje za mrežo vetra
   const [windGridData, setWindGridData] = useState([]);
   const [loadingGrid, setLoadingGrid] = useState(false);
-
+ 
   const windmillIcon = new L.Icon({
     iconUrl: "/photos/windmill.png",
     iconSize: [32, 32],
@@ -266,7 +267,7 @@ useEffect(() => {
     onEachFeature={(feature, layer) => {
       const name = feature.properties.NAME_2;
       const speed = regionWindSpeeds[name];
-      layer.bindPopup(`<strong>${name}</strong><br/>Hitrost vetra: ${speed ?? "ni podatka"} m/s`);
+      layer.bindPopup(`<strong>${name}</strong><br/>`);
     }}
   />
 )}
