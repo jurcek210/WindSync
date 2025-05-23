@@ -7,6 +7,7 @@ import "./styles/index.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Zanimivosti from './components/Zanimivosti'; // prilagodi pot glede na strukturo
+import WindMils from "./components/WindMils";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -70,7 +71,7 @@ function App() {
           element={<Login setUser={setUser} setLoggedIn={setLoggedIn} />}
         />
         <Route path="/zanimivosti" element={<Zanimivosti />} />
-
+        <Route path="/WindMils/:id/:windSpeed/:lat/:lng" element={<WindMils />} />
 
         <Route path="/register" element={<Register />} />
       </Routes>

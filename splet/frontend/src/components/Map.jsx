@@ -42,11 +42,8 @@ const fetchAverageWindSpeed = async (lat, lng) => {
   }
 };
 
-
-
 const getRegionColor = (speed) => {
   if (speed < 1.0) return "#ffffff"; // Bela za manj kot 1.0
-
   if (speed < 1.2) return "#e5f5e0";
   if (speed < 1.4) return "#ccebc5";
   if (speed < 1.6) return "#b2dfb3";
@@ -76,10 +73,7 @@ const getRegionColor = (speed) => {
   return "#004529"; // Najtemnejša zelena za 6.0+
 };
 
-
-
 const Legend = () => {
-  // Intervali od 1.0 do 6.0 s korakom 0.2
   const grades = [];
   for (let i = 1.0; i <= 6.0 + 0.001; i += 0.2) {
     grades.push(Number(i.toFixed(1)));
@@ -129,6 +123,8 @@ const Legend = () => {
   );
 };
 
+
+
 const Map = ({ loggedIn }) => {
   const [windmills, setWindmills] = useState([]);
   const [clickedLatLng, setClickedLatLng] = useState(null);
@@ -139,7 +135,8 @@ const Map = ({ loggedIn }) => {
   const [regionData, setRegionData] = useState(null);
   const [regionWindSpeeds, setRegionWindSpeeds] = useState({});
   const [showRegions, setShowRegions] = useState(true);
-
+  const [turbineCategory, setTurbineCategory] = useState("domaca");
+  const [selectedSubOption, setSelectedSubOption] = useState("");
  
   const windmillIcon = new L.Icon({
     iconUrl: "/photos/windmill.png",
@@ -270,100 +267,242 @@ useEffect(() => {
       </MapContainer>
 
       {/* Sidebar meni */}
-      {showSidebar && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 20,
-            width: "320px",
-            height: "100%",
-            backgroundColor: "white",
-            borderLeft: "1px solid #ccc",
-            boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
-            padding: "20px",
-            zIndex: 1000,
-            overflowY: "auto",
+{showSidebar && (
+  <div
+    style={{
+      position: "absolute",
+      top: 0,
+      right: 20,
+      width: "420px",
+      height: "100%",
+      backgroundColor: "white",
+      borderLeft: "1px solid #ccc",
+      boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
+      padding: "20px",
+      zIndex: 1000,
+      overflowY: "auto",
+    }}
+  >
+    <button
+      onClick={() => setShowSidebar(false)}
+      style={{
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        background: "none",
+        border: "none",
+        fontSize: "24px",
+        fontWeight: "bold",
+        cursor: "pointer",
+        color: "#333",
+      }}
+      aria-label="Zapri meni"
+    >
+      ×
+    </button>
+
+    <h2>Dodaj veternico</h2>
+    <input
+      placeholder="Ime"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      style={{ width: "100%", marginBottom: "8px" }}
+    />
+    <p style={{ marginBottom: "8px" }}>
+      <strong>Povprečna hitrost vetra:</strong>{" "}
+      {windSpeed ? `${windSpeed} m/s` : "Ni podatka"}
+    </p>
+
+    {/* Izbira glavne kategorije */}
+    <div style={{ marginBottom: "12px" }}>
+      <label>
+        <input
+          type="radio"
+          name="category"
+          value="domaca"
+          checked={turbineCategory === "domaca"}
+          onChange={() => {
+            setTurbineCategory("domaca");
+            setSelectedSubOption(""); // reset podizbire
           }}
-        >
-          <button
-            onClick={() => setShowSidebar(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              background: "none",
-              border: "none",
-              fontSize: "24px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              color: "#333",
-            }}
-            aria-label="Zapri meni"
-          >
-            ×
-          </button>
+        />
+        {" "}Domača raba
+      </label>
+      <br />
+      <label>
+        <input
+          type="radio"
+          name="category"
+          value="vecja"
+          checked={turbineCategory === "vecja"}
+          onChange={() => {
+            setTurbineCategory("vecja");
+            setSelectedSubOption("");
+          }}
+        />
+        {" "}Večja raba
+      </label>
+    </div>
 
-          <h2>Dodaj veternico</h2>
+    {/* Podmožnosti */}
+{turbineCategory === "domaca" && (
+  <div style={{ marginLeft: "16px", marginBottom: "12px" }}>
+    <label>
+      <input
+        type="radio"
+        name="subOption"
+        value="tipA"
+        checked={selectedSubOption === "tipA"}
+        onChange={() => setSelectedSubOption("tipA")}
+      />{" "}
+      <a
+        href={`/WindMils/1/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng} `}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginRight: "8px" }}
+      >
+        Poglej več
+      </a>
+       Bornay 1200 4000$ | 1200 W
+    </label>
+    <br />
+    <label>
+      <input
+        type="radio"
+        name="subOption"
+        value="tipB"
+        checked={selectedSubOption === "tipB"}
+        onChange={() => setSelectedSubOption("tipB")}
+      />{" "}
+      <a
+        href={`/WindMils/2/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng} `}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginRight: "8px" }}
+      >
+        Poglej več
+      </a>
+      Missouri Freedom II Wind Turbine 200$ | 2.000 W
+    </label>
+    <br />
+    <label>
+      <input
+        type="radio"
+        name="subOption"
+        value="tipC"
+        checked={selectedSubOption === "tipC"}
+        onChange={() => setSelectedSubOption("tipC")}
+      />{" "}
+      <a
+        href={`/WindMils/3/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng} `}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginRight: "8px" }}
+      >
+        Poglej več
+      </a>
+      Tumo-Int 1200W Horizontal Wind Turbine 1500$ | 1220 W
+    </label>
+  </div>
+)}
+
+
+    {turbineCategory === "vecja" && (
+      <div style={{ marginLeft: "16px", marginBottom: "12px" }}>
+        <label>
           <input
-            placeholder="Ime"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{ width: "100%", marginBottom: "8px" }}
-          />
+            type="radio"
+            name="subOption"
+            value="tipX"
+            checked={selectedSubOption === "tipX"}
+            onChange={() => setSelectedSubOption("tipX")}
+          />{" "}
+          Tip X
+        </label><br />
+        <label>
           <input
-            type="number"
-            placeholder="Hitrost vetra"
-            value={windSpeed}
-            onChange={(e) => setWindSpeed(e.target.value)}
-            style={{ width: "100%", marginBottom: "8px" }}
-          />
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-            <button onClick={() => setShowSidebar(false)}>Prekliči</button>
-            <button
-              onClick={async () => {
-                try {
-                  await axios.post(
-                    "/api/windmills",
-                    {
-                      name,
-                      windSpeed: parseFloat(windSpeed),
-                      location: {
-                        type: "Point",
-                        coordinates: [clickedLatLng.lng, clickedLatLng.lat],
-                      },
-                    },
-                    {
-                      headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                      },
-                    }
-                  );
+            type="radio"
+            name="subOption"
+            value="tipY"
+            checked={selectedSubOption === "tipY"}
+            onChange={() => setSelectedSubOption("tipY")}
+          />{" "}
+          Tip Y
+        </label><br />
+        <label>
+          <input
+            type="radio"
+            name="subOption"
+            value="tipZ"
+            checked={selectedSubOption === "tipZ"}
+            onChange={() => setSelectedSubOption("tipZ")}
+          />{" "}
+          Tip Z
+        </label><br />
+        <label>
+          <input
+            type="radio"
+            name="subOption"
+            value="tipW"
+            checked={selectedSubOption === "tipW"}
+            onChange={() => setSelectedSubOption("tipW")}
+          />{" "}
+          Tip W
+        </label>
+      </div>
+    )}
 
-                  setShowSidebar(false);
-                  setClickedLatLng(null);
-                  setName("");
-                  setWindSpeed("");
-                  const { data } = await axios.get("/api/windmills");
-                  setWindmills(data);
-                } catch (err) {
-                  console.error("Napaka pri shranjevanju veternice", err);
-                  alert("Napaka pri shranjevanju veternice.");
-                }
-              }}
-              style={{
-                backgroundColor: "#4caf50",
-                color: "white",
-                padding: "4px 8px",
-              }}
-            >
-              Shrani
-            </button>
-          </div>
+    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+      <button onClick={() => setShowSidebar(false)}>Prekliči</button>
+      <button
+        onClick={async () => {
+          try {
+            await axios.post(
+              "/api/windmills",
+              {
+                name,
+                windSpeed: parseFloat(windSpeed),
+                location: {
+                  type: "Point",
+                  coordinates: [clickedLatLng.lng, clickedLatLng.lat],
+                },
+                category: turbineCategory,
+                type: selectedSubOption,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
 
-          {clickedLatLng && <Wind lat={clickedLatLng.lat} lng={clickedLatLng.lng} />}
-        </div>
-      )}
+            setShowSidebar(false);
+            setClickedLatLng(null);
+            setName("");
+            setWindSpeed("");
+            setTurbineCategory("domaca");
+            setSelectedSubOption("");
+
+            const { data } = await axios.get("/api/windmills");
+            setWindmills(data);
+          } catch (err) {
+            console.error("Napaka pri shranjevanju veternice", err);
+            alert("Napaka pri shranjevanju veternice.");
+          }
+        }}
+        style={{
+          backgroundColor: "#4caf50",
+          color: "white",
+          padding: "4px 8px",
+        }}
+      >
+        Shrani
+      </button>
+    </div>
+
+    {clickedLatLng && <Wind lat={clickedLatLng.lat} lng={clickedLatLng.lng} />}
+  </div>
+)}
 
       {/* Gumb za preklop prikaza veternic */}
       <button
@@ -403,6 +542,8 @@ useEffect(() => {
         {showRegions ? "Skrij mapo" : "Pokaži mapo"}
       </button>                
       {showRegions && <Legend />}
+        
+
     </div>
   );
 };
