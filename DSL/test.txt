@@ -1,0 +1,19 @@
+zelenamreza "primer" {
+ let p = point(10, 20);
+  let center = point(75, 75);
+   senzor "s1" {
+        marker(p) (color = red, label = "start", value = 100);
+    };
+
+     kabel "k1" {
+            bend((100,100), (200,200), 30);
+        };
+     proizvajalci "p1" {
+            box((50,50), (150,150));
+        };
+    baterija "b1" {
+        circle(center, 25);
+    };
+    connect("k1", "p1");
+
+};
