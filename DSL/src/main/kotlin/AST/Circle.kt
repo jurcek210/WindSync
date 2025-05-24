@@ -24,4 +24,8 @@ class Circle(val center: String, val radius: Expr) : Command {
             )
         )
     }
+    fun evalArea(): Double {
+        val r = radius.eval()
+        return Math.PI * r * r
+    }
 }

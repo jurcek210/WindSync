@@ -34,14 +34,17 @@ fun main() {
     val parser = Parser(scanner)
 
     parser.parse()
-    val featureCollection = mapOf(
-        "type" to "FeatureCollection",
-        "features" to commands.map { it.eval() }
-    )
-    println(Gson().toJson(featureCollection))
-
-    val features = commands.map { it.eval() }
-
+    val features = mutableListOf<GeoJsonFeature>()
+    for (cmd in commands) {
+        try {
+            val feature = cmd.eval()
+            features.add(feature)
+            println("? Eval: ${cmd.javaClass.simpleName}")
+        } catch (e: Exception) {
+            println("? Eval failed for ${cmd.javaClass.simpleName}: ${e.message}")
+        }
+    }
+    
     val geoJson = mapOf(
         "type" to "FeatureCollection",
         "features" to features

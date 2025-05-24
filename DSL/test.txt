@@ -1,19 +1,53 @@
-zelenamreza "primer" {
- let p = point(10, 20);
-  let center = point(75, 75);
-   senzor "s1" {
-        marker(p) (color = red, label = "start", value = 100);
+zelenamreza "test" {
+    let center = point(15.0, 46.0);
+
+    let p1a = point(14.7, 46.2);
+    let p1b = point(14.8, 46.3);
+
+    let p2a = point(15.2, 46.2);
+    let p2b = point(15.3, 46.3);
+
+    let p3a = point(14.7, 45.7);
+    let p3b = point(14.8, 45.8);
+
+    baterija "b1" {
+        circle(center, 0.05);
     };
 
-     kabel "k1" {
-            bend((100,100), (200,200), 30);
-        };
-     proizvajalci "p1" {
-            box((50,50), (150,150));
-        };
-    baterija "b1" {
-        circle(center, 25);
+    proizvajalci "f1" {
+        box(p1a, p1b);
     };
-    connect("k1", "p1");
+
+    proizvajalci "f2" {
+        box(p2a, p2b);
+    };
+
+    proizvajalci "f3" {
+        box(p3a, p3b);
+    };
+
+    connect("b1", "f1");
+    connect("b1", "f2");
+    connect("b1", "f3");
+
+    let total = area("f1", "f2", "b1");
+    let number = count("box");
+
+    set("myValue" , 42);
+    let x = get("myValue");
+
+senzor "s1" {
+    marker(center) (color = red);
+};
+
+set("s1.color", "green");
+get("s1.color");
+
+let a = get("s1.color");
+
+senzor "s2" {
+    marker(center) (color = red);
+};
+set("s2.color", a);
 
 };

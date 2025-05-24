@@ -15,6 +15,24 @@ data class GeoJsonFeatureCollection(
     val features: List<GeoJsonFeature>
 )
 
+fun evalAllToGeoJson(): GeoJsonFeatureCollection {
+    val features = mutableListOf<GeoJsonFeature>()
+
+    for (cmd in commands) {
+        try {
+            val feature = cmd.eval()
+            features.add(feature)
+        } catch (e: Exception) {
+            println("Napaka pri eval komand: ${cmd.javaClass.simpleName} – ${e.message}")
+        }
+    }
+
+    return GeoJsonFeatureCollection(
+        features = features
+    )
+}
+
+
 data class Kabel(val name: String, val segments: List<Pair<Point, Point>>) : Command {
     override fun eval(): GeoJsonFeature {
         val coords = segments.map { segment ->

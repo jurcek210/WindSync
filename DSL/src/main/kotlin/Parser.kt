@@ -81,19 +81,51 @@ class Parser(
     }
 
 
-    private fun get() {
-        if (currentToken.symbol == Symbol.LPAREN) {
-            currentToken = lex.getToken()
-            if (currentToken.symbol == Symbol.STRING) {
-                currentToken = lex.getToken()
-                if (currentToken.symbol == Symbol.RPAREN) {
-                    currentToken = lex.getToken()
-                    return
-                }
+    private fun get(): Expr {
+        if (currentToken.symbol != Symbol.LPAREN)
+            throw Error("Expected '(' after get")
+
+        currentToken = lex.getToken()
+
+        if (currentToken.symbol != Symbol.STRING)
+            throw Error("Expected string key in get(...)")
+
+        val key = currentToken.lexeme
+        currentToken = lex.getToken()
+
+        if (currentToken.symbol != Symbol.RPAREN)
+            throw Error("Expected ')' after get(...)")
+
+        currentToken = lex.getToken()
+
+        val value = if ('.' in key) {
+            val (objectName, propertyName) = key.split('.', limit = 2)
+            val obj = vars[objectName]
+            if (obj is Marker) {
+                obj.props[propertyName]
+                    ?: throw Error("No property '$propertyName' in marker '$objectName'")
+            } else {
+                throw Error("No marker named '$objectName'")
             }
+        } else {
+            vars[key] ?: throw Error("No value stored under '$key'")
         }
-        throw Error("Invalid Get")
+
+        val result = when (value) {
+            is Expr -> value
+            is Double -> Expr.Real(value)
+            is Int -> Expr.Real(value.toDouble())
+            is Boolean -> Expr.Real(if (value) 1.0 else 0.0)
+            is String -> StringLiteral(value)
+            else -> throw Error("Unsupported value type in get('$key')")
+        }
+
+        println("✔ get('$key') = $value")
+        return result
     }
+
+
+
 
     private fun areaArgs() {
         entity()
@@ -147,6 +179,74 @@ class Parser(
                 currentToken = lex.getToken()  // zelo pomembno, da ne pozabiš premakniti tokena naprej
                 return inner
             }
+            Symbol.COUNT -> {
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.LPAREN) throw Error("Expected '(' after count")
+                currentToken = lex.getToken()
+                val type = if (currentToken.symbol == Symbol.STRING) {
+                    val t = currentToken.lexeme
+                    currentToken = lex.getToken()
+                    t
+                } else throw Error("Expected string argument in count")
+
+                if (currentToken.symbol != Symbol.RPAREN) throw Error("Expected ')' after count")
+                currentToken = lex.getToken()
+                Expr.CountExpr(type)
+            }
+
+            Symbol.AREA -> {
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.LPAREN) throw Error("Expected '(' after area")
+                currentToken = lex.getToken()
+
+                val names = mutableListOf<String>()
+
+                while (currentToken.symbol == Symbol.STRING || currentToken.symbol == Symbol.VARIABLE) {
+                    names.add(currentToken.lexeme)
+                    currentToken = lex.getToken()
+                    if (currentToken.symbol == Symbol.TO) {
+                        currentToken = lex.getToken()
+                    } else break
+                }
+
+                if (currentToken.symbol != Symbol.RPAREN) throw Error("Expected ')' after area(...)")
+                currentToken = lex.getToken()
+
+                return Expr.AreaExpr(names)
+            }
+            Symbol.GET -> {
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.LPAREN) throw Error("Expected '(' after get")
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.STRING) throw Error("Expected string as key in get")
+                val key = currentToken.lexeme
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.RPAREN) throw Error("Expected ')' after get")
+                currentToken = lex.getToken()
+
+                val v = vars[key] ?: throw Error("No value stored under '$key'")
+                val value = when (v) {
+                    is Expr -> v.eval()
+                    is Double -> v
+                    is Int -> v.toDouble()
+                    is Boolean -> if (v) 1.0 else 0.0
+                    is String -> {
+                        println("✔ get('$key') = $v")
+                        vars[key] = v
+                        return StringLiteral(v)
+                    }
+                    else -> throw Error("Cannot get $v as number (key = '$key')")
+                }
+
+                println("✔ get('$key') = $value")
+                return Expr.Real(value)
+            }
+
+
+
+
+
+
 
 
             else -> throw Error("Unexpected token in primary: ${currentToken.symbol}")
@@ -271,45 +371,72 @@ class Parser(
     }
 
     private fun set() {
-        if (currentToken.symbol == Symbol.LPAREN) {
-            currentToken = lex.getToken()
-            if (currentToken.symbol == Symbol.STRING) {
+        if (currentToken.symbol != Symbol.LPAREN)
+            throw Error("Expected '(' at beginning of set()")
+
+        currentToken = lex.getToken()
+
+        if (currentToken.symbol != Symbol.STRING)
+            throw Error("Expected string as property name")
+
+        val key = currentToken.lexeme
+        currentToken = lex.getToken()
+
+        if (currentToken.symbol != Symbol.TO)
+            throw Error("Expected ',' after key in set()")
+
+        currentToken = lex.getToken()
+
+        val value = when (currentToken.symbol) {
+            Symbol.STRING -> {
+                val v = currentToken.lexeme
                 currentToken = lex.getToken()
-                if (currentToken.symbol == Symbol.TO) {
-                    currentToken = lex.getToken()
-                    if (currentToken.symbol == Symbol.STRING ||
-                        currentToken.symbol == Symbol.TRUE ||
-                        currentToken.symbol == Symbol.FALSE) {
-                        currentToken = lex.getToken()
-                        if (currentToken.symbol == Symbol.RPAREN) {
-                            currentToken = lex.getToken()
-                            return
-                        } else {
-                            throw Error("Expected ')' after value")
-                        }
-                    }
-                    else if (currentToken.symbol == Symbol.VARIABLE || currentToken.symbol == Symbol.REAL ||
-                        currentToken.symbol == Symbol.MINUS || currentToken.symbol == Symbol.PLUS ||
-                        currentToken.symbol == Symbol.LPAREN || currentToken.symbol == Symbol.GET) {
-                        additive()
-                        if (currentToken.symbol == Symbol.RPAREN) {
-                            currentToken = lex.getToken()
-                            return
-                        } else {
-                            throw Error("Expected ')' after expression")
-                        }
-                    } else {
-                        throw Error("Invalid value after 'to'")
-                    }
-                } else {
-                    throw Error("Expected 'to' after property name")
+                v
+            }
+            Symbol.TRUE -> {
+                currentToken = lex.getToken()
+                true
+            }
+            Symbol.FALSE -> {
+                currentToken = lex.getToken()
+                false
+            }
+            Symbol.VARIABLE -> {
+                val name = currentToken.lexeme
+                currentToken = lex.getToken()
+                val stored = vars[name] ?: throw Error("No value stored under '$name'")
+                when (stored) {
+                    is Expr -> stored.eval()
+                    is Double, is Boolean, is String -> stored
+                    else -> throw Error("Unsupported value in variable '$name'")
                 }
-            } else {
-                throw Error("Expected string as property name")
+            }
+            Symbol.REAL, Symbol.MINUS, Symbol.PLUS, Symbol.LPAREN, Symbol.GET -> {
+                val expr = additive()
+                expr.eval()
+            }
+            else -> throw Error("Invalid value type in set()")
+        }
+
+        if (currentToken.symbol != Symbol.RPAREN)
+            throw Error("Expected ')' after value in set()")
+
+        currentToken = lex.getToken()
+
+        if ('.' in key) {
+            val (objectName, propertyName) = key.split('.', limit = 2)
+            val obj = vars[objectName]
+            if (obj is Marker) {
+                obj.props[propertyName] = value
+                println("✔ set('$objectName.$propertyName') = $value (in props)")
+                return
             }
         }
-        throw Error("Expected '(' at beginning of set()")
+
+        vars[key] = value
+        println("✔ set('$key') = $value")
     }
+
 
     private fun assignment() {
         if (currentToken.symbol == Symbol.VARIABLE) {
@@ -342,8 +469,6 @@ class Parser(
                             currentToken = lex.getToken()
                             val point = Point(x, y)
                             vars[name] = point
-                            println("Assigned variable '$name' = $point")
-
                             return
                         } else {
                             throw Error("Expected ')' after point coordinates")
@@ -355,12 +480,23 @@ class Parser(
                     throw Error("Expected '(' after 'point'")
                 }
             }
+            Symbol.STRING -> {
+                val strValue = currentToken.lexeme
+                currentToken = lex.getToken()
+                vars[name] = strValue
+            }
             else -> {
                 val expr = additive()
                 vars[name] = expr
+                when (expr) {
+                    is Expr.AreaExpr, is Expr.CountExpr -> {
+                        println("✔ '$name' = ${expr.eval()}")
+                    }
+                }
             }
         }
     }
+
 
 
 
@@ -643,7 +779,7 @@ class Parser(
     }
     private fun blockTerminator() {
         block()
-        println("After block, current token: ${currentToken.symbol}, lexeme='${currentToken.lexeme}'")
+
         if (currentToken.symbol == Symbol.SEMICOLON) {
             currentToken = lex.getToken()
         } else {
@@ -679,12 +815,19 @@ class Parser(
             Symbol.PROIZVAJALCI -> {
                 currentToken = lex.getToken()
                 if (currentToken.symbol == Symbol.STRING) {
+                    val name = currentToken.lexeme
                     currentToken = lex.getToken()
                     if (currentToken.symbol == Symbol.BEGIN) {
                         currentToken = lex.getToken()
+                        val beforeSize = commands.size
                         commands()
                         if (currentToken.symbol == Symbol.END) {
                             currentToken = lex.getToken()
+                            val newCommands = commands.drop(beforeSize)
+                            if (newCommands.isNotEmpty()) {
+                                vars[name] = newCommands.last()
+
+                            }
                         } else {
                             throw Error("Expected END after proizvajalci block")
                         }
@@ -699,12 +842,23 @@ class Parser(
             Symbol.SENZOR -> {
                 currentToken = lex.getToken()
                 if (currentToken.symbol == Symbol.STRING) {
+                    val name = currentToken.lexeme
                     currentToken = lex.getToken()
                     if (currentToken.symbol == Symbol.BEGIN) {
                         currentToken = lex.getToken()
+
+                        val beforeSize = commands.size
                         commands()
+
                         if (currentToken.symbol == Symbol.END) {
                             currentToken = lex.getToken()
+
+                            val newCommands = commands.drop(beforeSize)
+                            if (newCommands.isNotEmpty()) {
+                                vars[name] = newCommands.last()
+                                println("✔ senzor '$name' mapped to ${newCommands.last().javaClass.simpleName}")
+                            }
+
                         } else {
                             throw Error("Expected END after senzor block")
                         }
@@ -716,15 +870,23 @@ class Parser(
                 }
             }
 
+
             Symbol.BATERIJA -> {
                 currentToken = lex.getToken()
                 if (currentToken.symbol == Symbol.STRING) {
+                    val name = currentToken.lexeme
                     currentToken = lex.getToken()
                     if (currentToken.symbol == Symbol.BEGIN) {
                         currentToken = lex.getToken()
+                        val beforeSize = commands.size
                         commands()
                         if (currentToken.symbol == Symbol.END) {
                             currentToken = lex.getToken()
+                            val newCommands = commands.drop(beforeSize)
+                            if (newCommands.isNotEmpty()) {
+                                vars[name] = newCommands.last()
+
+                            }
                         } else {
                             throw Error("Expected END after baterija block")
                         }
@@ -736,6 +898,8 @@ class Parser(
                 }
             }
 
+
+
             Symbol.SET -> {
                 currentToken = lex.getToken()
                 set()
@@ -744,6 +908,10 @@ class Parser(
             Symbol.LET -> {
                 currentToken = lex.getToken()
                 assignment()
+            }
+            Symbol.GET -> {
+                currentToken = lex.getToken()
+                get()
             }
 
             Symbol.VARIABLE -> {
@@ -1045,6 +1213,12 @@ class Parser(
                     throw Error("Expected '(' after CIRCLE")
                 }
             }
+            Symbol.GET -> {
+                currentToken = lex.getToken()
+                val expr = get()
+                println("✔ get(...) = ${expr.eval()}")
+                return
+            }
 
             Symbol.MARKER -> {
                 currentToken = lex.getToken()
@@ -1197,27 +1371,39 @@ class Parser(
                 return
             }
             Symbol.CONNECT -> {
-                currentToken = lex.getToken()
-                if (currentToken.symbol == Symbol.LPAREN) {
-                    currentToken = lex.getToken()
 
-                    entity()
-                    if (currentToken.symbol == Symbol.TO) {
-                        currentToken = lex.getToken()
-                        entity()
-                        if (currentToken.symbol == Symbol.RPAREN) {
-                            currentToken = lex.getToken()
-                            return
-                        } else {
-                            throw Error("Expected ')' after connect arguments")
-                        }
-                    } else {
-                        throw Error("Expected ',' between connect arguments")
-                    }
-                } else {
+                currentToken = lex.getToken()
+
+                if (currentToken.symbol != Symbol.LPAREN)
                     throw Error("Expected '(' after 'connect'")
-                }
+
+                currentToken = lex.getToken()
+
+                val from = if (currentToken.symbol == Symbol.STRING || currentToken.symbol == Symbol.VARIABLE) {
+                    val name = currentToken.lexeme
+                    currentToken = lex.getToken()
+                    name
+                } else throw Error("Expected from-entity in connect(...)")
+
+                if (currentToken.symbol != Symbol.TO)
+                    throw Error("Expected TO between connect args")
+
+                currentToken = lex.getToken()
+
+                val to = if (currentToken.symbol == Symbol.STRING || currentToken.symbol == Symbol.VARIABLE) {
+                    val name = currentToken.lexeme
+                    currentToken = lex.getToken()
+                    name
+                } else throw Error("Expected to-entity in connect(...)")
+
+                if (currentToken.symbol != Symbol.RPAREN)
+                    throw Error("Expected ')' after connect(...)")
+
+                currentToken = lex.getToken()
+                commands.add(Connect(from, to))
+
             }
+
 
             else -> throw Error("Invalid")
         }
