@@ -1,5 +1,17 @@
 # Druga projektna naloga (Docker)
 
+## Prikaz Aplikacije
+# Glavna stran aplikacije:
+Na prvi strani aplikacije je prikazana karta Slovenije z barvnim prikazom povprečne hitrosti vetra za posamezno občino. Tako lahko uporabnik hitro vidi, kje so najugodnejši pogoji za postavitev vetrnih elektrarn.![Slika osnovne strani](Slike/image10.png)
+
+# Podstran z informacijami o vetrnici:
+Ko izberemo določeno vetrnico, se prikažejo podrobni podatki o njej. Na voljo je graf, ki prikazuje, koliko energije lahko proizvedemo v posameznem mesecu skozi leto. Poleg tega aplikacija prikaže tudi oceno časa, v katerem se investicija v vetrnico povrne.
+![Slika vetrnice](Slike/image11.png)
+
+# Podstran z zanimivostmi:
+Na tej podstrani lahko vidimo zanimive primerjave, koliko vetrne energije uporabljamo v Sloveniji v primerjavi z drugimi državami EU. Prikazano je, da je uporaba vetrne energije pri nas še precej nizka, kar nakazuje velik potencial za prihodnjo rast in razvoj obnovljivih virov energije.
+![Slika pdostrani zanimivosti](Slike/image12.png)
+
 
 ## Namestitev Dockerja
 
