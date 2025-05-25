@@ -989,9 +989,9 @@ class Parser(
 
 
     private fun kabelLines(segments: MutableList<KabelSegment>) {
-        if (currentToken.symbol == Symbol.EOF || currentToken.symbol == Symbol.END) return
-        kabelLine(segments)
-        kabelLines(segments)
+        while (currentToken.symbol != Symbol.EOF && currentToken.symbol != Symbol.END) {
+            kabelLine(segments)
+        }
     }
 
     private fun kabelLine(segments: MutableList<KabelSegment>) {
@@ -1014,6 +1014,7 @@ class Parser(
             currentToken = lex.getToken()
 
             segments.add(KabelSegment(from, to, radius))
+
         } else {
             val from = parsePointExpr()
             kabelCont(from, segments)
@@ -1026,10 +1027,9 @@ class Parser(
         }
     }
 
-
-
-    private fun kabelCont(from: Point, segments: MutableList<KabelSegment>) {
-        if (currentToken.symbol == Symbol.LINK) {
+    private fun kabelCont(fromStart: Point, segments: MutableList<KabelSegment>) {
+        var from = fromStart
+        while (currentToken.symbol == Symbol.LINK) {
             currentToken = lex.getToken()
 
             var bendRadius: Double? = null
@@ -1043,9 +1043,15 @@ class Parser(
 
             val to = parsePointExpr()
             segments.add(KabelSegment(from, to, bendRadius))
-            kabelCont(to, segments)
+            from = to
         }
     }
+
+
+
+
+
+
 
 
 
@@ -1371,7 +1377,6 @@ class Parser(
                 return
             }
             Symbol.CONNECT -> {
-
                 currentToken = lex.getToken()
 
                 if (currentToken.symbol != Symbol.LPAREN)
@@ -1400,8 +1405,15 @@ class Parser(
                     throw Error("Expected ')' after connect(...)")
 
                 currentToken = lex.getToken()
-                commands.add(Connect(from, to))
 
+                var bendAngle: Double? = null
+                if (currentToken.symbol == Symbol.BEND) {
+                    currentToken = lex.getToken()
+                    val expr = additive()
+                    bendAngle = expr.eval()
+                }
+
+                commands.add(Connect(from, to, bendAngle))
             }
 
 

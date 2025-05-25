@@ -2,7 +2,8 @@ package AST
 
 import Circle
 
-data class Connect(val from: String, val to: String) : Command {
+data class Connect(val from: String, val to: String, val bend: Double? = null) : Command
+{
     override fun eval(): GeoJsonFeature {
         val fromEntity = vars[from]
         val toEntity = vars[to]
@@ -10,17 +11,23 @@ data class Connect(val from: String, val to: String) : Command {
         val p1 = resolveCenter(from, fromEntity)
         val p2 = resolveCenter(to, toEntity)
 
+        val coords = if (bend != null) {
+            val start = Coordinates(p1.first, p1.second)
+            val end = Coordinates(p2.first, p2.second)
+            Bezier.bend(start, end, bend).toPoints(20).map { listOf(it.x, it.y) }
+        } else {
+            listOf(listOf(p1.first, p1.second), listOf(p2.first, p2.second))
+        }
+
         return GeoJsonFeature(
             geometry = GeoJsonGeometry(
                 type = "LineString",
-                coordinates = listOf(
-                    listOf(p1.first, p1.second),
-                    listOf(p2.first, p2.second)
-                )
+                coordinates = coords
             ),
             properties = mapOf("type" to "connection", "from" to from, "to" to to)
         )
     }
+
 
     private fun resolveCenter(name: String, entity: Any?): Pair<Double, Double> {
         return when (entity) {

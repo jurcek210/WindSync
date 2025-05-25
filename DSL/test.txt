@@ -29,6 +29,7 @@ zelenamreza "test" {
     connect("b1", "f1");
     connect("b1", "f2");
     connect("b1", "f3");
+    connect("f1", "f2") bend 60;
 
     let total = area("f1", "f2", "b1");
     let number = count("box");
@@ -42,12 +43,12 @@ senzor "s1" {
 
 set("s1.color", "green");
 get("s1.color");
+kabel "k1" {
 
-let a = get("s1.color");
-
-senzor "s2" {
-    marker(center) (color = red);
+    (14.7, 46.2) -- (14.8, 46.3);
 };
-set("s2.color", a);
+
+
+
 
 };
