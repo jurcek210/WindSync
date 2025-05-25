@@ -28,7 +28,7 @@ import com.google.gson.GsonBuilder
 
 
 fun main() {
-    val input = File("test.txt")
+    val input = File("test1.txt")
     val inputStream = FileInputStream(input)
     val scanner = Scanner(inputStream)
     val parser = Parser(scanner)
