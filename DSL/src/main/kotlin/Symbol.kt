@@ -52,5 +52,8 @@ enum class Symbol {
     MAGENTA,
     RGB,
     LABEL,
-    VALUE
+    VALUE,
+    ERROR,
+    SYMBOL,
+    IGNORE
 }

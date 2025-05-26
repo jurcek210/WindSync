@@ -1,3 +1,94 @@
-zelenamreza "maribor_postaja" {
+zelenamreza "mariborja" {
+        let p1a = point(108.84633110617523,11.512636872186619);
+           let p1b = point(108.85137027131441, 11.5110433462701);
+
+           proizvajalci "f1" {
+               box(p1a, p1b);
+           };
+         let p2a = point(108.8448257919573,11.511012117157449);
+         let p2b = point(108.85068220697701, 11.50948339883874);
+
+           proizvajalci "f2" {
+               box(p2a, p2b);
+           };
+
+         let p3a = point(108.84370470755937,11.50934884113073);
+         let p3b = point(108.84993709292581,11.50748297588396);
+
+           proizvajalci "f3" {
+               box(p3a, p3b);
+           };
+
+         let p4a = point(108.84536398498079,11.50559149904143);
+         let p4b = point(108.84966551855166, 11.507372254143888);
+
+           proizvajalci "f4" {
+               box(p4a, p4b);
+           };
+         let p5a = point(108.84532991525106,11.505755099462633);
+         let p5b = point(108.84490496330682,11.507400941891177);
+
+           proizvajalci "f5" {
+               box(p5a, p5b);
+           };
+
+         let p6a = point(108.84302856339815, 11.507406560814232);
+         let p6b = point( 108.84423230057314,11.506222437525977);
+
+           proizvajalci "f6" {
+               box(p6a, p6b);
+           };
+
+         let p7a = point(108.85174428139845, 11.50936385553689);
+         let p7b = point(108.85118739570788, 11.509065972641679);
+
+        baterija "b1" {
+             box(p7a, p7b);
+        };
+
+        let center =point(108.8518312434349,11.51499862681817);
+
+        proizvajalci "vetrnica1" {
+            circle(center, 0.0001);
+        };
+
+        let center2 =point(108.85364089156445, 11.513995951842702);
+
+        proizvajalci "vetrnica2" {
+            circle(center2, 0.0001);
+        };
+
+        let center3 =point( 108.85437681098153,11.508746134737322);
+
+        proizvajalci "vetrnica3" {
+            circle(center3, 0.0001);
+        };
+
+        let center4 =point(108.85045957821683,11.505788238793741);
+
+        proizvajalci "vetrnica4" {
+            circle(center4, 0.0001);
+        };
+        connect("vetrnica1", "vetrnica2");
+        connect("vetrnica2", "vetrnica3");
+        connect("vetrnica4", "vetrnica3");
+        connect("vetrnica3", "b1");
+        let bb = point(108.85147067056965,11.509223859295517);
+        senzor "s1" {
+            marker(bb) (label= "kapaciteta baterije", value = 22222);
+        };
+
+        connect("f1", "b1") bend 60;
+        connect("f2", "b1");
+        connect("f2", "b1") ;
+        connect("f3", "f2") ;
+        connect("f4", "f3") ;
+        connect("f5", "f4") ;
+        connect("f6", "f5") ;
+
+
+
+
+
 
 };

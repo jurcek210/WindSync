@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import java.io.File
 import java.io.FileInputStream
 import com.google.gson.GsonBuilder
+
 /*toti test dela:
 * zelenamreza "primer" {
  let p = point(10, 20);
@@ -33,6 +34,7 @@ fun main() {
     val scanner = Scanner(inputStream)
     val parser = Parser(scanner)
 
+
     parser.parse()
     val features = mutableListOf<GeoJsonFeature>()
     for (cmd in commands) {
@@ -54,4 +56,6 @@ fun main() {
     val jsonOutput = gson.toJson(geoJson)
 
     println(jsonOutput)
+
+
 }
