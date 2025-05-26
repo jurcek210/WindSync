@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Zanimivosti from './components/Zanimivosti'; // prilagodi pot glede na strukturo
 import WindMils from "./components/WindMils";
+import WindMilsBig from "./components/WindMilsBig";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -72,6 +73,8 @@ function App() {
         />
         <Route path="/zanimivosti" element={<Zanimivosti />} />
         <Route path="/WindMils/:id/:windSpeed/:lat/:lng" element={<WindMils />} />
+        <Route path="/WindMilsBig/:id/:windSpeed/:lat/:lng" element={<WindMilsBig />} />
+
 
         <Route path="/register" element={<Register />} />
       </Routes>

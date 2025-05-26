@@ -157,10 +157,7 @@ useEffect(() => {
 
       setRegionWindSpeeds(speedsData);
 
-      console.log("Povprečne hitrosti vetra za občine:");
-      Object.entries(speedsData).forEach(([name, speed]) => {
-        console.log(`${name}: ${speed} m/s`);
-      });
+
     } catch (err) {
       console.error("Napaka pri nalaganju podatkov:", err);
     }
@@ -407,52 +404,67 @@ useEffect(() => {
 )}
 
 
-    {turbineCategory === "vecja" && (
-      <div style={{ marginLeft: "16px", marginBottom: "12px" }}>
-        <label>
-          <input
-            type="radio"
-            name="subOption"
-            value="tipX"
-            checked={selectedSubOption === "tipX"}
-            onChange={() => setSelectedSubOption("tipX")}
-          />{" "}
-          Tip X
-        </label><br />
-        <label>
-          <input
-            type="radio"
-            name="subOption"
-            value="tipY"
-            checked={selectedSubOption === "tipY"}
-            onChange={() => setSelectedSubOption("tipY")}
-          />{" "}
-          Tip Y
-        </label><br />
-        <label>
-          <input
-            type="radio"
-            name="subOption"
-            value="tipZ"
-            checked={selectedSubOption === "tipZ"}
-            onChange={() => setSelectedSubOption("tipZ")}
-          />{" "}
-          Tip Z
-        </label><br />
-        <label>
-          <input
-            type="radio"
-            name="subOption"
-            value="tipW"
-            checked={selectedSubOption === "tipW"}
-            onChange={() => setSelectedSubOption("tipW")}
-          />{" "}
-          Tip W
-        </label>
-      </div>
-    )}
-
-    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+   {turbineCategory === "vecja" && (
+  <div style={{ marginLeft: "16px", marginBottom: "12px" }}>
+    <label>
+      <input
+        type="radio"
+        name="subOption"
+        value="tipY"
+        checked={selectedSubOption === "tipY"}
+        onChange={() => setSelectedSubOption("tipY")}
+      />{" "}
+      <a
+        href={`/WindMilsBig/1/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginRight: "8px" }}
+      >
+        Poglej več
+      </a>
+       Ampair 6000 Wind Turbine 20000$ | 6 kW
+    </label>
+    <br />
+    <label>
+      <input
+        type="radio"
+        name="subOption"
+        value="tipZ"
+        checked={selectedSubOption === "tipZ"}
+        onChange={() => setSelectedSubOption("tipZ")}
+      />{" "}
+      <a
+        href={`/WindMilsBig/2/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginRight: "8px" }}
+      >
+        Poglej več
+      </a>
+      Eocycle EOX S-15 40000$ | 15 kW
+    </label>
+    <br />
+    <label>
+      <input
+        type="radio"
+        name="subOption"
+        value="tipW"
+        checked={selectedSubOption === "tipW"}
+        onChange={() => setSelectedSubOption("tipW")}
+      />{" "}
+      <a
+        href={`/WindMilsBig/3/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginRight: "8px" }}
+      >
+        Poglej več
+      </a>
+      Kestrel e400i 12000$ | 3,5 kW
+    </label>
+  </div>
+)}
+<div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
       <button onClick={() => setShowSidebar(false)}>Prekliči</button>
       <button
         onClick={async () => {
