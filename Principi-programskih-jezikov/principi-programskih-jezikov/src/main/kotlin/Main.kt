@@ -1,31 +1,29 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
+import api.openweather.OpenWeatherApi
+import kotlinx.coroutines.runBlocking
+import models.Location
+import models.Station
+import models.User
 
-@Composable
-@Preview
-fun App() {
-    var text by remember { mutableStateOf("Hello, World!") }
+fun main() = runBlocking {
+    // 1. Ustvari uporabnika
+    val user = User(username = "ana", email = "ana@example.com", password = "tajno")
 
-    MaterialTheme {
-        Button(onClick = {
-            text = "Hello, Desktop!"
-        }) {
-            Text(text)
-        }
-    }
-}
+    // 2. Lokacije
+    val location1 = Location(coordinates = listOf(15.6467, 46.5547))
+    val location2 = Location(coordinates = listOf(14.907955, 46.332981))
 
-fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
-        App()
-    }
+    // 3. Postaje
+    val station1 = Station(location = location1, weatherApi = OpenWeatherApi)
+    val station2 = Station(location = location2, weatherApi = OpenWeatherApi)
+
+    // 4. Dodaj postaji uporabniku
+    user.addStation(station1)
+    user.addStation(station2)
+
+    // 5. Izpiši uporabnika in vse njegove postaje
+    println("Uporabnik:")
+    println(user)
+    println()
+
+    user.printAllStations()
 }
