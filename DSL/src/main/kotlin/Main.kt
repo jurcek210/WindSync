@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import java.io.File
 import java.io.FileInputStream
 import com.google.gson.GsonBuilder
+import org.example.Lexer
+import java.io.ByteArrayInputStream
 
 /*toti test dela:
 * zelenamreza "primer" {
@@ -29,7 +31,8 @@ import com.google.gson.GsonBuilder
 
 
 fun main() {
-    val input = File("test1.txt")
+    /*
+    val input = File("test.txt")
     val inputStream = FileInputStream(input)
     val scanner = Scanner(inputStream)
     val parser = Parser(scanner)
@@ -55,7 +58,33 @@ fun main() {
     val gson = GsonBuilder().setPrettyPrinting().create()
     val jsonOutput = gson.toJson(geoJson)
 
+    println(jsonOutput)*/
+    val input = File("test1.txt")
+    val inputStream = FileInputStream(input)
+    val lexer = Lexer(inputStream)
+
+    val parser = Parser(lexer)
+
+
+    parser.parse()
+    val features = mutableListOf<GeoJsonFeature>()
+    for (cmd in commands) {
+        try {
+            val feature = cmd.eval()
+            features.add(feature)
+            println("? Eval: ${cmd.javaClass.simpleName}")
+        } catch (e: Exception) {
+            println("? Eval failed for ${cmd.javaClass.simpleName}: ${e.message}")
+        }
+    }
+
+    val geoJson = mapOf(
+        "type" to "FeatureCollection",
+        "features" to features
+    )
+
+    val gson = GsonBuilder().setPrettyPrinting().create()
+    val jsonOutput = gson.toJson(geoJson)
+
     println(jsonOutput)
-
-
 }

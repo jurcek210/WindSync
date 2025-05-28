@@ -1,8 +1,9 @@
 import AST.*
+import org.example.Lexer
 
 
 class Parser(
-    private val lex: Scanner,
+    private val lex: Lexer,
     private var currentToken: Token = lex.getToken()
 ) {
 
@@ -177,7 +178,7 @@ class Parser(
                 if (currentToken.symbol != Symbol.RPAREN) {
                     throw Error("Expected ')' at ${currentToken.row}:${currentToken.column}")
                 }
-                currentToken = lex.getToken()  // zelo pomembno, da ne pozabiš premakniti tokena naprej
+                currentToken = lex.getToken()
                 return inner
             }
             Symbol.COUNT -> {

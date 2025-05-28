@@ -1,4 +1,7 @@
+package org.example
+import Token
 import java.io.InputStream
+import Symbol
 
 class Lexer
     (inputStream: InputStream) {
@@ -191,10 +194,7 @@ class Lexer
 
 
 
-// rgb
-        setTransition(116, 'g', 181)
-        setTransition(181, 'b', 182)
-        setSymbol(182, Symbol.RGB)
+
 
 // value
         setTransition(0, 'v', 183)
@@ -225,10 +225,83 @@ class Lexer
         setTransition(200, 'l', 201)
         setTransition(201, 'e', 202)
         setSymbol(202, Symbol.CIRCLE)
+//barve
+        //orange
+
+        setTransition(0, 'o', 203)
+        setTransition(203, 'r', 204)
+        setTransition(204, 'a', 205)
+        setTransition(205, 'n', 206)
+        setTransition(206, 'g', 207)
+        setTransition(207, 'e', 208)
+        setSymbol(208, Symbol.ORANGE)
+
+        //collor
+
+        setTransition(61, 'l', 211)
+        setTransition(211, 'o', 212)
+        setTransition(212, 'r', 213)
+        setSymbol(213, Symbol.COLOR)
+
+        //red
+
+        setTransition(0, 'r', 214)
+        setTransition(214, 'e', 215)
+        setTransition(215, 'd', 216)
+        setSymbol(216, Symbol.RED)
+
+        //green
+
+        setTransition(35, 'r', 217)
+        setTransition(217, 'e', 218)
+        setTransition(218, 'e', 219)
+        setTransition(219, 'n', 220)
+        setSymbol(220, Symbol.GREEN)
+
+        //blue
+
+        setTransition(38, 'l', 221)
+        setTransition(221, 'u', 222)
+        setTransition(222, 'e', 223)
+        setSymbol(223, Symbol.CYAN)
+
+        //yellow
+
+        setTransition(0, 'y', 224)
+        setTransition(224, 'e', 225)
+        setTransition(225, 'l', 226)
+        setTransition(226, 'l', 227)
+        setTransition(227, 'o', 228)
+        setTransition(228, 'w', 229)
+        setSymbol(229, Symbol.YELLOW)
+
+        // cyan
+        setTransition(60, 'y', 230)
+        setTransition(230, 'a', 231)
+        setTransition(231, 'n', 232)
+        setSymbol(232, Symbol.BLUE)
+
+        //brown
+        setTransition(38, 'r', 233)
+        setTransition(233, 'o', 234)
+        setTransition(234, 'w', 235)
+        setTransition(235, 'n', 236)
+        setSymbol(236, Symbol.BROWN)
+
+        //black
+
+        setTransition(221, 'a', 238)
+        setTransition(238, 'c', 239)
+        setTransition(239, 'k', 240)
+        setSymbol(240, Symbol.BLACK)
 
 
 
 
+// rgb
+        setTransition(214, 'g', 217)
+        setTransition(217, 'b', 218)
+        setSymbol(218, Symbol.RGB)
 
         for (c in 'a'..'z') setTransition(300, c, 300)
         for (c in 'A'..'Z') setTransition(300, c, 300)
@@ -239,6 +312,28 @@ class Lexer
 
         setTransition(300, '_', 300)
         setSymbol(300, Symbol.VARIABLE)
+        val reservedPaths = listOf(24, 27, 32, 35, 38, 41, 46, 56, 60, 65, 69, 80, 183, 203, 214, 224)
+        for (state in reservedPaths) {
+            for (c in 'a'..'z') {
+                if (transitions[state][c.code] == 0) {
+                    setTransition(state, c, 300)
+                }
+            }
+            for (c in 'A'..'Z') {
+                if (transitions[state][c.code] == 0) {
+                    setTransition(state, c, 300)
+                }
+            }
+            for (c in '0'..'9') {
+                if (transitions[state][c.code] == 0) {
+                    setTransition(state, c, 300)
+                }
+            }
+            if (transitions[state]['_'.code] == 0) {
+                setTransition(state, '_', 300)
+            }
+        }
+
 
     }
 
@@ -321,11 +416,18 @@ class Lexer
         }
 
 
-        val finalText = buffer.toString().take(lastFinalIndex)
+        val rawText = buffer.toString().take(lastFinalIndex)
         val finalSymbol = symbol(lastFinalState)
+
+        val finalText = if (finalSymbol == Symbol.STRING)
+            rawText.removeSurrounding("\"")
+        else
+            rawText
+
 
 
         return Token(finalSymbol, finalText, startRow, startColumn)
 
     }
+
 }
