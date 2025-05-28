@@ -1,0 +1,54 @@
+zelenamreza "test" {
+    let center = point(15.0, 46.0);
+
+    let p1a = point(14.7, 46.2);
+    let p1b = point(14.8, 46.3);
+
+    let p2a = point(15.2, 46.2);
+    let p2b = point(15.3, 46.3);
+
+    let p3a = point(14.7, 45.7);
+    let p3b = point(14.8, 45.8);
+
+    baterija "b1" {
+        circle(center, 0.05);
+    };
+
+    proizvajalci "f1" {
+        box(p1a, p1b);
+    };
+
+    proizvajalci "f2" {
+        box(p2a, p2b);
+    };
+
+    proizvajalci "f3" {
+        box(p3a, p3b);
+    };
+
+    connect("b1", "f1");
+    connect("b1", "f2");
+    connect("b1", "f3");
+    connect("f1", "f2") bend 60;
+
+    let total = area("f1", "f2", "b1");
+    let number = count("box");
+
+    set("myValue" , 42);
+    let x = get("myValue");
+
+senzor "s1" {
+    marker(center) (color = red);
+};
+
+set("s1.color", "green");
+get("s1.color");
+kabel "k1" {
+
+    (14.7, 46.2) -- (14.8, 46.3);
+};
+
+
+
+
+};

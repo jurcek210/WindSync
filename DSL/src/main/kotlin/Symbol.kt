@@ -17,6 +17,7 @@ enum class Symbol {
     BEND,
     LPAREN,
     RPAREN,
+    EQUALS,
     BOX,
     CIRCLE,
     CONNECT,
@@ -52,5 +53,7 @@ enum class Symbol {
     RGB,
     LABEL,
     VALUE,
+    ERROR,
+    SYMBOL,
     IGNORE
 }

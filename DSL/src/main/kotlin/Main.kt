@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import java.io.File
 import java.io.FileInputStream
 import com.google.gson.GsonBuilder
-import java.io.ByteArrayInputStream
 
 /*toti test dela:
 * zelenamreza "primer" {
@@ -30,7 +29,6 @@ import java.io.ByteArrayInputStream
 
 
 fun main() {
-    /*
     val input = File("test1.txt")
     val inputStream = FileInputStream(input)
     val scanner = Scanner(inputStream)
@@ -58,17 +56,6 @@ fun main() {
     val jsonOutput = gson.toJson(geoJson)
 
     println(jsonOutput)
-*/
-    val input = """
-        let 123.45 "hello" -- + - * / : = ( ) { } . ; , 
-        false true set get box point marker line area count connect 
-        zelenamreza kabel proizvajalci senzor baterija rgb value label bend circle 
-    """.trimIndent()
-    val lexer = Lexer(ByteArrayInputStream(input.toByteArray()))
-    while (true) {
-        val token = lexer.getToken()
-        println(token)
-        if (token.symbol == Symbol.EOF) break
-    }
+
 
 }
