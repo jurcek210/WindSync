@@ -63,18 +63,34 @@ fun main() {
     val inputStream = FileInputStream(input)
     val lexer = Lexer(inputStream)
 
-    val parser = Parser(lexer)
+    println("Lexical analysis:")
+    val tokenList = mutableListOf<Token>()
+    while (true) {
+        val token = lexer.getToken()
+        tokenList.add(token)
+        println("  ${token.symbol} '${token.lexeme}' at (${token.row}, ${token.column})")
+        if (token.symbol.name == "EOF") break
+    }
 
+    val newLexer = Lexer(FileInputStream(input))
+    val parser = Parser(newLexer)
 
-    parser.parse()
+    println("Starting parse...")
+    try {
+        parser.parse()
+    } catch (e: Exception) {
+        println("Parser error: ${e.message}")
+        return
+    }
+
     val features = mutableListOf<GeoJsonFeature>()
     for (cmd in commands) {
         try {
             val feature = cmd.eval()
             features.add(feature)
-            println("? Eval: ${cmd.javaClass.simpleName}")
+            println("Eval: ${cmd.javaClass.simpleName}")
         } catch (e: Exception) {
-            println("? Eval failed for ${cmd.javaClass.simpleName}: ${e.message}")
+            println("Eval failed for ${cmd.javaClass.simpleName}: ${e.message}")
         }
     }
 
@@ -86,5 +102,6 @@ fun main() {
     val gson = GsonBuilder().setPrettyPrinting().create()
     val jsonOutput = gson.toJson(geoJson)
 
+    println("? Output:")
     println(jsonOutput)
 }
