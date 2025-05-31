@@ -3,7 +3,7 @@ name: Build and Deploy Backend
 on:
   push:
     branches:
-      - backend-deploy-test
+      - main
     paths:
       - 'splet/backend/**'
       - '.github/workflows/backend-docker-image.yml'
