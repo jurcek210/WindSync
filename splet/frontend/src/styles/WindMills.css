@@ -1,0 +1,136 @@
+/* WindMills.css */
+
+:root {
+  --primary-color: #2a9d8f;
+  --secondary-color: #264653;
+  --accent-color: #e9c46a;
+  --background-color: #f4f4f9;
+  --text-color: #333;
+  --font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background-color: var(--background-color);
+  font-family: var(--font-family);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 50px auto;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding: 40px 50px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    padding: 30px 20px;
+  }
+}
+
+.title {
+  grid-column: 1 / -1;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
+  transition: transform 0.4s ease;
+  cursor: pointer;
+}
+
+.image:hover {
+  transform: scale(1.05) rotate(1.5deg);
+}
+
+.infoPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1rem;
+  color: var(--secondary-color);
+}
+
+.infoRow strong {
+  width: 140px;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.highlight {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-top: 30px;
+  margin-bottom: 10px;
+  letter-spacing: 0.1em;
+}
+
+.paybackText {
+  font-style: italic;
+  color: #d9534f;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.graphContainer {
+  grid-column: 1 / -1;
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 2px solid var(--background-color);
+}
+
+/* Ikone (za primer) */
+.icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  fill: var(--primary-color);
+}
+
+/* Tooltip za hover na slike (če želiš dodati) */
+.image-tooltip {
+  position: relative;
+}
+
+.image-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}

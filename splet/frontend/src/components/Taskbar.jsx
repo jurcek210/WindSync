@@ -1,10 +1,15 @@
-import React from 'react';
-import '../styles/Taskbar.css';
+import React from "react";
+import "../styles/Taskbar.css";
 
 const Taskbar = ({ loggedIn, setLoggedIn, user, setUser }) => {
   return (
     <header className="taskbar">
       <div className="taskbar-logo">
+      <img
+        src="/photos/logo.png"
+        alt="WindSync logo"
+        className="logo-icon"
+      />
         <h1>WindSync</h1>
       </div>
       <nav className="taskbar-right">
@@ -21,14 +26,13 @@ const Taskbar = ({ loggedIn, setLoggedIn, user, setUser }) => {
                 await fetch("http://localhost:3001/api/logout", {
                   method: "POST",
                 });
-                localStorage.removeItem("token"); 
+                localStorage.removeItem("token");
                 setUser(null);
                 setLoggedIn(false);
               }}
             >
               LOGOUT
             </button>
-
           </>
         )}
         <a href="/zanimivosti">ZANIMIVOSTI</a>
