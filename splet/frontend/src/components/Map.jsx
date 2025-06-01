@@ -41,8 +41,19 @@ const fetchAverageWindSpeed = async (lat, lng) => {
     return null;
   }
 };
+const hexToRgba = (hex, alpha = 0.4) => {
+  hex = hex.replace("#", "");
+  
+  const bigint = parseInt(hex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const getRegionColor = (speed) => {
-  if (speed < 3.0) return "#ffffff"; 
+  if (speed < 3.0) return hexToRgba("#ffffff", 0.4); 
 
   const greenShades = [
     "#e0f2f1", "#b2dfdb", "#80cbc4", "#4db6ac",
@@ -56,14 +67,15 @@ const getRegionColor = (speed) => {
 
   if (speed < 6.0) {
     const idx = Math.floor((speed - 3.0) / (6.0 - 3.0) * greenShades.length);
-    return greenShades[Math.min(idx, greenShades.length - 1)];
+    return hexToRgba(greenShades[Math.min(idx, greenShades.length - 1)], 0.4);
   } else if (speed >= 6.0 && speed < 9.0) {
     const idx = Math.floor((speed - 6.0) / (9.0 - 6.0) * redShades.length);
-    return redShades[Math.min(idx, redShades.length - 1)];
+    return hexToRgba(redShades[Math.min(idx, redShades.length - 1)], 0.4);
   }
 
-  return "#bf360c";
+  return hexToRgba("#bf360c", 0.4);
 };
+
 
 const Legend = () => {
   const grades = [];
@@ -715,7 +727,7 @@ useEffect(() => {
                   coordinates: [clickedLatLng.lng, clickedLatLng.lat],
                 },
                 category: turbineCategory,
-                type: selectedSubOption,                
+                windMillType : selectedSubOption,
               },
               {
                 headers: {
@@ -826,7 +838,7 @@ useEffect(() => {
   )}
 </div>
 <div style={{ marginTop: "8px", textAlign: "center", color: "#cceeff" }}>
-  {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
+  {showWindmills ? "" : " "}
 </div>
 
       <button

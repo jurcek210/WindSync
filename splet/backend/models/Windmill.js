@@ -28,7 +28,7 @@ const windmillSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
-   measurements: [{
+  measurements: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "WindmillData" //placeholder ko se bo dalje dodajalo
   }],
@@ -36,7 +36,12 @@ const windmillSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  windMillType: {
+    type: String,
+    required: false,  // ali true, če mora biti obvezen
+  },
 });
+
 windmillSchema.index({ location: "2dsphere" });
 
 export default mongoose.model("Windmill", windmillSchema);

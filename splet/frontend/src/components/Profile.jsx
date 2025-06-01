@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "../styles/Profile.css";
 
+const images = {
+  tipA: "../../public/photos/image1.jpg",
+  tipB: "../../public/photos/image2.jpg",
+  tipC: "../../public/photos/image3.jpg",
+  tipY: "../../public/photos/Slika1.jpg",
+  tipZ: "../../public/photos/Slika2.jpg",
+  tipW: "../../public/photos/Slika3.jpg",
+};
+
 const Profile = () => {
   const [windmills, setWindmills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,10 +110,25 @@ const Profile = () => {
         {windmills.length === 0 ? (
           <p>Nimaš še dodanih veternic.</p>
         ) : (
-            <div className="windmill-grid">
-            {windmills.map((wm) => (
-              <div key={wm._id} className={`windmill-card ${wm.status ? "active" : "inactive"}`}>
+          <div className="windmill-grid">
+            {windmills.map((wm) => {
+              const imgSrc = images[wm.windMillType] || null;
+
+              return (
+                <div 
+              key={wm._id} 
+              className={`windmill-card ${wm.status ? "active" : "inactive"}`}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "20px",
+                padding: "10px",
+              }}
+            >
+              <div style={{ flex: 1 }}>
                 <h4>{wm.name}</h4>
+
                 <p>
                   <strong>Lokacija:</strong> {wm.location.coordinates[1].toFixed(4)},{" "}
                   {wm.location.coordinates[0].toFixed(4)}
@@ -117,40 +141,55 @@ const Profile = () => {
                   <strong>Status:</strong> {wm.status ? "Aktivna" : "Neaktivna"}
                 </p>
                 <div className="windmill-actions">
-                <button
-                  onClick={() => toggleStatus(wm._id, !wm.status)}
-                  style={{
-                    marginTop: "8px",
-                    padding: "6px 12px",
-                    backgroundColor: wm.status ? "#ef4444" : "#4caf50",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {wm.status ? "Deaktiviraj" : "Aktiviraj"}
-                </button>
-                <button
-                  onClick={() => deleteWindmill(wm._id)}
-                  style={{
-                    marginTop: "8px",
-                    padding: "6px 12px",
-                    backgroundColor: "#d32f2f",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Izbriši
-                </button>
+                  <button
+                    onClick={() => toggleStatus(wm._id, !wm.status)}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: wm.status ? "#ef4444" : "#4caf50",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      marginRight: "10px",
+                    }}
+                  >
+                    {wm.status ? "Deaktiviraj" : "Aktiviraj"}
+                  </button>
+                  <button
+                    onClick={() => deleteWindmill(wm._id)}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: "#d32f2f",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Izbriši
+                  </button>
                 </div>
               </div>
-              
-            ))}
-              </div>
-        
+
+              {imgSrc && (
+                <img
+                  src={imgSrc}
+                  alt={`Slika tipa ${wm.windMillType}`}
+                  style={{ 
+                    maxHeight: "120px", 
+                    height: "100%", 
+                    width: "auto", 
+                    borderRadius: "8px", 
+                    objectFit: "contain" 
+                  }}
+                />
+              )}
+            </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
