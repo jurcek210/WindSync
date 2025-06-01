@@ -59,6 +59,25 @@ const Profile = () => {
     }
   };
 
+  const deleteWindmill = async (id) => {
+    const confirmed = window.confirm("Ali res želiš izbrisati veternico?");
+    if (!confirmed) return;
+
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`http://localhost:3001/api/windmills/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setWindmills((prev) => prev.filter((w) => w._id !== id));
+    } catch (err) {
+      console.error("Napaka pri brisanju veternice:", err);
+      alert("Napaka pri brisanju veternice.");
+    }
+  };
+
   if (loading) return <p>Loading...</p>;
 
   return (
@@ -82,7 +101,7 @@ const Profile = () => {
         {windmills.length === 0 ? (
           <p>Nimaš še dodanih veternic.</p>
         ) : (
-          <div className="windmill-grid">
+            <div className="windmill-grid">
             {windmills.map((wm) => (
               <div key={wm._id} className={`windmill-card ${wm.status ? "active" : "inactive"}`}>
                 <h4>{wm.name}</h4>
@@ -97,6 +116,7 @@ const Profile = () => {
                 <p>
                   <strong>Status:</strong> {wm.status ? "Aktivna" : "Neaktivna"}
                 </p>
+                <div className="windmill-actions">
                 <button
                   onClick={() => toggleStatus(wm._id, !wm.status)}
                   style={{
@@ -111,9 +131,26 @@ const Profile = () => {
                 >
                   {wm.status ? "Deaktiviraj" : "Aktiviraj"}
                 </button>
+                <button
+                  onClick={() => deleteWindmill(wm._id)}
+                  style={{
+                    marginTop: "8px",
+                    padding: "6px 12px",
+                    backgroundColor: "#d32f2f",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Izbriši
+                </button>
+                </div>
               </div>
+              
             ))}
-          </div>
+              </div>
+        
         )}
       </div>
     </div>

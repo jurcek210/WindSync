@@ -93,3 +93,9 @@
   margin: 0.4rem 0;
   color: var(--dark-text);
 }
+
+.windmill-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
