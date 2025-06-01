@@ -57,37 +57,66 @@ function Wind({ lat, lng }) {
   }, [lat, lng]);
 
   return (
-    <div style={{ padding: "12px 0" }}>
-      <h3 style={{ marginBottom: 12, fontWeight: "600", color: "#333" }}>
-        Graf hitrosti vetra (mesečno)
+    <div
+      style={{
+        padding: "12px 0",
+        background: "linear-gradient(135deg, #f0f0f0, #ffffff)",
+        borderRadius: "12px",
+        boxShadow: "0 0 15px rgba(0, 200, 255, 0.2)",
+        color: "#007bff",
+      }}
+    >
+      <h3
+        style={{
+          marginBottom: 12,
+          fontWeight: "600",
+          color: "#007bff",
+          textShadow: "0 0 6px rgba(0, 123, 255, 0.3)"
+        }}
+      >
+        🌬️ Graf hitrosti vetra (mesečno)
       </h3>
       <div style={{ width: "100%", height: 250 }}>
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="#e0e0e0" strokeDasharray="4 4" />
+            <CartesianGrid stroke="#00c8ff44" strokeDasharray="4 4" />
             <XAxis
               dataKey="month"
-              tick={{ fill: "#666", fontSize: 12 }}
-              tickFormatter={(tick) => tick.slice(5)} // prikaže samo MM (mesec)
-              padding={{ left: 10, right: 10 }}
+              tick={{ fill: "#007bff", fontSize: 12 }}
+              tickFormatter={(tick) => tick.slice(5)}
             />
             <YAxis
               unit=" m/s"
-              tick={{ fill: "#666", fontSize: 12 }}
+              tick={{ fill: "#007bff", fontSize: 12 }}
               domain={['auto', 'auto']}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "#f9f9f9", borderRadius: 6, borderColor: "#ccc" }}
-              labelStyle={{ color: "#555", fontWeight: "600" }}
+              contentStyle={{
+                backgroundColor: "#ffffffcc",
+                borderRadius: 6,
+                borderColor: "#00c8ff88",
+                color: "#007bff"
+              }}
+              labelStyle={{ color: "#007bff", fontWeight: "600" }}
               formatter={(value) => `${value} m/s`}
             />
             <Line
               type="monotone"
               dataKey="average"
-              stroke="#4caf50"
+              stroke="#00c8ff"
               strokeWidth={3}
-              dot={{ r: 4, stroke: "#4caf50", strokeWidth: 2, fill: "white" }}
-              activeDot={{ r: 6 }}
+              dot={{
+                r: 4,
+                stroke: "#00c8ff",
+                strokeWidth: 2,
+                fill: "#ffffff"
+              }}
+              activeDot={{
+                r: 6,
+                fill: "#00c8ff",
+                stroke: "#00c8ff",
+                strokeWidth: 2
+              }}
             />
           </LineChart>
         </ResponsiveContainer>
