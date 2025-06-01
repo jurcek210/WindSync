@@ -42,31 +42,26 @@ const fetchAverageWindSpeed = async (lat, lng) => {
   }
 };
 const getRegionColor = (speed) => {
-  if (speed < 3.0) return "#ffffff"; // Bela za zelo šibek veter
+  if (speed < 3.0) return "#ffffff"; 
 
-  // Odtenki zelene za šibek do zmeren veter
   const greenShades = [
     "#e0f2f1", "#b2dfdb", "#80cbc4", "#4db6ac",
     "#26a69a", "#009688", "#00897b", "#00796b"
   ];
 
-  // Odtenki rdeče za močan veter
   const redShades = [
     "#ffccbc", "#ffab91", "#ff8a65", "#ff7043",
     "#f4511e", "#e64a19", "#d84315", "#bf360c"
   ];
 
   if (speed < 6.0) {
-    // Linearno poiščemo ustrezno zeleno barvo
     const idx = Math.floor((speed - 3.0) / (6.0 - 3.0) * greenShades.length);
     return greenShades[Math.min(idx, greenShades.length - 1)];
   } else if (speed >= 6.0 && speed < 9.0) {
-    // Linearno poiščemo ustrezno rdečo barvo
     const idx = Math.floor((speed - 6.0) / (9.0 - 6.0) * redShades.length);
     return redShades[Math.min(idx, redShades.length - 1)];
   }
 
-  // Najtemnejša rdeča za 9.0+
   return "#bf360c";
 };
 
@@ -311,9 +306,9 @@ useEffect(() => {
           <GeoJSON
             data={regionData}
             style={(feature) => {
-              const speed = regionWindSpeeds[feature.properties.NAME_2]; // prilagodi glede na ključe v tvojem JSON-u
+              const speed = regionWindSpeeds[feature.properties.NAME_2]; 
               return {
-                fillColor: speed ? getRegionColor(speed) : "#ccc", // siva za manjkajoče podatke
+                fillColor: speed ? getRegionColor(speed) : "#ccc", 
                 fillOpacity: 0.6,
                 color: "#444",
                 weight: 1,
@@ -344,200 +339,336 @@ useEffect(() => {
       right: 20,
       width: "420px",
       height: "100%",
-      backgroundColor: "white",
-      borderLeft: "1px solid #ccc",
-      boxShadow: "-4px 0 12px rgba(0,0,0,0.1)",
-      padding: "20px",
+      backgroundColor: "#f9faff", 
+      borderLeft: "1px solid #ddd",
+      boxShadow: "-6px 0 20px rgba(0,0,0,0.1)",
+      padding: "24px",
       zIndex: 1000,
       overflowY: "auto",
+      color: "#222",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      borderRadius: "0 8px 8px 0",
+      transition: "transform 0.3s ease",
     }}
   >
     <button
       onClick={() => setShowSidebar(false)}
       style={{
         position: "absolute",
-        top: "10px",
-        right: "10px",
+        top: "16px",
+        right: "16px",
         background: "none",
         border: "none",
-        fontSize: "24px",
+        fontSize: "28px",
         fontWeight: "bold",
         cursor: "pointer",
-        color: "#333",
+        color: "#666",
+        transition: "color 0.2s ease",
       }}
       aria-label="Zapri meni"
+      onMouseEnter={(e) => (e.currentTarget.style.color = "#333")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
     >
       ×
     </button>
 
-    <h2>Dodaj veternico</h2>
+    <h2 style={{ marginBottom: "20px", color: "#0078d7", fontWeight: "700" }}>
+      Dodaj veternico
+    </h2>
+
     <input
       placeholder="Ime"
       value={name}
       onChange={(e) => setName(e.target.value)}
-      style={{ width: "100%", marginBottom: "8px" }}
+      style={{
+        width: "100%",
+        marginBottom: "12px",
+        padding: "10px 12px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        backgroundColor: "#fff",
+        color: "#222",
+        fontSize: "16px",
+        outline: "none",
+        transition: "border-color 0.3s ease",
+      }}
+      onFocus={(e) => (e.currentTarget.style.borderColor = "#0078d7")}
+      onBlur={(e) => (e.currentTarget.style.borderColor = "#ccc")}
     />
-    <p style={{ marginBottom: "8px" }}>
-      <strong>Povprečna hitrost vetra:</strong>{" "}
+
+    <p style={{ marginBottom: "20px", fontSize: "15px" }}>
+      <strong style={{ color: "#0078d7" }}>Povprečna hitrost vetra:</strong>{" "}
       {windSpeed ? `${windSpeed} m/s` : "Ni podatka"}
     </p>
+<div style={{ marginBottom: "20px", display: "flex", gap: "16px" }}>
+  {[
+    { value: "domaca", label: "Domača raba" },
+    { value: "vecja", label: "Večja raba" },
+  ].map(({ value, label }) => {
+    const isSelected = turbineCategory === value;
+    return (
+      <button
+        key={value}
+        type="button"
+        onClick={() => {
+          setTurbineCategory(value);
+          setSelectedSubOption("");
+        }}
+        style={{
+          padding: "10px 20px",
+          fontSize: "16px",
+          borderRadius: "8px",
+          border: isSelected ? "2px solid #0078d7" : "1px solid #ccc",
+          backgroundColor: isSelected ? "#e6f0ff" : "#fff",
+          color: isSelected ? "#0078d7" : "#444",
+          cursor: "pointer",
+          transition: "all 0.3s ease",
+          boxShadow: isSelected ? "0 0 8px rgba(0, 120, 215, 0.5)" : "none",
+          userSelect: "none",
+        }}
+        aria-pressed={isSelected}
+      >
+        {label}
+      </button>
+    );
+  })}
+</div>
 
-    {/* Izbira glavne kategorije */}
-    <div style={{ marginBottom: "12px" }}>
-      <label>
-        <input
-          type="radio"
-          name="category"
-          value="domaca"
-          checked={turbineCategory === "domaca"}
-          onChange={() => {
-            setTurbineCategory("domaca");
-            setSelectedSubOption(""); // reset podizbire
-          }}
-        />
-        {" "}Domača raba
-      </label>
-      <br />
-      <label>
-        <input
-          type="radio"
-          name="category"
-          value="vecja"
-          checked={turbineCategory === "vecja"}
-          onChange={() => {
-            setTurbineCategory("vecja");
-            setSelectedSubOption("");
-          }}
-        />
-        {" "}Večja raba
-      </label>
-    </div>
 
-    {/* Podmožnosti */}
 {turbineCategory === "domaca" && (
-  <div style={{ marginLeft: "16px", marginBottom: "12px" }}>
-    <label>
-      <input
-        type="radio"
-        name="subOption"
-        value="tipA"
-        checked={selectedSubOption === "tipA"}
-        onChange={() => setSelectedSubOption("tipA")}
-      />{" "}
-      <a
-        href={`/WindMils/1/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng} `}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginRight: "8px" }}
-      >
-        Poglej več
-      </a>
-       Bornay 1200 4000$ | 1200 W
-    </label>
-    <br />
-    <label>
-      <input
-        type="radio"
-        name="subOption"
-        value="tipB"
-        checked={selectedSubOption === "tipB"}
-        onChange={() => setSelectedSubOption("tipB")}
-      />{" "}
-      <a
-        href={`/WindMils/2/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng} `}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginRight: "8px" }}
-      >
-        Poglej več
-      </a>
-      Missouri Freedom II Wind Turbine 200$ | 2.000 W
-    </label>
-    <br />
-    <label>
-      <input
-        type="radio"
-        name="subOption"
-        value="tipC"
-        checked={selectedSubOption === "tipC"}
-        onChange={() => setSelectedSubOption("tipC")}
-      />{" "}
-      <a
-        href={`/WindMils/3/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng} `}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginRight: "8px" }}
-      >
-        Poglej več
-      </a>
-      Tumo-Int 1200W Horizontal Wind Turbine 1500$ | 1220 W
-    </label>
+  <div style={{ marginLeft: "16px", marginBottom: "24px" }}>
+    {[
+      {
+        value: "tipA",
+        href: `/WindMils/1/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`,
+        label: "Bornay 1200 4000$ | 1200 W",
+      },
+      {
+        value: "tipB",
+        href: `/WindMils/2/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`,
+        label: "Missouri Freedom II Wind Turbine 200$ | 2.000 W",
+      },
+      {
+        value: "tipC",
+        href: `/WindMils/3/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`,
+        label: "Tumo-Int 1200W Horizontal Wind Turbine 1500$ | 1220 W",
+      },
+    ].map(({ value, href, label }) => {
+      const isSelected = selectedSubOption === value;
+      return (
+        <div
+          key={value}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "12px",
+            cursor: "pointer",
+            fontSize: "14px",
+            border: isSelected ? "2px solid #0078d7" : "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "10px 12px",
+            backgroundColor: isSelected ? "#e6f0ff" : "transparent",
+            color: isSelected ? "#0078d7" : "#222",
+            transition: "all 0.3s ease",
+            userSelect: "none",
+            gap: "12px",
+          }}
+          onClick={() => setSelectedSubOption(value)}
+          onMouseEnter={e => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = "#f0f7ff";
+          }}
+          onMouseLeave={e => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setSelectedSubOption(value);
+            }
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+            <button
+              type="button"
+              aria-pressed={isSelected}
+              style={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                border: isSelected ? "6px solid #0078d7" : "2px solid #ccc",
+                backgroundColor: isSelected ? "#0078d7" : "transparent",
+                cursor: "pointer",
+                padding: 0,
+                margin: 0,
+                flexShrink: 0,
+              }}
+              onClick={e => {
+                e.stopPropagation();
+                setSelectedSubOption(value);
+              }}
+            />
+            <span>{label}</span>
+          </div>
+
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: isSelected ? "#005ea1" : "#0078d7",
+              textDecoration: "none",
+              fontWeight: "600",
+              whiteSpace: "nowrap",
+              transition: "text-decoration 0.3s ease",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+            onClick={e => e.stopPropagation()}
+          >
+            Poglej več →
+          </a>
+        </div>
+      );
+    })}
+  </div>
+)}
+
+{turbineCategory === "vecja" && (
+  <div style={{ marginLeft: "16px", marginBottom: "24px" }}>
+    {[
+      {
+        value: "tipY",
+        href: `/WindMilsBig/1/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`,
+        label: "Ampair 6000 Wind Turbine 20000$ | 6 kW",
+      },
+      {
+        value: "tipZ",
+        href: `/WindMilsBig/2/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`,
+        label: "Eocycle EOX S-15 40000$ | 15 kW",
+      },
+      {
+        value: "tipW",
+        href: `/WindMilsBig/3/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`,
+        label: "Kestrel e400i 12000$ | 3,5 kW",
+      },
+    ].map(({ value, href, label }) => {
+      const isSelected = selectedSubOption === value;
+      return (
+        <div
+          key={value}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "12px",
+            cursor: "pointer",
+            fontSize: "14px",
+            border: isSelected ? "2px solid #0078d7" : "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "10px 12px",
+            backgroundColor: isSelected ? "#e6f0ff" : "transparent",
+            color: isSelected ? "#0078d7" : "#222",
+            transition: "all 0.3s ease",
+            userSelect: "none",
+            gap: "12px",
+          }}
+          onClick={() => setSelectedSubOption(value)}
+          onMouseEnter={e => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = "#f0f7ff";
+          }}
+          onMouseLeave={e => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setSelectedSubOption(value);
+            }
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+            <button
+              type="button"
+              aria-pressed={isSelected}
+              style={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                border: isSelected ? "6px solid #0078d7" : "2px solid #ccc",
+                backgroundColor: isSelected ? "#0078d7" : "transparent",
+                cursor: "pointer",
+                padding: 0,
+                margin: 0,
+                flexShrink: 0,
+              }}
+              onClick={e => {
+                e.stopPropagation();
+                setSelectedSubOption(value);
+              }}
+            />
+            <span>{label}</span>
+          </div>
+
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: isSelected ? "#005ea1" : "#0078d7",
+              textDecoration: "none",
+              fontWeight: "600",
+              whiteSpace: "nowrap",
+              transition: "text-decoration 0.3s ease",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+            onClick={e => e.stopPropagation()}
+          >
+            Poglej več →
+          </a>
+        </div>
+      );
+    })}
   </div>
 )}
 
 
-   {turbineCategory === "vecja" && (
-  <div style={{ marginLeft: "16px", marginBottom: "12px" }}>
-    <label>
-      <input
-        type="radio"
-        name="subOption"
-        value="tipY"
-        checked={selectedSubOption === "tipY"}
-        onChange={() => setSelectedSubOption("tipY")}
-      />{" "}
-      <a
-        href={`/WindMilsBig/1/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginRight: "8px" }}
+
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        gap: "12px",
+      }}
+    >
+      <button
+        onClick={() => setShowSidebar(false)}
+        style={{
+          backgroundColor: "transparent",
+          border: "1.5px solid #0078d7",
+          borderRadius: "6px",
+          color: "#0078d7",
+          padding: "8px 16px",
+          fontWeight: "600",
+          cursor: "pointer",
+          transition: "background-color 0.3s ease, color 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "#0078d7";
+          e.currentTarget.style.color = "#fff";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+          e.currentTarget.style.color = "#0078d7";
+        }}
       >
-        Poglej več
-      </a>
-       Ampair 6000 Wind Turbine 20000$ | 6 kW
-    </label>
-    <br />
-    <label>
-      <input
-        type="radio"
-        name="subOption"
-        value="tipZ"
-        checked={selectedSubOption === "tipZ"}
-        onChange={() => setSelectedSubOption("tipZ")}
-      />{" "}
-      <a
-        href={`/WindMilsBig/2/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginRight: "8px" }}
-      >
-        Poglej več
-      </a>
-      Eocycle EOX S-15 40000$ | 15 kW
-    </label>
-    <br />
-    <label>
-      <input
-        type="radio"
-        name="subOption"
-        value="tipW"
-        checked={selectedSubOption === "tipW"}
-        onChange={() => setSelectedSubOption("tipW")}
-      />{" "}
-      <a
-        href={`/WindMilsBig/3/${windSpeed}/${clickedLatLng.lat}/${clickedLatLng.lng}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginRight: "8px" }}
-      >
-        Poglej več
-      </a>
-      Kestrel e400i 12000$ | 3,5 kW
-    </label>
-  </div>
-)}
-<div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-      <button onClick={() => setShowSidebar(false)}>Prekliči</button>
+        Prekliči
+      </button>
       <button
         onClick={async () => {
           try {
@@ -575,10 +706,17 @@ useEffect(() => {
           }
         }}
         style={{
-          backgroundColor: "#4caf50",
+          backgroundColor: "#0078d7",
+          border: "none",
+          borderRadius: "6px",
           color: "white",
-          padding: "4px 8px",
+          padding: "8px 16px",
+          fontWeight: "600",
+          cursor: "pointer",
+          transition: "background-color 0.3s ease",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#005ea1")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0078d7")}
       >
         Shrani
       </button>
@@ -588,45 +726,93 @@ useEffect(() => {
   </div>
 )}
 
+
       {/* Gumb za preklop prikaza veternic */}
+    <div
+      style={{
+        position: "absolute",
+        top: "10px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        display: "flex",
+        gap: "24px",
+        zIndex: 1001,
+      }}
+    >
       <button
         onClick={() => setShowWindmills((prev) => !prev)}
         style={{
-          position: "absolute",
-          top: "0px",
-          right: "90px",
-          backgroundColor: "#4caf50",
-          color: "white",
-          border: "none",
-          padding: "10px 20px",
-          fontSize: "16px",
-          borderRadius: "4px",
+          background: "linear-gradient(135deg, #0af, #005f9e)",
+          color: "#cceeff",
+          border: "1.5px solid #3399ff",
+          padding: "16px 32px",
+          fontSize: "18px",
+          fontWeight: "600",
+          borderRadius: "10px",
           cursor: "pointer",
-          zIndex: 1001,
+          boxShadow: "0 0 6px rgba(51, 153, 255, 0.4)",
+          textShadow: "0 0 4px rgba(204, 238, 255, 0.6)",
+          transition: "all 0.3s ease",
+          letterSpacing: "1px",
+          userSelect: "none",
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = "linear-gradient(135deg, #33adff, #007acc)";
+          e.currentTarget.style.boxShadow = "0 0 10px rgba(51, 153, 255, 0.6)";
+          e.currentTarget.style.color = "#e0f3ff";
+          e.currentTarget.style.textShadow = "0 0 6px rgba(204, 238, 255, 0.8)";
+          e.currentTarget.style.transform = "scale(1.04)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = "linear-gradient(135deg, #0af, #005f9e)";
+          e.currentTarget.style.boxShadow = "0 0 6px rgba(51, 153, 255, 0.4)";
+          e.currentTarget.style.color = "#cceeff";
+          e.currentTarget.style.textShadow = "0 0 4px rgba(204, 238, 255, 0.6)";
+          e.currentTarget.style.transform = "scale(1)";
         }}
       >
         {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
       </button>
+
       <button
-      onClick={() => setShowRegions((prev) => !prev)}
-      style={{
-        position: "absolute",
-        top: "0px",
-        right: "240px",
-        backgroundColor: "#9c27b0",
-        color: "white",
-        border: "none",
-        padding: "10px 20px",
-        fontSize: "16px",
-        borderRadius: "4px",
-        cursor: "pointer",
-        zIndex: 1001,
-      }}
+        onClick={() => setShowRegions((prev) => !prev)}
+        style={{
+          background: "linear-gradient(135deg, #b164b1, #7a3f7a)",
+          color: "#e9c8ef",
+          border: "1.5px solid #bf7fcf",
+          padding: "16px 32px",
+          fontSize: "18px",
+          fontWeight: "600",
+          borderRadius: "10px",
+          cursor: "pointer",
+          boxShadow: "0 0 6px rgba(191, 127, 207, 0.4)",
+          textShadow: "0 0 4px rgba(233, 200, 239, 0.6)",
+          transition: "all 0.3s ease",
+          letterSpacing: "1px",
+          userSelect: "none",
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = "linear-gradient(135deg, #cc94cc, #874987)";
+          e.currentTarget.style.boxShadow = "0 0 10px rgba(191, 127, 207, 0.6)";
+          e.currentTarget.style.color = "#f5d6fb";
+          e.currentTarget.style.textShadow = "0 0 6px rgba(233, 200, 239, 0.8)";
+          e.currentTarget.style.transform = "scale(1.04)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = "linear-gradient(135deg, #b164b1, #7a3f7a)";
+          e.currentTarget.style.boxShadow = "0 0 6px rgba(191, 127, 207, 0.4)";
+          e.currentTarget.style.color = "#e9c8ef";
+          e.currentTarget.style.textShadow = "0 0 4px rgba(233, 200, 239, 0.6)";
+          e.currentTarget.style.transform = "scale(1)";
+        }}
       >
         {showRegions ? "Skrij mapo" : "Pokaži mapo"}
-      </button>                
-      {showRegions && <Legend />}
-        
+      </button>
+    </div>
+
+    {showRegions && <Legend />}
+
+
 
     </div>
   );

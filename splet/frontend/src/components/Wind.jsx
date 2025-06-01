@@ -57,16 +57,38 @@ function Wind({ lat, lng }) {
   }, [lat, lng]);
 
   return (
-    <div>
-      <h3>Graf hitrosti vetra (mesečno)</h3>
-      <div style={{ width: "100%", height: 200 }}>
+    <div style={{ padding: "12px 0" }}>
+      <h3 style={{ marginBottom: 12, fontWeight: "600", color: "#333" }}>
+        Graf hitrosti vetra (mesečno)
+      </h3>
+      <div style={{ width: "100%", height: 250 }}>
         <ResponsiveContainer>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis unit=" m/s" />
-            <Tooltip />
-            <Line type="monotone" dataKey="average" stroke="#4caf50" />
+          <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="#e0e0e0" strokeDasharray="4 4" />
+            <XAxis
+              dataKey="month"
+              tick={{ fill: "#666", fontSize: 12 }}
+              tickFormatter={(tick) => tick.slice(5)} // prikaže samo MM (mesec)
+              padding={{ left: 10, right: 10 }}
+            />
+            <YAxis
+              unit=" m/s"
+              tick={{ fill: "#666", fontSize: 12 }}
+              domain={['auto', 'auto']}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#f9f9f9", borderRadius: 6, borderColor: "#ccc" }}
+              labelStyle={{ color: "#555", fontWeight: "600" }}
+              formatter={(value) => `${value} m/s`}
+            />
+            <Line
+              type="monotone"
+              dataKey="average"
+              stroke="#4caf50"
+              strokeWidth={3}
+              dot={{ r: 4, stroke: "#4caf50", strokeWidth: 2, fill: "white" }}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

@@ -7,15 +7,16 @@ function DayliEnergy({ windmill }) {
   const [weatherDesc, setWeatherDesc] = useState("");
   const [temperature, setTemperature] = useState(null);
   const [windSpeed, setWindSpeed] = useState(null);
+  const [windDirection, setWindDirection] = useState(null);
 
   const handleClick = async () => {
     if (energy || error) {
-      // Če so podatki že prikazani, jih skrijemo
       setEnergy(null);
       setError(null);
       setWeatherDesc("");
       setTemperature(null);
       setWindSpeed(null);
+      setWindDirection(null);
       return;
     }
 
@@ -26,7 +27,6 @@ function DayliEnergy({ windmill }) {
     const [lng, lat] = coordinates;
 
     const API_KEY = "7f24a8b33318df879eda6cd00f4f5716";
-
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${API_KEY}&units=metric`;
 
     try {
@@ -37,6 +37,7 @@ function DayliEnergy({ windmill }) {
       const data = await response.json();
 
       const windSpeedData = data.wind?.speed ?? 0;
+      const windDirData = data.wind?.deg ?? null;
       const tempData = data.main?.temp ?? null;
       const desc = data.weather && data.weather.length > 0 ? data.weather[0].description : "";
 
@@ -46,11 +47,41 @@ function DayliEnergy({ windmill }) {
       setWeatherDesc(desc);
       setTemperature(tempData);
       setWindSpeed(windSpeedData);
+      setWindDirection(windDirData);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getWeatherIcon = () => {
+    const desc = weatherDesc.toLowerCase();
+    if (desc.includes("sun") || desc.includes("clear")) {
+      return "☀️";
+    } else if (desc.includes("cloud")) {
+      return "☁️";
+    } else if (desc.includes("rain") || desc.includes("drizzle")) {
+      return "🌧️";
+    } else if (desc.includes("mist") || desc.includes("fog") || desc.includes("haze")) {
+      return "🌫️";
+    } else {
+      return "🌈";
+    }
+  };
+
+  // Funkcija za določanje puščice glede na kot
+  const getWindDirectionArrow = (deg) => {
+    if (deg === null) return "";
+    if (deg >= 337.5 || deg < 22.5) return "⬆️";
+    if (deg >= 22.5 && deg < 67.5) return "↗️";
+    if (deg >= 67.5 && deg < 112.5) return "➡️";
+    if (deg >= 112.5 && deg < 157.5) return "↘️";
+    if (deg >= 157.5 && deg < 202.5) return "⬇️";
+    if (deg >= 202.5 && deg < 247.5) return "↙️";
+    if (deg >= 247.5 && deg < 292.5) return "⬅️";
+    if (deg >= 292.5 && deg < 337.5) return "↖️";
+    return "";
   };
 
   return (
@@ -59,12 +90,15 @@ function DayliEnergy({ windmill }) {
         onClick={handleClick}
         disabled={loading}
         style={{
-          padding: "4px 8px",
+          padding: "8px 16px",
           background: "#4caf50",
           color: "#fff",
           border: "none",
           borderRadius: "4px",
           cursor: loading ? "not-allowed" : "pointer",
+          fontWeight: "600",
+          fontSize: "14px",
+          transition: "all 0.3s ease",
         }}
       >
         {loading
@@ -73,14 +107,34 @@ function DayliEnergy({ windmill }) {
           ? "Skrij energijo in vreme"
           : "Prikaži energijo za danes"}
       </button>
+
       {(energy || error) && (
-        <div style={{ marginTop: "8px", fontWeight: "bold" }}>
+        <div
+          style={{
+            marginTop: "12px",
+            fontWeight: "bold",
+            backgroundColor: "#f0f0f0",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            color: "#333",
+          }}
+        >
           {energy && (
             <>
-              <p>Danes bi naredila: {energy} kWh</p>
-              <p>Vreme: {weatherDesc.charAt(0).toUpperCase() + weatherDesc.slice(1)}</p>
+              <p>
+                Energija danes: ⚡ {energy} kWh
+              </p>
+              <p>
+                Vreme: {getWeatherIcon()}{" "}
+                {weatherDesc.charAt(0).toUpperCase() + weatherDesc.slice(1)}
+              </p>
               <p>Temperatura: {temperature} °C</p>
-              <p>Hitrost vetra: {windSpeed} m/s</p>
+              <p>
+                Hitrost vetra: {windSpeed} m/s{" "}
+                {windDirection !== null && (
+                  <span>{getWindDirectionArrow(windDirection)}</span>
+                )}
+              </p>
             </>
           )}
           {error && <p style={{ color: "red" }}>Napaka: {error}</p>}
