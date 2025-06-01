@@ -9,6 +9,7 @@ import axios from "axios";
 import Zanimivosti from './components/Zanimivosti'; // prilagodi pot glede na strukturo
 import WindMils from "./components/WindMils";
 import WindMilsBig from "./components/WindMilsBig";
+import Profile from "./components/Profile";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -21,7 +22,7 @@ function App() {
       if (!token) {
         setUser(null);
         setLoggedIn(false);
-         setAuthChecked(true);
+        setAuthChecked(true);
         return;
       }
 
@@ -74,6 +75,7 @@ function App() {
         <Route path="/zanimivosti" element={<Zanimivosti />} />
         <Route path="/WindMils/:id/:windSpeed/:lat/:lng" element={<WindMils />} />
         <Route path="/WindMilsBig/:id/:windSpeed/:lat/:lng" element={<WindMilsBig />} />
+        <Route path="/profile" element={<Profile />} />
 
 
         <Route path="/register" element={<Register />} />

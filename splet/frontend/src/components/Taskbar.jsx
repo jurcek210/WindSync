@@ -20,7 +20,8 @@ const Taskbar = ({ loggedIn, setLoggedIn, user, setUser }) => {
             <a href="/register">REGISTER</a>
           </>
         ) : (
-          <>
+            <>
+            <a href="/profile">MOJ PROFIL</a>
             <button
               onClick={async () => {
                 await fetch("http://localhost:3001/api/logout", {

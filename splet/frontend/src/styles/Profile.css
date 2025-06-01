@@ -1,0 +1,87 @@
+.profile-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+.profile-title {
+  color: var(--blue);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.profile-header {
+  background-color: var(--light-blue);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.profile-header h2 {
+  color: var(--blue);
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.profile-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.profile-label {
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--dark-text);
+  min-width: 100px;
+}
+
+.profile-value {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--subtle-text);
+}
+
+.windmill-section h3 {
+  color: var(--green);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.windmill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.windmill-card {
+  background-color: var(--light-green);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.windmill-card:hover {
+  transform: scale(1.01);
+}
+
+.windmill-card h4 {
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+}
+
+.windmill-card p {
+  margin: 0.4rem 0;
+  color: var(--dark-text);
+}

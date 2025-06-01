@@ -134,9 +134,17 @@ const Map = ({ loggedIn }) => {
   const [showRegions, setShowRegions] = useState(true);
   const [turbineCategory, setTurbineCategory] = useState("domaca");
   const [selectedSubOption, setSelectedSubOption] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
  
   const windmillIcon = new L.Icon({
     iconUrl: "/photos/windmill.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
+  const myWindmillIcon = new L.Icon({
+    iconUrl: "/photos/my_windmill.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -32],
@@ -163,6 +171,49 @@ useEffect(() => {
   fetchData();
 }, []);
 
+  useEffect(() => {
+  const fetchUser = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await axios.get("http://localhost:3001/api/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setCurrentUser(res.data.user);
+    } catch (err) {
+      console.error("Napaka pri pridobivanju uporabnika", err);
+    }
+  };
+
+  fetchUser();
+  }, []);
+  
+  const deleteWindmill = async (id) => {
+  const confirmed = window.confirm("Ali res želiš izbrisati veternico?");
+  if (!confirmed) return;
+
+  try {
+    const res = await axios.delete(`http://localhost:3001/api/windmills/${id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      }
+    });
+
+    if (res.status === 200) {
+      setWindmills((prev) => prev.filter((w) => w._id !== id));
+    } else {
+      alert(res.data.message || "Napaka pri brisanju veternice");
+    }
+
+  } catch (err) {
+    console.error("Napaka pri axios.delete:", err);
+    alert("Napaka pri pošiljanju zahteve");
+  }
+};
+  
   useEffect(() => {
     const fetchWindmills = async () => {
       try {
@@ -219,20 +270,43 @@ useEffect(() => {
         />
 
         {/* Prikaz veternic */}
-        {showWindmills && windmills.map((wm) => (
-          <Marker
-            key={wm._id}
-            position={[wm.location.coordinates[1], wm.location.coordinates[0]]}
-            icon={windmillIcon}
-          >
-          <Popup>
-            <strong>{wm.name}</strong><br />
-            Status: {wm.status ? "Aktivna" : "Neaktivna"}<br />
-            Hitrost: {wm.windSpeed ?? "ni podatka"} m/s
-            <DayliEnergy windmill={wm} />
-          </Popup>
-          </Marker>
-        ))}
+        {showWindmills && windmills.map((wm) => {
+          const isMine = currentUser && wm.owner === currentUser._id;
+
+          return (
+            <Marker
+              key={wm._id}
+              position={[wm.location.coordinates[1], wm.location.coordinates[0]]}
+              icon={isMine ? myWindmillIcon : windmillIcon}
+            >
+              <Popup>
+                <strong>{wm.name}</strong><br />
+                Status: {wm.status ? "Aktivna" : "Neaktivna"}<br />
+                Hitrost: {wm.windSpeed ?? "ni podatka"} m/s
+                <DayliEnergy windmill={wm} />
+
+                {isMine && (
+                  <div style={{ marginTop: "8px" }}>
+                    <button
+                      onClick={() => deleteWindmill(wm._id)}
+                      style={{
+                        backgroundColor: "#ef4444",
+                        color: "white",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontSize: "14px"
+                      }}
+                    >
+                      Izbriši
+                    </button>
+                  </div>
+                )}
+              </Popup>
+            </Marker>
+          );
+        })}
         {regionData && showRegions && (
           <GeoJSON
             data={regionData}
