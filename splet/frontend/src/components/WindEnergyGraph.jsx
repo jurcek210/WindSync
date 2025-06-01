@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import '../styles/WindMills.css';
 import {
   LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
+import "../styles/WindMills.css"; // Stil za futuristični videz
 
 function WindEnergyGraph({ lat, lng, powerKW }) {
   const [data, setData] = useState([]);
@@ -60,19 +62,32 @@ function WindEnergyGraph({ lat, lng, powerKW }) {
   }, [lat, lng, powerKW]);
 
   return (
-    <div>
-      <h3>Graf mesečne proizvodnje energije</h3>
-      <div style={{ width: "50%", height: 250 }}>
-        <ResponsiveContainer>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis unit=" kWh" />
-            <Tooltip />
-            <Line type="monotone" dataKey="energy" stroke="#007acc" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="graph-container">
+      <h3 className="graph-title">Mesečna proizvodnja energije</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data}>
+          <CartesianGrid stroke="rgba(255, 255, 255, 0.1)" />
+          <XAxis dataKey="month" stroke="#aaa" />
+          <YAxis unit=" kWh" stroke="#aaa" />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              border: "none",
+              borderRadius: "8px",
+              color: "#00fff7",
+            }}
+            labelStyle={{ color: "#fff" }}
+          />
+          <Line
+            type="monotone"
+            dataKey="energy"
+            stroke="#00fff7"
+            strokeWidth={3}
+            dot={{ r: 4, stroke: "#00fff7", strokeWidth: 1, fill: "#001f3f" }}
+            activeDot={{ r: 6, fill: "#00fff7" }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }

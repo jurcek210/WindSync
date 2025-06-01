@@ -53,7 +53,7 @@
   transition: all 0.3s ease;
   text-shadow: var(--text-shadow);
   box-shadow: 0 0 8px rgba(0, 191, 166, 0.3);
-}
+} 
 
 .taskbar-right a:hover,
 .taskbar-right button:hover {

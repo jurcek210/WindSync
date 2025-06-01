@@ -42,39 +42,32 @@ const fetchAverageWindSpeed = async (lat, lng) => {
   }
 };
 const getRegionColor = (speed) => {
-  if (speed < 3.0) return "#ffffff"; // Bela za manj kot 3.0
-  if (speed < 3.2) return "#e5f5e0";
-  if (speed < 3.4) return "#ccebc5";
-  if (speed < 3.6) return "#b2dfb3";
-  if (speed < 3.8) return "#99d8a4";
-  if (speed < 4.0) return "#80cfa9";
-  if (speed < 4.2) return "#66c2a4";
-  if (speed < 4.4) return "#4daf9c";
-  if (speed < 4.6) return "#3e9e88";
-  if (speed < 4.8) return "#2e8b57";
-  if (speed < 5.0) return "#26734d";
-  if (speed < 5.2) return "#1e633e";
-  if (speed < 5.4) return "#155832";
-  if (speed < 5.6) return "#0c4d28";
-  if (speed < 5.8) return "#094421";
-  if (speed < 6.0) return "#083d1b";
-  if (speed < 6.2) return "#063716";
-  if (speed < 6.4) return "#053212";
-  if (speed < 6.6) return "#042e0f";
-  if (speed < 6.8) return "#032a0c";
-  if (speed < 7.0) return "#022709";
-  if (speed < 7.2) return "#012406";
-  if (speed < 7.4) return "#012203";
-  if (speed < 7.6) return "#011f02";
-  if (speed < 7.8) return "#001d01";
-  if (speed < 8.0) return "#001b00";
-  if (speed < 8.2) return "#004529";
-  if (speed < 8.4) return "#004529";
-  if (speed < 8.6) return "#004529";
-  if (speed < 8.8) return "#004529";
-  if (speed < 9.0) return "#004529";
+  if (speed < 3.0) return "#ffffff"; // Bela za zelo šibek veter
 
-  return "#004529"; // Najtemnejša zelena za 9.0+
+  // Odtenki zelene za šibek do zmeren veter
+  const greenShades = [
+    "#e0f2f1", "#b2dfdb", "#80cbc4", "#4db6ac",
+    "#26a69a", "#009688", "#00897b", "#00796b"
+  ];
+
+  // Odtenki rdeče za močan veter
+  const redShades = [
+    "#ffccbc", "#ffab91", "#ff8a65", "#ff7043",
+    "#f4511e", "#e64a19", "#d84315", "#bf360c"
+  ];
+
+  if (speed < 6.0) {
+    // Linearno poiščemo ustrezno zeleno barvo
+    const idx = Math.floor((speed - 3.0) / (6.0 - 3.0) * greenShades.length);
+    return greenShades[Math.min(idx, greenShades.length - 1)];
+  } else if (speed >= 6.0 && speed < 9.0) {
+    // Linearno poiščemo ustrezno rdečo barvo
+    const idx = Math.floor((speed - 6.0) / (9.0 - 6.0) * redShades.length);
+    return redShades[Math.min(idx, redShades.length - 1)];
+  }
+
+  // Najtemnejša rdeča za 9.0+
+  return "#bf360c";
 };
 
 const Legend = () => {

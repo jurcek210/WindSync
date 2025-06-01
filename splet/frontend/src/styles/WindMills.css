@@ -1,12 +1,13 @@
-/* WindMills.css */
-
 :root {
-  --primary-color: #2a9d8f;
-  --secondary-color: #264653;
-  --accent-color: #e9c46a;
-  --background-color: #f4f4f9;
-  --text-color: #333;
-  --font-family: 'Poppins', sans-serif;
+  --primary-color: #00bfa6;      /* svetlo turkizna */
+  --primary-dark: #00796b;       /* temna turkizna */
+  --accent-color: #64ffda;       /* svetleča zelena */
+  --background-color: #0d1f1c;   /* zelo temna ozadje */
+  --card-background: #022926;    /* temno-zeleno ozadje kartic */
+  --text-color: #a0f2de;         /* svetlo modro-zeleni tekst */
+  --highlight-color: #64ffda;
+  --shadow-color: rgba(0, 191, 166, 0.6);
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
@@ -18,17 +19,15 @@ body {
 }
 
 .container {
-  max-width: 900px;
-  margin: 50px auto;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  padding: 40px 50px;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 }
+
 
 @media (max-width: 768px) {
   .container {
@@ -38,25 +37,23 @@ body {
 }
 
 .title {
-  grid-column: 1 / -1;
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: var(--secondary-color);
-  margin-bottom: 24px;
-  letter-spacing: 1px;
   text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
 }
 
 .image {
   width: 100%;
-  border-radius: 20px;
-  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
-  transition: transform 0.4s ease;
-  cursor: pointer;
+  max-width: 400px;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 1rem;
 }
 
 .image:hover {
-  transform: scale(1.05) rotate(1.5deg);
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 30px 50px var(--accent-color);
+  filter: drop-shadow(0 0 20px var(--accent-color));
 }
 
 .infoPanel {
@@ -70,50 +67,48 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 1.1rem;
-  color: var(--secondary-color);
+  font-size: 1.2rem;
+  color: var(--text-color);
+  text-shadow: 0 0 5px var(--primary-dark);
 }
 
 .infoRow strong {
-  width: 140px;
-  font-weight: 600;
+  width: 160px;
+  font-weight: 700;
   color: var(--primary-color);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+  user-select: none;
 }
 
 .highlight {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--accent-color);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--highlight-color);
   margin-top: 30px;
   margin-bottom: 10px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 12px var(--highlight-color);
 }
 
 .paybackText {
   font-style: italic;
-  color: #d9534f;
-  font-weight: 600;
+  color: #ff5252; /* malo močna rdeča za opozorilo */
+  font-weight: 700;
   margin-top: 10px;
+  text-shadow: 0 0 8px #ff5252;
 }
 
 .graphContainer {
   grid-column: 1 / -1;
   margin-top: 50px;
   padding-top: 20px;
-  border-top: 2px solid var(--background-color);
+  border-top: 2px solid var(--primary-dark);
+  box-shadow: 0 0 10px var(--primary-dark);
+  border-radius: 0 0 20px 20px;
 }
 
-/* Ikone (za primer) */
-.icon {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  fill: var(--primary-color);
-}
-
-/* Tooltip za hover na slike (če želiš dodati) */
+/* Tooltip za hover na slike */
 .image-tooltip {
   position: relative;
 }
@@ -124,13 +119,65 @@ body {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--secondary-color);
-  color: white;
-  padding: 6px 10px;
+  background-color: var(--primary-dark);
+  color: var(--accent-color);
+  padding: 6px 12px;
   border-radius: 8px;
   white-space: nowrap;
-  font-size: 0.9rem;
-  opacity: 0.85;
+  font-size: 1rem;
+  opacity: 0.95;
   pointer-events: none;
+  box-shadow: 0 0 10px var(--accent-color);
   transition: opacity 0.3s ease;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.data-table td {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-table td:first-child {
+  font-weight: bold;
+  width: 50%;
+}
+
+.graph {
+  margin-top: 2rem;
+}
+
+.company-stats {
+  margin-top: 2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+
+.graph-container {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 255, 247, 0.2);
+  backdrop-filter: blur(6px);
+  margin-top: 20px;
+}
+
+.graph-title {
+  color: #00fff7;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
