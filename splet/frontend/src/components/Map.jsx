@@ -432,7 +432,40 @@ useEffect(() => {
       </button>
     );
   })}
+  
+  {/* Gumb za ustvarjanje svoje turbine */}
+<button
+  type="button"
+  onClick={() => {
+    window.location.href = "/WindMillCreate";
+  }}
+  style={{
+    padding: "12px 28px",
+    fontSize: "16px",
+    borderRadius: "12px",
+    border: "none",
+    background: "linear-gradient(135deg, #0078d7 0%, #00b3ff 100%)",
+    color: "#fff",
+    cursor: "pointer",
+    transition: "all 0.4s ease",
+    boxShadow: "0 4px 12px rgba(0, 120, 215, 0.4)",
+    userSelect: "none",
+    letterSpacing: "0.5px",
+  }}
+  onMouseEnter={(e) => {
+    e.target.style.transform = "scale(1.05)";
+    e.target.style.boxShadow = "0 6px 18px rgba(0, 120, 215, 0.5)";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.transform = "scale(1)";
+    e.target.style.boxShadow = "0 4px 12px rgba(0, 120, 215, 0.4)";
+  }}
+>
+  Ustvari svojo
+</button>
+
 </div>
+
 
 
 {turbineCategory === "domaca" && (
@@ -682,7 +715,7 @@ useEffect(() => {
                   coordinates: [clickedLatLng.lng, clickedLatLng.lat],
                 },
                 category: turbineCategory,
-                type: selectedSubOption,
+                type: selectedSubOption,                
               },
               {
                 headers: {
@@ -739,40 +772,62 @@ useEffect(() => {
         zIndex: 1001,
       }}
     >
-      <button
-        onClick={() => setShowWindmills((prev) => !prev)}
-        style={{
-          background: "linear-gradient(135deg, #0af, #005f9e)",
-          color: "#cceeff",
-          border: "1.5px solid #3399ff",
-          padding: "16px 32px",
-          fontSize: "18px",
-          fontWeight: "600",
-          borderRadius: "10px",
-          cursor: "pointer",
-          boxShadow: "0 0 6px rgba(51, 153, 255, 0.4)",
-          textShadow: "0 0 4px rgba(204, 238, 255, 0.6)",
-          transition: "all 0.3s ease",
-          letterSpacing: "1px",
-          userSelect: "none",
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = "linear-gradient(135deg, #33adff, #007acc)";
-          e.currentTarget.style.boxShadow = "0 0 10px rgba(51, 153, 255, 0.6)";
-          e.currentTarget.style.color = "#e0f3ff";
-          e.currentTarget.style.textShadow = "0 0 6px rgba(204, 238, 255, 0.8)";
-          e.currentTarget.style.transform = "scale(1.04)";
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = "linear-gradient(135deg, #0af, #005f9e)";
-          e.currentTarget.style.boxShadow = "0 0 6px rgba(51, 153, 255, 0.4)";
-          e.currentTarget.style.color = "#cceeff";
-          e.currentTarget.style.textShadow = "0 0 4px rgba(204, 238, 255, 0.6)";
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-      >
-        {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
-      </button>
+<div
+  onClick={() => setShowWindmills((prev) => !prev)}
+  style={{
+    display: "inline-block",
+    cursor: "pointer",
+    position: "relative",
+    width: "80px", 
+    height: "80px",
+    borderRadius: "10px",
+    boxShadow: showWindmills
+      ? "0 0 10px rgba(51, 153, 255, 0.6)"
+      : "0 0 6px rgba(51, 153, 255, 0.4)",
+    transition: "all 0.3s ease",
+    transform: showWindmills ? "scale(1.04)" : "scale(1)",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.boxShadow = "0 0 10px rgba(51, 153, 255, 0.6)";
+    e.currentTarget.style.transform = "scale(1.04)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.boxShadow = showWindmills
+      ? "0 0 10px rgba(51, 153, 255, 0.6)"
+      : "0 0 6px rgba(51, 153, 255, 0.4)";
+    e.currentTarget.style.transform = "scale(1)";
+  }}
+>
+  <img
+    src="../../public/photos/windmill.png"
+    alt="Vetrnica"
+    style={{
+      width: "100%",
+      height: "100%",
+      borderRadius: "10px",
+      opacity: showWindmills ? 0.5 : 1, 
+      filter: showWindmills ? "grayscale(100%)" : "none",
+      transition: "all 0.3s ease",
+    }}
+  />
+  {/* Prečrtana črta */}
+  {showWindmills && (
+    <div
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "0",
+        width: "100%",
+        height: "2px",
+        background: "red",
+        transform: "rotate(-45deg)",
+      }}
+    ></div>
+  )}
+</div>
+<div style={{ marginTop: "8px", textAlign: "center", color: "#cceeff" }}>
+  {showWindmills ? "Skrij veternice" : "Pokaži veternice"}
+</div>
 
       <button
         onClick={() => setShowRegions((prev) => !prev)}
@@ -808,6 +863,9 @@ useEffect(() => {
       >
         {showRegions ? "Skrij mapo" : "Pokaži mapo"}
       </button>
+
+
+      
     </div>
 
     {showRegions && <Legend />}

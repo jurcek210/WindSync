@@ -10,6 +10,7 @@ import Zanimivosti from './components/Zanimivosti'; // prilagodi pot glede na st
 import WindMils from "./components/WindMils";
 import WindMilsBig from "./components/WindMilsBig";
 import Profile from "./components/Profile";
+import WindMillCreate from "./components/WindMillCreate";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -75,6 +76,7 @@ function App() {
         <Route path="/zanimivosti" element={<Zanimivosti />} />
         <Route path="/WindMils/:id/:windSpeed/:lat/:lng" element={<WindMils />} />
         <Route path="/WindMilsBig/:id/:windSpeed/:lat/:lng" element={<WindMilsBig />} />
+        <Route path="/WindMillCreate" element={<WindMillCreate />} />        
         <Route path="/profile" element={<Profile />} />
 
 
