@@ -53,6 +53,27 @@ export const deleteWindmill = async (req, res) => {
   }
 };
 
+export const toggleWindmillStatus = async (req, res) => {
+  try {
+    const windmill = await Windmill.findById(req.params.id);
+    if (!windmill) {
+      return res.status(404).json({ message: "Veternica ni bila najdena." });
+    }
+
+    if (windmill.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Ni dovoljenja za urejanje." });
+    }
+
+    windmill.status = req.body.status;
+    await windmill.save();
+
+    res.json({ message: "Status posodobljen.", status: windmill.status });
+  } catch (err) {
+    console.error("Napaka pri posodobitvi statusa:", err);
+    res.status(500).json({ message: "Napaka strežnika." });
+  }
+};
+
 export const getNearbyWindmills = async (req, res) => {
   const { lat, lon, maxDistance } = req.query;
 

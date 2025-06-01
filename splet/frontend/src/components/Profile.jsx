@@ -35,24 +35,47 @@ const Profile = () => {
     fetchData();
   }, []);
 
+  const toggleStatus = async (id, newStatus) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `http://localhost:3001/api/windmills/${id}/toggle-status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setWindmills((prev) =>
+        prev.map((w) =>
+          w._id === id ? { ...w, status: newStatus } : w
+        )
+      );
+    } catch (err) {
+      console.error("Napaka pri posodabljanju statusa:", err);
+      alert("Napaka pri spremembi statusa veternice.");
+    }
+  };
+
   if (loading) return <p>Loading...</p>;
 
   return (
     <div className="profile-container">
-
       <div className="profile-header">
         <div className="profile-info">
-            <h2 className="profile-title">Profil</h2>
-            <div className="profile-row">
+          <h2 className="profile-title">Profil</h2>
+          <div className="profile-row">
             <span className="profile-label">Username:</span>
             <span className="profile-value">{user?.username}</span>
-            </div>
-            <div className="profile-row">
+          </div>
+          <div className="profile-row">
             <span className="profile-label">Email:</span>
             <span className="profile-value">{user?.email}</span>
-            </div>
-            </div>
+          </div>
         </div>
+      </div>
 
       <div className="windmill-section">
         <h3>Moje veternice</h3>
@@ -61,7 +84,7 @@ const Profile = () => {
         ) : (
           <div className="windmill-grid">
             {windmills.map((wm) => (
-              <div key={wm._id} className="windmill-card">
+              <div key={wm._id} className={`windmill-card ${wm.status ? "active" : "inactive"}`}>
                 <h4>{wm.name}</h4>
                 <p>
                   <strong>Lokacija:</strong> {wm.location.coordinates[1].toFixed(4)},{" "}
@@ -74,6 +97,20 @@ const Profile = () => {
                 <p>
                   <strong>Status:</strong> {wm.status ? "Aktivna" : "Neaktivna"}
                 </p>
+                <button
+                  onClick={() => toggleStatus(wm._id, !wm.status)}
+                  style={{
+                    marginTop: "8px",
+                    padding: "6px 12px",
+                    backgroundColor: wm.status ? "#ef4444" : "#4caf50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {wm.status ? "Deaktiviraj" : "Aktiviraj"}
+                </button>
               </div>
             ))}
           </div>

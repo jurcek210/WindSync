@@ -72,6 +72,14 @@
   transition: transform 0.2s ease;
 }
 
+.windmill-card.active {
+  background-color: #e6ffe6;
+}
+
+.windmill-card.inactive {
+  background-color: #ffe6e6;
+}
+
 .windmill-card:hover {
   transform: scale(1.01);
 }
