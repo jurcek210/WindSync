@@ -43,7 +43,7 @@ const fetchAverageWindSpeed = async (lat, lng) => {
 };
 const hexToRgba = (hex, alpha = 0.4) => {
   hex = hex.replace("#", "");
-  
+
   const bigint = parseInt(hex, 16);
   const r = (bigint >> 16) & 255;
   const g = (bigint >> 8) & 255;
@@ -55,25 +55,21 @@ const hexToRgba = (hex, alpha = 0.4) => {
 const getRegionColor = (speed) => {
   if (speed < 3.0) return hexToRgba("#ffffff", 0.4); 
 
-  const greenShades = [
-    "#e0f2f1", "#b2dfdb", "#80cbc4", "#4db6ac",
-    "#26a69a", "#009688", "#00897b", "#00796b"
+  const blueShades = [
+    "#e3f2fd", // svetlo modra
+    "#bbdefb",
+    "#90caf9",
+    "#64b5f6",
+    "#42a5f5",
+    "#2196f3",
+    "#1e88e5",
+    "#1976d2",
+    "#1565c0",
+    "#0d47a1"  // temno modra
   ];
 
-  const redShades = [
-    "#ffccbc", "#ffab91", "#ff8a65", "#ff7043",
-    "#f4511e", "#e64a19", "#d84315", "#bf360c"
-  ];
-
-  if (speed < 6.0) {
-    const idx = Math.floor((speed - 3.0) / (6.0 - 3.0) * greenShades.length);
-    return hexToRgba(greenShades[Math.min(idx, greenShades.length - 1)], 0.4);
-  } else if (speed >= 6.0 && speed < 9.0) {
-    const idx = Math.floor((speed - 6.0) / (9.0 - 6.0) * redShades.length);
-    return hexToRgba(redShades[Math.min(idx, redShades.length - 1)], 0.4);
-  }
-
-  return hexToRgba("#bf360c", 0.4);
+  const idx = Math.floor(Math.min((speed - 3.0) / (12.0 - 3.0) * blueShades.length, blueShades.length - 1));
+  return hexToRgba(blueShades[idx], 0.4);
 };
 
 
