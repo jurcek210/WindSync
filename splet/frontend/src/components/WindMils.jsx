@@ -75,6 +75,8 @@ function WindMills() {
       : null;
   const paybackMonths = paybackDays !== null ? paybackDays / 30 : null;
 
+   const averageHouseDailyConsumption = 10; // kWh, povprečna dnevna poraba hiše
+
   return (
     <div className="container">
       <h2 className="title">{data.name}</h2>
@@ -98,6 +100,10 @@ function WindMills() {
         <p className="highlight">
           Dnevna proizvodnja energije: {dailyEnergyProduction.toFixed(2)} kWh
         </p>
+
+        <div className="infoRow" style={{ fontStyle: 'italic', color: '#ccc' }}>
+          Povprečna hiša porabi približno <strong>{averageHouseDailyConsumption} kWh</strong> energije na dan.
+        </div>
 
         {paybackMonths !== null ? (
           <p className="infoRow" style={{ fontWeight: "600" }}>

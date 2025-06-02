@@ -81,10 +81,10 @@ function WindEnergyGraph({ lat, lng, powerKW }) {
           <Line
             type="monotone"
             dataKey="energy"
-            stroke="#00fff7"
-            strokeWidth={3}
-            dot={{ r: 4, stroke: "#00fff7", strokeWidth: 1, fill: "#001f3f" }}
-            activeDot={{ r: 6, fill: "#00fff7" }}
+            stroke="rgba(0, 255, 247, 0.5)"  // svetlejša in bolj prosojna turkizna
+            strokeWidth={2}                // manjša debelina linije
+            dot={{ r: 3, stroke: "rgba(0, 255, 247, 0.5)", strokeWidth: 1, fill: "#001f3f" }}
+            activeDot={{ r: 5, fill: "rgba(0, 255, 247, 0.7)" }}
           />
         </LineChart>
       </ResponsiveContainer>

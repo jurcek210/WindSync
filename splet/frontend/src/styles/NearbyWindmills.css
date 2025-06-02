@@ -1,0 +1,56 @@
+.image-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.image-button img {
+  display: block;
+}
+
+.image-button:active {
+  transform: scale(0.95);
+}
+
+.image-button.loading img {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.loading-box {
+  position: fixed; /* celotno okno */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(9, 142, 175, 0.85);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 12px;
+  font-weight: bold;
+  text-align: center;
+  z-index: 1000;
+  min-width: 200px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.3);
+}
+
+.close-btn {
+  margin-top: 10px;
+  background: #ffffff44;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+}

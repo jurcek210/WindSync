@@ -5,30 +5,36 @@
   background-repeat: no-repeat;
   min-height: 100vh;
   padding: 2rem;
-  color: white;
+  color: var(--white);
   display: flex;
   justify-content: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .overlay {
-  background-color: rgba(0, 0, 0, 0.6);
+  background: rgba(9, 142, 175, 0.8); /* prosojna turkizna (var(--primary-color) z alpha) */
   padding: 2rem;
   border-radius: 16px;
   max-width: 1000px;
   width: 100%;
+  box-shadow: 0 0 15px rgba(9, 142, 175, 0.5);
 }
 
 .overlay h2 {
   font-size: 2rem;
   margin-bottom: 1rem;
+  color: var(--white);
+  text-shadow: var(--text-shadow);
 }
 
 .info-box {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(187, 222, 251, 0.15); /* svetlo modra prosojna (var(--primary-dark)) */
   padding: 1rem 1.5rem;
   margin-top: 2rem;
-  border-left: 5px solid #00aaff;
+  border-left: 5px solid var(--primary-color);
   border-radius: 8px;
+  color: var(--white);
+  text-shadow: var(--text-shadow);
 }
 
 .info-box h3 {
@@ -42,4 +48,23 @@
 
 .info-box li {
   margin-bottom: 0.5rem;
+}
+
+/* Prilagoditev bar Chart: XAxis & YAxis label barve */
+.recharts-cartesian-axis-tick-value {
+  fill: var(--white) !important;
+  font-weight: 700;
+}
+
+/* Tooltip barve */
+.recharts-tooltip-wrapper {
+  background-color: var(--white) !important;
+  color: var(--primary-color) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 8px rgba(9, 142, 175, 0.6) !important;
+}
+
+/* Bar barva usklajena z --primary-color */
+.custom-bar {
+  fill: var(--primary-color);
 }

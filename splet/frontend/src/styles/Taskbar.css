@@ -13,35 +13,34 @@
   align-items: center;
   padding: 20px 40px;
   background: var(--background-gradient);
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 2px solid var(--white);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .taskbar-logo {
   display: flex;
   align-items: center;
-  color: white;
+  color: var(--white); /* besedilo belo */
 }
 
 .taskbar-logo h1 {
-  font-size: 40px;
+  font-size: 30px;
   font-weight: 900;
-  color: var(--primary-color);
+  color: var(--white); /* besedilo belo */
   margin-left: 12px;
-  text-shadow: var(--text-shadow);
+  text-shadow: none; /* odstranjen shadow za logotip */
   letter-spacing: 2px;
 }
 
 .logo-icon {
   width: 64px;
   height: 64px;
-  filter: drop-shadow(0 0 5px var(--primary-color));
 }
 
 .taskbar-right a,
 .taskbar-right button {
   margin-left: 28px;
-  color: var(--primary-color);
+  color: var(--white); /* besedilo belo */
   text-decoration: none;
   font-weight: 700;
   background: none;
@@ -58,8 +57,8 @@
 .taskbar-right a:hover,
 .taskbar-right button:hover {
   color: var(--white);
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  box-shadow: 0 0 15px var(--primary-color);
-  text-shadow: 0 0 10px var(--white);
+  background-color: #95bee0; /* nežnejša prosojna turkizna */
+  border-color: #95bee0;
+  box-shadow: 0 0 12px rgba(9, 142, 175, 0.6); /* mehkejša senca */
+  text-shadow: 0 0 8px var(--white); /* manj agresivna senca */
 }

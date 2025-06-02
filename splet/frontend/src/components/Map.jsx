@@ -6,6 +6,8 @@ import L from "leaflet";
 import Wind from "./Wind"; 
 import { GeoJSON } from "react-leaflet";
 import DayliEnergy from "./DayliEnergy";
+import NearbyWindmills from "./NearbyWindmills.jsx";
+
 
 const MapDoubleClickHandler = ({ onDoubleClick }) => {
   useMapEvents({
@@ -147,7 +149,14 @@ const Map = ({ loggedIn }) => {
   });
 
   const myWindmillIcon = new L.Icon({
-    iconUrl: "/photos/my_windmill.png",
+    iconUrl: "/photos/windmillZelen.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
+    const redWindmillIcon = new L.Icon({
+    iconUrl: "/photos/windmillRed.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -32],
@@ -234,7 +243,7 @@ useEffect(() => {
       style={{
         position: "relative",
         width: "100vw",
-        height: "100vh",
+        height: "900px",
       }}
     >
       <MapContainer
@@ -275,41 +284,48 @@ useEffect(() => {
         {/* Prikaz veternic */}
         {showWindmills && windmills.map((wm) => {
           const isMine = currentUser && wm.owner === currentUser._id;
+          const isActive = wm.status;
+           let iconToUse;
+            if (!isActive) {
+              iconToUse = redWindmillIcon;
+            } else {
+              iconToUse = isMine ? myWindmillIcon : windmillIcon;
+            }
 
-          return (
-            <Marker
-              key={wm._id}
-              position={[wm.location.coordinates[1], wm.location.coordinates[0]]}
-              icon={isMine ? myWindmillIcon : windmillIcon}
-            >
-              <Popup>
-                <strong>{wm.name}</strong><br />
-                Status: {wm.status ? "Aktivna" : "Neaktivna"}<br />
-                Hitrost: {wm.windSpeed ?? "ni podatka"} m/s
-                <DayliEnergy windmill={wm} />
+            return (
+              <Marker
+                key={wm._id}
+                position={[wm.location.coordinates[1], wm.location.coordinates[0]]}
+                icon={iconToUse}
+              >
+                <Popup>
+                  <strong>{wm.name}</strong><br />
+                  Status: {isActive ? "Aktivna" : "Neaktivna"}<br />
+                  Hitrost: {wm.windSpeed ?? "ni podatka"} m/s
+                  <DayliEnergy windmill={wm} />
 
-                {isMine && (
-                  <div style={{ marginTop: "8px" }}>
-                    <button
-                      onClick={() => deleteWindmill(wm._id)}
-                      style={{
-                        backgroundColor: "#ef4444",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        fontSize: "14px"
-                      }}
-                    >
-                      Izbriši
-                    </button>
-                  </div>
-                )}
-              </Popup>
-            </Marker>
-          );
-        })}
+                  {isMine && (
+                    <div style={{ marginTop: "8px" }}>
+                      <button
+                        onClick={() => deleteWindmill(wm._id)}
+                        style={{
+                          backgroundColor: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "14px"
+                        }}
+                      >
+                        Izbriši
+                      </button>
+                    </div>
+                  )}
+                </Popup>
+              </Marker>
+            );
+          })}
         {regionData && showRegions && (
           <GeoJSON
             data={regionData}
@@ -346,7 +362,7 @@ useEffect(() => {
       top: 0,
       right: 20,
       width: "420px",
-      height: "100%",
+      height: "850px",
       backgroundColor: "#f9faff", 
       borderLeft: "1px solid #ddd",
       boxShadow: "-6px 0 20px rgba(0,0,0,0.1)",
@@ -359,6 +375,7 @@ useEffect(() => {
       transition: "transform 0.3s ease",
     }}
   >
+
     <button
       onClick={() => setShowSidebar(false)}
       style={{
@@ -440,38 +457,6 @@ useEffect(() => {
       </button>
     );
   })}
-  
-  {/* Gumb za ustvarjanje svoje turbine */}
-<button
-  type="button"
-  onClick={() => {
-    window.location.href = "/WindMillCreate";
-  }}
-  style={{
-    padding: "12px 28px",
-    fontSize: "16px",
-    borderRadius: "12px",
-    border: "none",
-    background: "linear-gradient(135deg, #0078d7 0%, #00b3ff 100%)",
-    color: "#fff",
-    cursor: "pointer",
-    transition: "all 0.4s ease",
-    boxShadow: "0 4px 12px rgba(0, 120, 215, 0.4)",
-    userSelect: "none",
-    letterSpacing: "0.5px",
-  }}
-  onMouseEnter={(e) => {
-    e.target.style.transform = "scale(1.05)";
-    e.target.style.boxShadow = "0 6px 18px rgba(0, 120, 215, 0.5)";
-  }}
-  onMouseLeave={(e) => {
-    e.target.style.transform = "scale(1)";
-    e.target.style.boxShadow = "0 4px 12px rgba(0, 120, 215, 0.4)";
-  }}
->
-  Ustvari svojo
-</button>
-
 </div>
 
 
@@ -769,74 +754,75 @@ useEffect(() => {
 
 
       {/* Gumb za preklop prikaza veternic */}
-    <div
-      style={{
-        position: "absolute",
-        top: "10px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        display: "flex",
-        gap: "24px",
-        zIndex: 1001,
-      }}
-    >
 <div
-  onClick={() => setShowWindmills((prev) => !prev)}
   style={{
-    display: "inline-block",
-    cursor: "pointer",
-    position: "relative",
-    width: "80px", 
-    height: "80px",
-    borderRadius: "10px",
-    boxShadow: showWindmills
-      ? "0 0 10px rgba(51, 153, 255, 0.6)"
-      : "0 0 6px rgba(51, 153, 255, 0.4)",
-    transition: "all 0.3s ease",
-    transform: showWindmills ? "scale(1.04)" : "scale(1)",
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.boxShadow = "0 0 10px rgba(51, 153, 255, 0.6)";
-    e.currentTarget.style.transform = "scale(1.04)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.boxShadow = showWindmills
-      ? "0 0 10px rgba(51, 153, 255, 0.6)"
-      : "0 0 6px rgba(51, 153, 255, 0.4)";
-    e.currentTarget.style.transform = "scale(1)";
+    position: "absolute",
+    top: "10px",
+    right: showSidebar ? "470px" : "20px", // potisne levo, če je sidebar
+    transition: "right 0.3s ease",
+    display: "flex",
+    gap: "24px",
+    zIndex: 1001,
   }}
 >
-  <img
-    src="../../public/photos/windmill.png"
-    alt="Vetrnica"
+  <div
+    onClick={() => setShowWindmills((prev) => !prev)}
     style={{
-      width: "100%",
-      height: "100%",
+      display: "inline-block",
+      cursor: "pointer",
+      position: "relative",
+      width: "80px",
+      height: "80px",
       borderRadius: "10px",
-      opacity: showWindmills ? 0.5 : 1, 
-      filter: showWindmills ? "grayscale(100%)" : "none",
+      boxShadow: showWindmills
+        ? "0 0 10px rgba(51, 153, 255, 0.6)"
+        : "0 0 6px rgba(51, 153, 255, 0.4)",
       transition: "all 0.3s ease",
+      transform: showWindmills ? "scale(1.04)" : "scale(1)",
     }}
-  />
-  {/* Prečrtana črta */}
-  {showWindmills && (
-    <div
+    onMouseEnter={(e) => {
+      e.currentTarget.style.boxShadow = "0 0 10px rgba(51, 153, 255, 0.6)";
+      e.currentTarget.style.transform = "scale(1.04)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.boxShadow = showWindmills
+        ? "0 0 10px rgba(51, 153, 255, 0.6)"
+        : "0 0 6px rgba(51, 153, 255, 0.4)";
+      e.currentTarget.style.transform = "scale(1)";
+    }}
+  >
+    <img
+      src="../../public/photos/windmill.png"
+      alt="Vetrnica"
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "0",
         width: "100%",
-        height: "2px",
-        background: "red",
-        transform: "rotate(-45deg)",
+        height: "100%",
+        borderRadius: "10px",
+        opacity: showWindmills ? 0.5 : 1,
+        filter: showWindmills ? "grayscale(100%)" : "none",
+        transition: "all 0.3s ease",
       }}
-    ></div>
-  )}
-</div>
-<div style={{ marginTop: "8px", textAlign: "center", color: "#cceeff" }}>
-  {showWindmills ? "" : " "}
-</div>
+    />
+    {showWindmills && (
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "0",
+          width: "100%",
+          height: "2px",
+          background: "red",
+          transform: "rotate(-45deg)",
+        }}
+      ></div>
+    )}
+  </div>
+    <NearbyWindmills />
 
+  <div style={{ marginTop: "8px", textAlign: "center", color: "#cceeff" }}>
+    {showWindmills ? "" : " "}
+  </div>
+    {/*gumb}
       <button
         onClick={() => setShowRegions((prev) => !prev)}
         style={{
@@ -871,6 +857,7 @@ useEffect(() => {
       >
         {showRegions ? "Skrij mapo" : "Pokaži mapo"}
       </button>
+    {gumb*/}
 
 
       
@@ -878,7 +865,7 @@ useEffect(() => {
 
     {showRegions && <Legend />}
 
-
+  
 
     </div>
   );

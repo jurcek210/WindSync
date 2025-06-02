@@ -39,16 +39,23 @@ const Zanimivosti = () => {
             layout="vertical"
             margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" domain={[0, 60]} tickFormatter={(val) => `${val}%`} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--primary-dark)" />
+            <XAxis
+              type="number"
+              domain={[0, 60]}
+              tickFormatter={(val) => `${val}%`}
+              stroke={ 'var(--white)' }
+              tick={{ fill: 'var(--white)' }}
+            />
             <YAxis
-            type="category"
-            dataKey="drzava"
-            tick={{ fontSize: 14, fontWeight: 'bold', fill: '#ffffff' }} 
+              type="category"
+              dataKey="drzava"
+              tick={{ fontSize: 14, fontWeight: 'bold', fill: 'var(--white)' }}
+              stroke={'var(--white)'}
             />
             <Tooltip formatter={(value) => `${value}%`} />
-            <Legend />
-            <Bar dataKey="procent" fill="#00aaff" name="Delež (%)" />
+            <Legend wrapperStyle={{ color: 'var(--white)' }} />
+            <Bar dataKey="procent" fill="var(--primary-color)" name="Delež (%)" />
           </BarChart>
         </ResponsiveContainer>
 
@@ -58,8 +65,10 @@ const Zanimivosti = () => {
             <li>💡 Povprečen delež vetrne energije v EU je okoli <strong>16%</strong>.</li>
             <li>🔌 Slovenija pridobi le <strong>0.05%</strong> elektrike iz vetra – eden najnižjih deležev v Evropi.</li>
             <li>🌍 Danska proizvede več kot polovico elektrike z vetrnimi elektrarnami!</li>
+            <li>🌄 V Sloveniji je manj vetrnih elektrarn zaradi geografske lege, hribovitega terena in strožjih okoljskih ter prostorskih omejitev.</li>
           </ul>
         </div>
+
       </div>
     </div>
   );
