@@ -1,21 +1,36 @@
 .image-button {
-  border: none;
   background: none;
   cursor: pointer;
   padding: 0;
   transition: transform 0.2s ease;
+  border: #00000044;
+  background-color: #ffffff44;
+ box-shadow: 0 0 10px rgba(51, 153, 255, 0.6);
+  border-radius: 10px;
+
 }
 
 .image-button img {
   display: block;
+  margin-top: 0px;
+   width: 80px;
+  height: 80px; 
+  filter:  grayscale(100%) ;
+  
+}
+
+.image-button:hover {
+  transform: scale(1.05);
 }
 
 .image-button:active {
   transform: scale(0.95);
+  filter: grayscale(0%);
 }
 
 .image-button.loading img {
-  animation: pulse 1s infinite;
+  animation: pulse 10s infinite;
+  filter: grayscale(0%);
 }
 
 @keyframes pulse {

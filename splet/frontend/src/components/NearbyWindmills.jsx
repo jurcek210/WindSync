@@ -44,7 +44,7 @@ const NearbyWindmills = () => {
         className={`image-button ${loading ? "loading" : ""}`}
       >
         <img
-          src="../../public/photos/radar.jpg"
+          src="../../public/photos/radar.png"
           alt="Search nearby windmills"
           className="w-16 h-16"
         />

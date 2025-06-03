@@ -1,8 +1,8 @@
 :root {
-  --primary-color: #098eaf;  /* svetlo turkizna */
-  --primary-dark: #bbdefb;   /* temna turkizna */
+  --primary-color: #098eaf; 
+  --primary-dark: #bbdefb;  
   --background-gradient:#bbdefb; 
-  --white: #f0f5f5;
+  --white: #2df0f0;
   --border: #ffffff;
   --text-shadow: 0 0 5px rgba(255, 255, 255, 0.719);
 }
@@ -26,9 +26,9 @@
 .taskbar-logo h1 {
   font-size: 30px;
   font-weight: 900;
-  color: var(--white); /* besedilo belo */
+  color: var(--white); 
   margin-left: 12px;
-  text-shadow: none; /* odstranjen shadow za logotip */
+  text-shadow: none; 
   letter-spacing: 2px;
 }
 
@@ -40,7 +40,7 @@
 .taskbar-right a,
 .taskbar-right button {
   margin-left: 28px;
-  color: var(--white); /* besedilo belo */
+  color: var(--white);
   text-decoration: none;
   font-weight: 700;
   background: none;
@@ -50,15 +50,14 @@
   padding: 8px 16px;
   border-radius: 12px;
   transition: all 0.3s ease;
-  text-shadow: var(--text-shadow);
-  box-shadow: 0 0 8px rgba(0, 191, 166, 0.3);
+  box-shadow: 0 0 8px rgba(0, 136, 248, 0.3);
 } 
 
 .taskbar-right a:hover,
 .taskbar-right button:hover {
   color: var(--white);
-  background-color: #95bee0; /* nežnejša prosojna turkizna */
+  background-color: #95bee0; 
   border-color: #95bee0;
-  box-shadow: 0 0 12px rgba(9, 142, 175, 0.6); /* mehkejša senca */
-  text-shadow: 0 0 8px var(--white); /* manj agresivna senca */
+  box-shadow: 0 0 12px rgba(112, 158, 170, 0.6); 
+
 }
