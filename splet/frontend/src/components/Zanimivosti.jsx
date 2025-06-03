@@ -55,7 +55,7 @@ const Zanimivosti = () => {
             />
             <Tooltip formatter={(value) => `${value}%`} />
             <Legend wrapperStyle={{ color: 'var(--white)' }} />
-            <Bar dataKey="procent" fill="var(--primary-color)" name="Delež (%)" />
+            <Bar dataKey="procent" fill="var(--blue-hover)" name="Delež (%)" />
           </BarChart>
         </ResponsiveContainer>
 
