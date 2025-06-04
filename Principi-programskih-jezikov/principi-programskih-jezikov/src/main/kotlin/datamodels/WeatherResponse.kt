@@ -1,8 +1,6 @@
-package api.openweather.models
+package datamodels
 
 import kotlinx.serialization.Serializable
-import api.openweather.models.Coord
-import api.openweather.models.Wind
 
 @Serializable
 data class WeatherResponse(

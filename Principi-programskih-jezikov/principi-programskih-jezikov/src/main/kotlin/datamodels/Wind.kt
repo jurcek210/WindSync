@@ -1,4 +1,4 @@
-package api.openweather.models
+package datamodels
 
 import kotlinx.serialization.Serializable
 

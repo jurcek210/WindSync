@@ -1,7 +1,7 @@
 package api.openweather
 
 import api.WeatherApi
-import api.openweather.models.WeatherResponse
+import datamodels.WeatherResponse
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -27,13 +27,12 @@ object OpenWeatherApi : WeatherApi {
 
     override suspend fun enrichStation(station: Station): Station {
         val response = client.get(BASE_URL) {
-            parameter("lat", station.location.coordinates[1])
-            parameter("lon", station.location.coordinates[0])
+            parameter("lat", station.location.getLatitude())
+            parameter("lon", station.location.getLongitude())
             parameter("appid", API_KEY)
             parameter("units", "metric")
         }.body<WeatherResponse>()
 
-        station.name = response.name
         station.windSpeed = response.wind.speed
 
         return station

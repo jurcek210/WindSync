@@ -31,7 +31,10 @@ dependencies {
     implementation("org.litote.kmongo:kmongo:4.9.0")
     implementation("org.litote.kmongo:kmongo-serialization:4.9.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+    implementation("io.github.serpro69:kotlin-faker:1.13.0")
+    implementation("org.jsoup:jsoup:1.17.2")
 }
+
 
 compose.desktop {
     application {

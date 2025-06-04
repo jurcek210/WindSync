@@ -1,5 +1,7 @@
 package models
 
+import io.github.serpro69.kfaker.Faker
+import java.time.LocalDateTime
 import java.util.*
 
 class User(
@@ -7,29 +9,22 @@ class User(
     val username: String,
     val email: String,
     private var password: String,
-    val stations: MutableList<Station> = mutableListOf()
+    val stations: Stations = Stations(),
+    val createdAt: LocalDateTime = LocalDateTime.now()
 ) {
 
-    fun addStation(station: Station) {
-        stations.add(station)
-    }
+    companion object {
+        private val faker = Faker()
 
-    fun removeStation(station: Station) {
-        stations.remove(station)
-    }
-
-    fun printAllStations() {
-        if (stations.isEmpty()) {
-            println("$username nima nobene vremenske postaje.")
-        } else {
-            println("Postaje uporabnika $username:")
-            stations.forEachIndexed { index, station ->
-                println("${index + 1}. ${station}")
-            }
+        fun randomUser(): User {
+            val username = faker.name.name()
+            val email = faker.internet.safeEmail()
+            val password = faker.random.nextString(10)
+            return User(username = username, email = email, password = password)
         }
     }
 
     override fun toString(): String {
-        return "$username <$email> (${stations.size} postaj)"
+        return "$username <$email> (${stations.size()} veternic) - ustvarjen: $createdAt"
     }
 }
