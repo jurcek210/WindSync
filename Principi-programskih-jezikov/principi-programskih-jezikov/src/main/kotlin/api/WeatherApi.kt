@@ -1,6 +1,7 @@
 package api
 
-import models.Station
+import Station
+import models.*
 import models.Location
 
 interface WeatherApi {
