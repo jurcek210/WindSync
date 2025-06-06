@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import WindmillDetailsModal from "./WindmillDetailsModal";
 import axios from "axios";
 import "../styles/Profile.css";
 
@@ -15,6 +16,7 @@ const Profile = () => {
   const [windmills, setWindmills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [selectedWindmill, setSelectedWindmill] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,12 +120,14 @@ const Profile = () => {
                 <div 
               key={wm._id} 
               className={`windmill-card ${wm.status ? "active" : "inactive"}`}
+              onClick={() => setSelectedWindmill(wm)}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 gap: "20px",
                 padding: "10px",
+                cursor: "pointer"
               }}
             >
               <div style={{ flex: 1 }}>
@@ -142,7 +146,10 @@ const Profile = () => {
                 </p>
                 <div className="windmill-actions">
                   <button
-                    onClick={() => toggleStatus(wm._id, !wm.status)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus(wm._id, !wm.status);
+                    }}
                     style={{
                       marginTop: "8px",
                       padding: "6px 12px",
@@ -157,7 +164,10 @@ const Profile = () => {
                     {wm.status ? "Deaktiviraj" : "Aktiviraj"}
                   </button>
                   <button
-                    onClick={() => deleteWindmill(wm._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteWindmill(wm._id);
+                    }}
                     style={{
                       marginTop: "8px",
                       padding: "6px 12px",
@@ -192,6 +202,12 @@ const Profile = () => {
           </div>
         )}
       </div>
+      {selectedWindmill && (
+        <WindmillDetailsModal
+          windmill={selectedWindmill}
+          onClose={() => setSelectedWindmill(null)}
+        />
+      )}
     </div>
   );
 };
