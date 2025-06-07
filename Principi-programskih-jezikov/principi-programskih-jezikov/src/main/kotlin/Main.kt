@@ -36,13 +36,15 @@ import java.lang.reflect.Array.set
 
 
 
+
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
 import models.Location
 import models.Station
-
+import scraper.thewindpower.Scraper
+import datamodels.ScrapedWindFarm
 
 
 private val DarkColorPalette = darkColors(
@@ -263,7 +265,57 @@ fun UserCard(user: User, onUserUpdated: (User) -> Unit) {
 
 
 @Composable
-fun ScraperScreen() {}
+fun ScraperScreen() {
+    val windFarms = remember { mutableStateListOf<ScrapedWindFarm>() }
+
+    LaunchedEffect(Unit) {
+        val scraped = Scraper.scrapeWindFarms()
+        windFarms.clear()
+        windFarms.addAll(scraped)
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = "Vetrnice v Sloveniji",
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            items(windFarms) { farm ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f), // kvadratni okvirček
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(8.dp),
+                    backgroundColor = Color(0xFF2A2A2A)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(text = farm.name, style = MaterialTheme.typography.h6, color = Color.White)
+                        Text(text = "Lokacija: ${farm.location.getLatitude()}, ${farm.location.getLongitude()}", color = Color.LightGray)
+                        Text(text = "Moč: ${farm.power} kW", color = Color.LightGray)
+                        Text(text = "Status: ${farm.status}", color = Color.LightGray)
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun GeneratorScreen() {
