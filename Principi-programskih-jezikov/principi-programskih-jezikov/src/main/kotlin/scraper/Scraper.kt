@@ -33,7 +33,7 @@ object Scraper {
                 Jsoup.connect(fullUrl).get()
             } catch (e: Exception) {
                 println("Napaka pri povezavi do strani vetrnice '$name': ${e.message}")
-                continue // preskoči to vetrnico in nadaljuj
+                continue
             }
 
             val farmDataList = extractWindFarmData(document, name)
@@ -54,16 +54,33 @@ object Scraper {
             .filter { it.text().contains("Longitude:") }
             .map { it.text().substringAfter("Longitude:").trim() }
 
+        val power = liElements
+            .filter { it.text().contains("Total nominal power:") }
+            .map { it.text().substringAfter("Total nominal power:").substringBefore("kW").trim().replace(",", "") }
+
+        val statuses = mutableListOf<String>()
+
+        liElements.forEachIndexed { index, element ->
+            if (element.text().contains("Total nominal power:")) {
+                val status = liElements.getOrNull(index + 1)?.text()?.trim() ?: "Unknown"
+                statuses.add(status)
+            }
+        }
+
+
         val count = minOf(latitudes.size, longitudes.size)
         val farms = mutableListOf<ScrapedWindFarm>()
 
         for (i in 0 until count) {
             val lat = parseCoordinate(latitudes[i])
             val lon = parseCoordinate(longitudes[i])
+            val pow = power[i].toInt()
+            val status = statuses[i]
+
 
             if (lat != null && lon != null) {
                 val partName = if (count > 1) "$name - Part ${i + 1}" else name
-                farms.add(ScrapedWindFarm(partName, Location.fromLatLon(lat, lon)))
+                farms.add(ScrapedWindFarm(partName, Location.fromLatLon(lat, lon), pow, status))
             }
         }
 
