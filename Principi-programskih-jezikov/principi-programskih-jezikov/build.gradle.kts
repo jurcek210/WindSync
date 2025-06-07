@@ -31,6 +31,8 @@ dependencies {
     implementation("org.litote.kmongo:kmongo:4.11.0")
     implementation("org.litote.kmongo:kmongo-serialization:4.9.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+    implementation("org.jsoup:jsoup:1.20.1")
+
 
 
 }

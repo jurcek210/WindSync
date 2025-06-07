@@ -272,11 +272,11 @@ fun GeneratorScreen() {
     var maxWindText by remember { mutableStateOf("12") }
     var centerLatText by remember { mutableStateOf("") }
     var centerLonText by remember { mutableStateOf("") }
+    var radiusText by remember { mutableStateOf("") }
     var selectedArea by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    // Prednastavljene lokacije
     val predefinedCenters = listOf(
         "None" to null,
         "Ljubljana" to Pair(46.1512, 14.9955),
@@ -338,7 +338,6 @@ fun GeneratorScreen() {
         Text("Izberi center lokacije ali vnesi ročno:", color = Color.White, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Dropdown meni za izbiro centra
         var expanded by remember { mutableStateOf(false) }
         Box {
             OutlinedTextField(
@@ -376,14 +375,13 @@ fun GeneratorScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Ročni vnos koordinat
         Row {
             OutlinedTextField(
                 value = centerLatText,
                 onValueChange = { newText ->
                     if (newText.matches(Regex("[-0-9.]*"))) {
                         centerLatText = newText
-                        selectedArea = "" // Če uporabnik ročno spremeni, izbira se resetira
+                        selectedArea = ""
                     }
                 },
                 label = { Text("Latitude") },
@@ -407,12 +405,27 @@ fun GeneratorScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        OutlinedTextField(
+            value = radiusText,
+            onValueChange = { newText ->
+                if (newText.matches(Regex("\\d*\\.?\\d*"))) {
+                    radiusText = newText
+                }
+            },
+            label = { Text("Radius (km)") },
+            singleLine = true,
+            modifier = Modifier.width(150.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(onClick = {
             val count = countText.toIntOrNull() ?: 0
             val minWind = minWindText.toDoubleOrNull() ?: 1.0
             val maxWind = maxWindText.toDoubleOrNull() ?: 12.0
+            val radius = radiusText.toDoubleOrNull() ?: 10.0
+            println("dela $radius" )
 
-            // Privzete koordinate Slovenije, če uporabnik ne vnese veljavnih vrednosti
             val defaultLat = 46.1512
             val defaultLon = 14.9955
 
@@ -425,11 +438,12 @@ fun GeneratorScreen() {
                 maxWind < minWind -> message = "Maksimalna hitrost mora biti večja ali enaka minimalni"
                 centerLat !in -90.0..90.0 -> message = "Latitude mora biti med -90 in 90"
                 centerLon !in -180.0..180.0 -> message = "Longitude mora biti med -180 in 180"
+                radius <= 0 -> message = "Radius mora biti večji od 0"
                 else -> {
                     message = ""
                     coroutineScope.launch {
                         try {
-                            generateWindmills(count, minWind, maxWind, centerLat, centerLon)
+                            generateWindmills(count, minWind, maxWind, centerLat, centerLon, radius)
                             message = "Ustvarjenih $count vetrnic"
                         } catch (e: Exception) {
                             message = "Napaka pri generiranju: ${e.message}"
@@ -454,14 +468,15 @@ suspend fun generateWindmills(
     minWind: Double = 1.0,
     maxWind: Double = 12.0,
     centerLat: Double = 46.1512,
-    centerLon: Double = 14.9955
+    centerLon: Double = 14.9955,
+    radius: Double = 10.0  // radius v km
 ) {
     val centerLocation = Location.fromLatLon(centerLat, centerLon)
     val stations = mutableListOf<Station>()
 
     repeat(count) {
-        val nearLoc = Location.near(centerLocation, 10.0)
-        val station = Station.randomWind(min = minWind,max = maxWind, location =nearLoc)
+        val nearLoc = Location.near(centerLocation, radius)
+        val station = Station.randomWind(min = minWind, max = maxWind, location = nearLoc)
         stations.add(station)
     }
 

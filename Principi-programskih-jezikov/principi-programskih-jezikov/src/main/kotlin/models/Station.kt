@@ -41,10 +41,41 @@ data class Station(
 
     companion object {
         private val windMillTypes = listOf("tipA", "tipB", "tipC", "tipY", "tipZ", "tipW")
+        private val windMillNamePrefixes = listOf(
+            "Vetra",
+            "Gora",
+            "Bela",
+            "Sonce",
+            "Zora",
+            "Moc",
+            "Plamen",
+            "Val",
+            "Nebesa",
+            "Sijaj",
+            "Tiha",
+            "Orkan",
+            "Iskra",
+            "Blisk",
+            "Luna"
+        )
 
-        private val windMillNamePrefixes = listOf("Vetra", "Gora", "Bela", "Sonce", "Zora", "Moc")
-        private val windMillNameSuffixes = listOf("1", "2", "X", "Nova", "Prime", "Max")
-
+        private val windMillNameSuffixes = listOf(
+            "1",
+            "2",
+            "X",
+            "Nova",
+            "Prime",
+            "Max",
+            "Aurora",
+            "Echo",
+            "Vihar",
+            "Zvezda",
+            "Legenda",
+            "Spektar",
+            "Brezmejna",
+            "Svetloba",
+            "Horizont"
+        )
         fun randomWindMillType(): String {
             return windMillTypes.random()
         }
