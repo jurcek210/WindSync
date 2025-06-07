@@ -35,6 +35,16 @@ import org.litote.kmongo.updateOneById
 import java.lang.reflect.Array.set
 
 
+
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import models.Location
+import models.Station
+
+
+
 private val DarkColorPalette = darkColors(
     primary = Color(0xFFBB86FC),
     primaryVariant = Color(0xFF3700B3),
@@ -256,7 +266,212 @@ fun UserCard(user: User, onUserUpdated: (User) -> Unit) {
 fun ScraperScreen() {}
 
 @Composable
-fun GeneratorScreen() {}
+fun GeneratorScreen() {
+    var countText by remember { mutableStateOf("0") }
+    var minWindText by remember { mutableStateOf("1") }
+    var maxWindText by remember { mutableStateOf("12") }
+    var centerLatText by remember { mutableStateOf("") }
+    var centerLonText by remember { mutableStateOf("") }
+    var selectedArea by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Prednastavljene lokacije
+    val predefinedCenters = listOf(
+        "None" to null,
+        "Ljubljana" to Pair(46.1512, 14.9955),
+        "Maribor" to Pair(46.5547, 15.6459),
+        "Celje" to Pair(46.2389, 15.2672)
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text("Koliko vetrnic želiš ustvariti?", color = Color.White, fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = countText,
+            onValueChange = { newText ->
+                if (newText.all { it.isDigit() }) {
+                    countText = newText
+                }
+            },
+            label = { Text("Število vetrnic") },
+            singleLine = true,
+            modifier = Modifier.width(150.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text("Hitrost vetra (m/s):", color = Color.White, fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row {
+            OutlinedTextField(
+                value = minWindText,
+                onValueChange = { newText ->
+                    if (newText.all { it.isDigit() }) {
+                        minWindText = newText
+                    }
+                },
+                label = { Text("Min") },
+                singleLine = true,
+                modifier = Modifier.width(75.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            OutlinedTextField(
+                value = maxWindText,
+                onValueChange = { newText ->
+                    if (newText.all { it.isDigit() }) {
+                        maxWindText = newText
+                    }
+                },
+                label = { Text("Max") },
+                singleLine = true,
+                modifier = Modifier.width(75.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Izberi center lokacije ali vnesi ročno:", color = Color.White, fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Dropdown meni za izbiro centra
+        var expanded by remember { mutableStateOf(false) }
+        Box {
+            OutlinedTextField(
+                value = selectedArea.ifEmpty { "None" },
+                onValueChange = {},
+                label = { Text("Prednastavljeni centri") },
+                readOnly = true,
+                trailingIcon = {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null,
+                        Modifier.clickable { expanded = true })
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                predefinedCenters.forEach { (name, coords) ->
+                    DropdownMenuItem(onClick = {
+                        selectedArea = name
+                        expanded = false
+                        if (coords != null) {
+                            centerLatText = coords.first.toString()
+                            centerLonText = coords.second.toString()
+                        } else {
+                            centerLatText = ""
+                            centerLonText = ""
+                        }
+                    }) {
+                        Text(name)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Ročni vnos koordinat
+        Row {
+            OutlinedTextField(
+                value = centerLatText,
+                onValueChange = { newText ->
+                    if (newText.matches(Regex("[-0-9.]*"))) {
+                        centerLatText = newText
+                        selectedArea = "" // Če uporabnik ročno spremeni, izbira se resetira
+                    }
+                },
+                label = { Text("Latitude") },
+                singleLine = true,
+                modifier = Modifier.width(150.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            OutlinedTextField(
+                value = centerLonText,
+                onValueChange = { newText ->
+                    if (newText.matches(Regex("[-0-9.]*"))) {
+                        centerLonText = newText
+                        selectedArea = ""
+                    }
+                },
+                label = { Text("Longitude") },
+                singleLine = true,
+                modifier = Modifier.width(150.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            val count = countText.toIntOrNull() ?: 0
+            val minWind = minWindText.toDoubleOrNull() ?: 1.0
+            val maxWind = maxWindText.toDoubleOrNull() ?: 12.0
+
+            // Privzete koordinate Slovenije, če uporabnik ne vnese veljavnih vrednosti
+            val defaultLat = 46.1512
+            val defaultLon = 14.9955
+
+            val centerLat = centerLatText.toDoubleOrNull() ?: defaultLat
+            val centerLon = centerLonText.toDoubleOrNull() ?: defaultLon
+
+            when {
+                count <= 0 -> message = "Prosim vnesi veljavno število vetrnic"
+                minWind < 0 -> message = "Minimalna hitrost vetra ne more biti negativna"
+                maxWind < minWind -> message = "Maksimalna hitrost mora biti večja ali enaka minimalni"
+                centerLat !in -90.0..90.0 -> message = "Latitude mora biti med -90 in 90"
+                centerLon !in -180.0..180.0 -> message = "Longitude mora biti med -180 in 180"
+                else -> {
+                    message = ""
+                    coroutineScope.launch {
+                        try {
+                            generateWindmills(count, minWind, maxWind, centerLat, centerLon)
+                            message = "Ustvarjenih $count vetrnic"
+                        } catch (e: Exception) {
+                            message = "Napaka pri generiranju: ${e.message}"
+                        }
+                    }
+                }
+            }
+        }) {
+            Text("Generiraj")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (message.isNotEmpty()) {
+            Text(message, color = Color.Green)
+        }
+    }
+}
+
+suspend fun generateWindmills(
+    count: Int,
+    minWind: Double = 1.0,
+    maxWind: Double = 12.0,
+    centerLat: Double = 46.1512,
+    centerLon: Double = 14.9955
+) {
+    val centerLocation = Location.fromLatLon(centerLat, centerLon)
+    val stations = mutableListOf<Station>()
+
+    repeat(count) {
+        val nearLoc = Location.near(centerLocation, 10.0)
+        val station = Station.randomWind(min = minWind,max = maxWind, location =nearLoc)
+        stations.add(station)
+    }
+
+    withContext(Dispatchers.IO) {
+        Database.windmills.insertMany(stations)
+    }
+
+    println("${stations.size} stations saved to DB.")
+}
+
 
 @Composable
 fun AboutScreen() {}

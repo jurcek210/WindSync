@@ -32,6 +32,7 @@ dependencies {
     implementation("org.litote.kmongo:kmongo-serialization:4.9.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
+
 }
 
 compose.desktop {

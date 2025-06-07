@@ -1,6 +1,5 @@
 package models
 
-import Station
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
