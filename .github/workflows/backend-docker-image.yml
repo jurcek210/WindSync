@@ -16,6 +16,12 @@ jobs:
       - name: Checkout koda
         uses: actions/checkout@v3
 
+      - name: Prikaz datotek v ./splet/backend
+        run: |
+          ls -la ./splet/backend
+          echo "--- VSE DATOTEKE (rekurzivno) ---"
+          find ./splet/backend
+
       - name: Docker login
         uses: docker/login-action@v2
         with:
