@@ -16,6 +16,15 @@ jobs:
       - name: Checkout koda
         uses: actions/checkout@v3
 
+      - name: Prikaz datotek v ./splet/frontend
+        run: |
+          ls -la ./splet/frontend
+          echo "--- VSE DATOTEKE (rekurzivno) ---"
+          find ./splet/frontend
+
+      - name: Izpiši vsebino direktorija
+        run: ls -la ./splet/frontend && find ./splet/frontend
+
       - name: Docker login
         uses: docker/login-action@v2
         with:
@@ -27,5 +36,10 @@ jobs:
         with:
           context: ./splet/frontend
           push: true
+          no-cache: true
           tags: jurcek321/windsync-frontend:latest
 
+      - name: Izpiši vsebino Docker slike
+        run: |
+          docker build -t debug-frontend ./splet/frontend
+          docker run --rm debug-frontend ls -la
