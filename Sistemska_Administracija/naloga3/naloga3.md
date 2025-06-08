@@ -248,3 +248,8 @@ services:
 - Omejiti dostop do portov z VM firewallom (npr. samo za GitHub IP).
 - Uporabiti HTTPS preko reverznega proxy strežnika (npr. Nginx).
 - Spremljati dnevnike in obvestila o vsakem sproženju.
+
+### Skupina WindSync
+- Jurij Beber
+- Matic Koren
+- Jaka Jurečko
