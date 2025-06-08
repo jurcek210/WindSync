@@ -21,6 +21,9 @@ jobs:
           ls -la ./splet/backend
           echo "--- VSE DATOTEKE (rekurzivno) ---"
           find ./splet/backend
+      
+      - name: Izpiši vsebino direktorija
+        run: ls -la ./splet/backend && find ./splet/backend
 
       - name: Docker login
         uses: docker/login-action@v2
