@@ -9,12 +9,12 @@ object Scraper {
 
     private const val BASE_URL = "https://www.thewindpower.net"
 
-    fun scrapeWindFarms(): List<ScrapedWindFarm> {
+    fun scrapeWindFarms(relativePath: String): List<ScrapedWindFarm> {
         val farms = mutableListOf<ScrapedWindFarm>()
         val visitedNames = mutableSetOf<String>()
 
         val doc: Document = try {
-            Jsoup.connect("$BASE_URL/country_windfarms_en_100_slovenia.php").get()
+            Jsoup.connect("$BASE_URL/$relativePath").get()
         } catch (e: Exception) {
             println("Napaka pri povezavi do osnovne strani: ${e.message}")
             return farms // vrni prazen seznam, ker ni mogoče pridobiti podatkov

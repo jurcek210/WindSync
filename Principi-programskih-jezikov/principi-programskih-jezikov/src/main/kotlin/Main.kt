@@ -35,16 +35,11 @@ import org.litote.kmongo.updateOneById
 import java.lang.reflect.Array.set
 
 
-
-
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.CoroutineScope
 import models.Location
 import models.Station
 import scraper.thewindpower.Scraper
 import datamodels.ScrapedWindFarm
+import kotlinx.coroutines.*
 
 
 private val DarkColorPalette = darkColors(
@@ -263,20 +258,64 @@ fun UserCard(user: User, onUserUpdated: (User) -> Unit) {
 
 
 
-
 @Composable
 fun ScraperScreen() {
-    val windFarms = remember { mutableStateListOf<ScrapedWindFarm>() }
+    val countries = listOf(
+        "Slovenia" to "country_windfarms_en_100_slovenia.php",
+        "Austria" to "country_windfarms_en_13_austria.php",
+        "Albanija" to "country_windfarms_en_75_albania.php",
+        "Hrvaška" to "country_windfarms_en_45_croatia.php"
+    )
 
-    LaunchedEffect(Unit) {
-        val scraped = Scraper.scrapeWindFarms()
+    var selectedCountry by remember { mutableStateOf(countries.first()) }
+    var expanded by remember { mutableStateOf(false) }
+    val windFarms = remember { mutableStateListOf<ScrapedWindFarm>() }
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedCountry) {
+        isLoading = true
+
+        delay(2000)
+        val scraped = Scraper.scrapeWindFarms(selectedCountry.second)
         windFarms.clear()
         windFarms.addAll(scraped)
+
+        isLoading = false
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            OutlinedButton(
+                onClick = { expanded = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Država: ${selectedCountry.first}")
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                countries.forEach { country ->
+                    DropdownMenuItem(
+                        onClick = {
+                            selectedCountry = country
+                            expanded = false
+                        }
+                    ) {
+                        Text(text = country.first)
+                    }
+                }
+            }
+        }
         Text(
-            text = "Vetrnice v Sloveniji",
+            text = "Vetrnice v ${selectedCountry.first}",
             style = MaterialTheme.typography.h5,
             modifier = Modifier
                 .fillMaxWidth()
@@ -284,38 +323,52 @@ fun ScraperScreen() {
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
-            items(windFarms) { farm ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f), // kvadratni okvirček
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(8.dp),
-                    backgroundColor = Color(0xFF2A2A2A)
-                ) {
-                    Column(
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 200.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+            ) {
+                items(windFarms) { farm ->
+                    Card(
                         modifier = Modifier
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .aspectRatio(1f)
+                            .fillMaxWidth(),
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(8.dp),
+                        backgroundColor = Color(0xFF2A2A2A)
                     ) {
-                        Text(text = farm.name, style = MaterialTheme.typography.h6, color = Color.White)
-                        Text(text = "Lokacija: ${farm.location.getLatitude()}, ${farm.location.getLongitude()}", color = Color.LightGray)
-                        Text(text = "Moč: ${farm.power} kW", color = Color.LightGray)
-                        Text(text = "Status: ${farm.status}", color = Color.LightGray)
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(text = farm.name, style = MaterialTheme.typography.h6, color = Color.White)
+                            Text(
+                                text = "Lokacija: ${farm.location.getLatitude()}, ${farm.location.getLongitude()}",
+                                color = Color.LightGray
+                            )
+                            Text(text = "Moč: ${farm.power} kW", color = Color.LightGray)
+                            Text(text = "Status: ${farm.status}", color = Color.LightGray)
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun GeneratorScreen() {
