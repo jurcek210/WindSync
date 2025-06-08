@@ -29,6 +29,9 @@ jobs:
           no-cache: true
           tags: jurcek321/windsync-frontend:latest
 
-      - name: Call webhook
+      - name: Webhook
         if: success()
-        run: curl -X POST ${{ secrets.URL }}
+        uses: joelwmale/webhook-action@master
+        with:
+          url: ${{ secrets.URL }}
+          method: POST
