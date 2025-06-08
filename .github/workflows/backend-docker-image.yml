@@ -36,4 +36,10 @@ jobs:
         with:
           context: ./splet/backend
           push: true
+          no-cache: true
           tags: jurcek321/windsync-backend:latest
+              
+      - name: Izpiši vsebino Docker slike
+        run: |
+          docker build -t debug-backend ./splet/backend
+          docker run --rm debug-backend ls -la
