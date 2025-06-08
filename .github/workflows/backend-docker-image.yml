@@ -29,8 +29,6 @@ jobs:
           no-cache: true
           tags: jurcek321/windsync-backend:latest
 
-      - name: Trigger Webhook on VM
+      - name: Call webhook
         if: success()
-        uses: distributhor/webhook-action@v1.0.4
-        with:
-          url: ${{ secrets.URL }}
+        run: curl -X POST ${{ secrets.URL }}
