@@ -31,6 +31,6 @@ jobs:
 
       - name: Trigger Webhook on VM
         if: success()
-        uses: distributhor/webhook-action@v2
+        uses: distributhor/webhook-action@v1.0.4
         with:
           url: ${{ secrets.URL }}
