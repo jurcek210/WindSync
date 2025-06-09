@@ -37,6 +37,16 @@ export const Register = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, { username: 1, email: 1, _id: 0 }); 
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 export const Login = async (req, res) => {
   try {

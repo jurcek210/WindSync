@@ -29,6 +29,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import org.litote.kmongo.set
 import org.litote.kmongo.setTo
 import org.litote.kmongo.updateOneById
@@ -40,6 +41,7 @@ import models.Station
 import scraper.thewindpower.Scraper
 import datamodels.ScrapedWindFarm
 import kotlinx.coroutines.*
+import org.bson.types.ObjectId
 
 
 private val DarkColorPalette = darkColors(
@@ -594,7 +596,91 @@ suspend fun generateWindmills(
 
 
 @Composable
-fun AboutScreen() {}
+fun AboutScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(Icons.Default.Info, contentDescription = null, tint = Color.White, modifier = Modifier.size(48.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Windsync", color = Color.White, fontSize = 24.sp)
+        Text("Razvito za spremljanje in upravljanje vetrnic", color = Color.LightGray, fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Avtorji: Jurij Beber, Jaka Jurečko, Matic Koren", color = Color.Gray, fontSize = 14.sp)
+        Text("Verzija: 1.0.0", color = Color.Gray, fontSize = 14.sp)
+    }
+}
+
 
 @Composable
-fun AddUserScreen(){}
+fun AddUserScreen() {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text("Dodaj novega uporabnika", color = Color.White, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Ime") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(0.5f)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(0.5f)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Geslo") },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(0.5f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
+                val user = User(username = name, email = email, password = password)
+                Database.users.insertOne(user)
+                message = "Uporabnik dodan!"
+                name = ""
+                email = ""
+                password = ""
+            } else {
+                message = "Prosim vnesi vse podatke."
+            }
+        }) {
+            Text("Shrani")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (message.isNotEmpty()) {
+            Text(message, color = Color.Green)
+        }
+    }
+}
+
+
