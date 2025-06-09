@@ -329,6 +329,11 @@ const Profile = () => {
               const price = turbinePriceMap[wm.windMillType] || 1000;
               const imgSrc = images[wm.windMillType];
 
+              const percentagePaidBack = Math.min(
+                (parseFloat(stats.totalEarnings) / price) * 100,
+                100
+              );
+
               return (
                 <div className="windmill-card-container" key={wm._id}>
                   <div
@@ -348,84 +353,98 @@ const Profile = () => {
 
                       <div className="windmill-info-grid">
                         <div>
-                          <span className="info-label">Datum postavitve </span>
-                          <span className="info-value">
-                            {new Date(wm.createdAt).toLocaleDateString()}
-                          </span>
+                          <strong>Tip:</strong> {wm.windMillType}
                         </div>
                         <div>
-                          <span className="info-label">Investicija </span>
-                          <span className="info-value">{price} €</span>
+                          <strong>Hitrost vetra:</strong> {wm.windSpeed} m/s
+                        </div>
+                        <div>
+                          <strong>Danes proizvedena energija:</strong>{" "}
+                          {stats.todayEnergy} kWh
+                        </div>
+                        <div>
+                          <strong>Danes zaslužek:</strong> {stats.todayEarnings} €
+                        </div>
+                        <div>
+                          <strong>Skupna proizvedena energija:</strong>{" "}
+                          {stats.totalEnergy} kWh
+                        </div>
+                        <div>
+                          <strong>Skupni zaslužek:</strong> {stats.totalEarnings} €
+                        </div>
+                        <div>
+                          <strong>Meseci do povračila investicije:</strong>{" "}
+                          {stats.monthsLeft}
                         </div>
                       </div>
 
-                      <hr className="divider" />
-
-                      <div className="windmill-stats-grid">
-                        <div>
-                          <span className="info-label">Današnja energija </span>
-                          <span className="info-value">
-                            {stats.todayEnergy} kWh
-                          </span>
-                        </div>
-                        <div>
-                          <span className="info-label">Današnji zaslužek </span>
-                          <span className="info-value">
-                            {stats.todayEarnings} €
-                          </span>
-                        </div>
-                        <div>
-                          <span className="info-label">Skupna energija </span>
-                          <span className="info-value">
-                            {stats.totalEnergy} kWh
-                          </span>
-                        </div>
-                        <div>
-                          <span className="info-label">Skupni zaslužek </span>
-                          <span className="info-value">
-                            {stats.totalEarnings} €
-                          </span>
-                        </div>
-                        <div>
-                          <span className="info-label">Povračilo </span>
-                          <span className="info-value">
-                            {stats.monthsLeft} mesecev
-                          </span>
-                        </div>
+                      {/* Progress bar */}
+                      <div
+                        className="progress-bar-bg"
+                        style={{
+                          position: "relative",
+                          height: "20px",
+                          borderRadius: "10px",
+                          backgroundColor: "#e74c3c",
+                          overflow: "hidden",
+                          fontWeight: "bold",
+                          color: "white",
+                          fontSize: "0.9rem",
+                          textAlign: "center",
+                          lineHeight: "20px",
+                          userSelect: "none",
+                        }}
+                      >
+                      <div
+                        className="progress-bar-filled"
+                        style={{
+                          width: `${percentagePaidBack}%`,
+                          height: "100%",
+                          backgroundColor: "#27ae60",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          transition: "width 0.5s ease",
+                          borderRadius: "10px 0 0 10px",
+                          lineHeight: "20px",
+                          textAlign: "center",
+                          color: "white",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {percentagePaidBack.toFixed(1)}%
+                      </div>
                       </div>
 
                       <div className="windmill-actions">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleStatus(wm._id, !wm.status);
-                          }}
-                          className="action-button toggle"
+                          className={`btn-toggle ${wm.status ? "active" : "inactive"}`}
+                          onClick={() => toggleStatus(wm._id, !wm.status)}
                         >
-                          {wm.status ? "Deaktiviraj" : "Aktiviraj"}
+                          {wm.status ? "Onemogoči" : "Omogoči"}
                         </button>
-
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteWindmill(wm._id);
-                          }}
-                          className="action-button delete"
+                          className="btn-delete"
+                          onClick={() => deleteWindmill(wm._id)}
                         >
                           Izbriši
                         </button>
                       </div>
                     </div>
 
-                    {imgSrc && (
-                      <div className="windmill-image-container">
+                    <div className="windmill-right">
+                      {imgSrc ? (
                         <img
                           src={imgSrc}
-                          alt={`Veternica ${wm.windMillType}`}
+                          alt={wm.windMillType}
                           className="windmill-image"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="windmill-image-placeholder">
+                          Brez slike
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

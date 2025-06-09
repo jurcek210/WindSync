@@ -324,8 +324,10 @@ useEffect(() => {
                   )}
                 </Popup>
               </Marker>
-            );
+
+          );
           })}
+          
         {regionData && showRegions && (
           <GeoJSON
             data={regionData}
@@ -864,11 +866,10 @@ useEffect(() => {
     </div>
 
     {showRegions && <Legend />}
-
-  
-
+    
+   
     </div>
   );
-};
+}
 
 export default Map;
