@@ -351,30 +351,40 @@ const Profile = () => {
                         </span>
                       </div>
 
-                      <div className="windmill-info-grid">
-                        <div>
-                          <strong>Tip:</strong> {wm.windMillType}
+                      <div className="windmill-info-modern">
+                        <div className="info-row">
+                          <span className="info-label">Hitrost vetra</span>
+                          <span className="info-value">{wm.windSpeed} m/s</span>
                         </div>
-                        <div>
-                          <strong>Hitrost vetra:</strong> {wm.windSpeed} m/s
+                        <div className="info-row">
+                          <span className="info-label">Energija danes</span>
+                          <span className="info-value">
+                            {stats.todayEnergy} kWh
+                          </span>
                         </div>
-                        <div>
-                          <strong>Danes proizvedena energija:</strong>{" "}
-                          {stats.todayEnergy} kWh
+                        <div className="info-row">
+                          <span className="info-label">Zaslužek danes</span>
+                          <span className="info-value">
+                            {stats.todayEarnings} €
+                          </span>
                         </div>
-                        <div>
-                          <strong>Danes zaslužek:</strong> {stats.todayEarnings} €
+                        <div className="info-row">
+                          <span className="info-label">Skupna energija</span>
+                          <span className="info-value">
+                            {stats.totalEnergy} kWh
+                          </span>
                         </div>
-                        <div>
-                          <strong>Skupna proizvedena energija:</strong>{" "}
-                          {stats.totalEnergy} kWh
+                        <div className="info-row">
+                          <span className="info-label">Skupni zaslužek</span>
+                          <span className="info-value">
+                            {stats.totalEarnings} €
+                          </span>
                         </div>
-                        <div>
-                          <strong>Skupni zaslužek:</strong> {stats.totalEarnings} €
-                        </div>
-                        <div>
-                          <strong>Meseci do povračila investicije:</strong>{" "}
-                          {stats.monthsLeft}
+                        <div className="info-row">
+                          <span className="info-label">
+                            Meseci do povračila
+                          </span>
+                          <span className="info-value">{stats.monthsLeft}</span>
                         </div>
                       </div>
 
@@ -395,30 +405,32 @@ const Profile = () => {
                           userSelect: "none",
                         }}
                       >
-                      <div
-                        className="progress-bar-filled"
-                        style={{
-                          width: `${percentagePaidBack}%`,
-                          height: "100%",
-                          backgroundColor: "#27ae60",
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          transition: "width 0.5s ease",
-                          borderRadius: "10px 0 0 10px",
-                          lineHeight: "20px",
-                          textAlign: "center",
-                          color: "white",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {percentagePaidBack.toFixed(1)}%
-                      </div>
+                        <div
+                          className="progress-bar-filled"
+                          style={{
+                            width: `${percentagePaidBack}%`,
+                            height: "100%",
+                            backgroundColor: "#27ae60",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            transition: "width 0.5s ease",
+                            borderRadius: "10px 0 0 10px",
+                            lineHeight: "20px",
+                            textAlign: "center",
+                            color: "white",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {percentagePaidBack.toFixed(1)}%
+                        </div>
                       </div>
 
                       <div className="windmill-actions">
                         <button
-                          className={`btn-toggle ${wm.status ? "active" : "inactive"}`}
+                          className={`btn-toggle ${
+                            wm.status ? "active" : "inactive"
+                          }`}
                           onClick={() => toggleStatus(wm._id, !wm.status)}
                         >
                           {wm.status ? "Onemogoči" : "Omogoči"}
@@ -437,7 +449,7 @@ const Profile = () => {
                         <img
                           src={imgSrc}
                           alt={wm.windMillType}
-                          className="windmill-image"
+                          className="windmill-sidebar-image"
                         />
                       ) : (
                         <div className="windmill-image-placeholder">
