@@ -30,7 +30,7 @@ export const Register = async (req, res) => {
       message: "User registered successfully",
       success: true,
       user: { username: user.username, email: user.email },
-      
+
     });
   } catch (error) {
     console.error(error);
@@ -39,7 +39,7 @@ export const Register = async (req, res) => {
 };
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, { username: 1, email: 1, _id: 0 }); 
+    const users = await User.find({}, { username: 1, email: 1, _id: 0 });
     res.status(200).json(users);
   } catch (error) {
     console.error(error);
@@ -53,14 +53,14 @@ export const Login = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password)
       return res.status(400).json({ message: "All fields required" });
-    
+
     const user = await User.findOne({ email });
     if (user) {
-  console.log("Vnešeno geslo:", password);
-  console.log("Shranjeno geslo:", user.password);
-  const auth = await bcrypt.compare(password, user.password);
-  console.log("Rezultat primerjave:", auth);
-}
+      console.log("Vnešeno geslo:", password);
+      console.log("Shranjeno geslo:", user.password);
+      const auth = await bcrypt.compare(password, user.password);
+      console.log("Rezultat primerjave:", auth);
+    }
 
     if (!user)
       return res.status(401).json({ message: "Wrong email or password" });
@@ -76,7 +76,7 @@ export const Login = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
     });
     console.log("PRIJAVA za:", email);
-console.log("Najden uporabnik:", user);
+    console.log("Najden uporabnik:", user);
 
 
     res.status(200).json({

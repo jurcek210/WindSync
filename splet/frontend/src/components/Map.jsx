@@ -14,6 +14,8 @@ import { GeoJSON } from "react-leaflet";
 import DayliEnergy from "./DayliEnergy";
 import NearbyWindmills from "./NearbyWindmills.jsx";
 import WindmillDetailsSidebar from "./WindmillDetailsSidebar";
+import { io } from "socket.io-client";
+
 
 const MapDoubleClickHandler = ({ onDoubleClick }) => {
   useMapEvents({
@@ -246,6 +248,29 @@ const Map = ({ loggedIn }) => {
     };
     fetchWindmills();
   }, []);
+
+  useEffect(() => {
+  const socket = io("http://localhost:3001");
+
+  socket.on("connect", () => {
+    console.log("Povezan na socket strežnik:", socket.id);
+  });
+
+  socket.on("windmillCreated", (windmill) => {
+    console.log("Prejeta nova veternica:", windmill);
+    setWindmills((prev) => [...prev, windmill]);
+  });
+
+  socket.on("windmillDeleted", ({ id }) => {
+    console.log("Prejet izbris veternice:", id);
+    setWindmills((prev) => prev.filter((w) => w._id !== id));
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, []);
+
 
   return (
     <div

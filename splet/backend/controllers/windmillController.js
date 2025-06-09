@@ -6,14 +6,18 @@ export const createWindmill = async (req, res) => {
     const windmill = await Windmill.create({
       ...req.body,
       owner: req.user.id
-      
     });
+
     res.status(201).json(windmill);
-    console.log("REQ.USER:", req.user);
+
+    const io = req.app.get("io");
+    io.emit("windmillCreated", windmill);
+
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
+
 
 export const listWindmills = async (req, res) => {
   try {
@@ -45,13 +49,18 @@ export const deleteWindmill = async (req, res) => {
     }
 
     await windmill.deleteOne();
+
     res.status(200).json({ message: "Veternica izbrisana" });
+
+    const io = req.app.get("io");
+    io.emit("windmillDeleted", { id: windmill._id });
 
   } catch (err) {
     console.error("Napaka pri brisanju veternice:", err);
     res.status(500).json({ message: "Napaka pri brisanju veternice" });
   }
 };
+
 
 export const toggleWindmillStatus = async (req, res) => {
   try {
