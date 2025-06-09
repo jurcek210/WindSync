@@ -19,6 +19,10 @@ import androidx.compose.ui.window.application
 import api.openweather.OpenWeatherApi
 import org.litote.kmongo.text
 import api.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import org.litote.kmongo.set
+
 import models.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -78,6 +82,8 @@ fun App( ) {
                     when (selectedScreen) {
                         "Add user" -> AddUserScreen()
                         "Users" -> UsersScreen()
+                        "Add windmill" -> AddWindmillScreen()
+                        "Windmills" -> AllWindmillsScreen()
                         "Scraper" -> ScraperScreen()
                         "Generator" -> GeneratorScreen()
                         "About" -> AboutScreen()
@@ -119,6 +125,10 @@ fun NavPanel(onNavigate: (String) -> Unit) {
     ) {
         NavigationButton("Add user", Icons.Filled.Add, onNavigate)
         NavigationButton("Users", Icons.Default.Menu, onNavigate)
+
+        NavigationButton("Add windmill", Icons.Filled.Add, onNavigate)
+        NavigationButton("Windmills", Icons.Default.Menu, onNavigate)
+
         Divider(
             color = Color(0xFF333333),
             thickness = 1.dp,
@@ -570,6 +580,180 @@ fun GeneratorScreen() {
     }
 }
 
+@Composable
+fun AllWindmillsScreen() {
+    val windmills = remember { mutableStateListOf<Station>() }
+
+    LaunchedEffect(Unit) {
+        windmills.clear()
+        windmills.addAll(
+            listOf(
+                Station(
+                    name = "OrkanSpektar",
+                    windSpeed = 11.62,
+                    windMillType = "tipZ",
+                    generated = true,
+                    location = Location.fromLatLon(46.051, 14.505)
+                ),
+                Station(
+                    name = "BliskBrezmejna",
+                    windSpeed = 19.95,
+                    windMillType = "tipY",
+                    generated = true,
+                    location = Location.fromLatLon(46.052, 14.506)
+                ),
+                Station(
+                    name = "TihaMax",
+                    windSpeed = 9.49,
+                    windMillType = "tipZ",
+                    generated = true,
+                    location = Location.fromLatLon(46.053, 14.507)
+                ),
+                Station(
+                    name = "VetraLegenda",
+                    windSpeed = 10.41,
+                    windMillType = "tipA",
+                    generated = true,
+                    location = Location.fromLatLon(46.054, 14.508)
+                ),
+                Station(
+                    name = "Koper center",
+                    windSpeed = 10.98,
+                    windMillType = "tipZ",
+                    generated = false,
+                    location = Location.fromLatLon(45.548, 13.730)
+                ),
+                Station(
+                    name = "Tolmin zahod",
+                    windSpeed = 7.12,
+                    windMillType = "tipZ",
+                    generated = false,
+                    location = Location.fromLatLon(46.185, 13.733)
+                ),
+                Station(
+                    name = "Litija jug",
+                    windSpeed = 7.38,
+                    windMillType = "tipA",
+                    generated = false,
+                    location = Location.fromLatLon(46.055, 14.823)
+                ),
+                Station(
+                    name = "TihaHorizont",
+                    windSpeed = 13.33,
+                    windMillType = "tipC",
+                    generated = true,
+                    location = Location.fromLatLon(46.056, 14.509)
+                ),
+                Station(
+                    name = "ZoraEcho",
+                    windSpeed = 12.78,
+                    windMillType = "tipZ",
+                    generated = true,
+                    location = Location.fromLatLon(46.057, 14.510)
+                ),
+                Station(
+                    name = "Val1",
+                    windSpeed = 9.79,
+                    windMillType = "tipZ",
+                    generated = true,
+                    location = Location.fromLatLon(46.058, 14.511)
+                )
+            )
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF121212))
+            .padding(16.dp)
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(windmills, key = { it.name }) { station ->
+                WindmillCard(station) { updatedName ->
+                    val index = windmills.indexOfFirst { it.name == station.name }
+                    if (index != -1) {
+                        windmills[index] = station.copy(name = updatedName)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WindmillCard(station: Station, onRename: suspend (String) -> Unit) {
+    var isEditing by remember { mutableStateOf(false) }
+    var editedName by remember { mutableStateOf(station.name) }
+    val coroutineScope = rememberCoroutineScope()
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clickable { isEditing = true },
+        elevation = 4.dp,
+        shape = RoundedCornerShape(8.dp),
+        backgroundColor = Color(0xFF2A2A2A)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+
+            Spacer(Modifier.height(8.dp))
+
+            if (isEditing) {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text("Ime") },
+                    singleLine = true
+                )
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    Button(onClick = {
+                        coroutineScope.launch {
+                            onRename(editedName)
+                            isEditing = false
+                        }
+                    }) {
+                        Text("Shrani")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(onClick = {
+                        editedName = station.name
+                        isEditing = false
+                    }) {
+                        Text("Prekliči")
+                    }
+                }
+            } else {
+                Text(text = station.name, color = Color.White, fontSize = 16.sp)
+                Text(
+                    text = "${station.windSpeed?.let { "%.1f".format(it) } ?: "?"} m/s",
+                    color = Color.LightGray
+                )
+                Text(
+                    text = " ${station.location.getLatitude()}, ${station.location.getLongitude()}",
+                    color = Color.LightGray,
+                    fontSize = 12.sp
+                )
+            }
+        }
+    }
+}
+
+
 suspend fun generateWindmills(
     count: Int,
     minWind: Double = 1.0,
@@ -593,6 +777,111 @@ suspend fun generateWindmills(
 
     println("${stations.size} stations saved to DB.")
 }
+@Composable
+fun AddWindmillScreen() {
+    var name by remember { mutableStateOf("") }
+    var lat by remember { mutableStateOf("") }
+    var lon by remember { mutableStateOf("") }
+    var windSpeed by remember { mutableStateOf("") }
+    var windType by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text("Dodaj novo vetrnico", color = Color.White, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Ime (prazno = naključno)") },
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = lat,
+            onValueChange = { lat = it },
+            label = { Text("Latitude") },
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = lon,
+            onValueChange = { lon = it },
+            label = { Text("Longitude") },
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = windSpeed,
+            onValueChange = { windSpeed = it },
+            label = { Text("Hitrost vetra (m/s)") },
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = windType,
+            onValueChange = { windType = it },
+            label = { Text("Tip vetrnice (prazno = naključno)") },
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(onClick = {
+            val latitude = lat.toDoubleOrNull()
+            val longitude = lon.toDoubleOrNull()
+            val speed = windSpeed.toDoubleOrNull()
+
+            if (latitude == null || longitude == null || speed == null) {
+                message = "Vnesi pravilne številčne vrednosti."
+                return@Button
+            }
+
+            coroutineScope.launch {
+                try {
+                    val station = Station(
+                        name = if (name.isBlank()) Station.randomStationName() else name,
+                        location = Location.fromLatLon(latitude, longitude),
+                        windSpeed = speed,
+                        windMillType = if (windType.isBlank()) Station.randomWindMillType() else windType,
+                        generated = false // ročno dodana
+                    )
+                    withContext(Dispatchers.IO) {
+                        Database.windmills.insertOne(station)
+                    }
+                    message = "Vetrnica dodana!"
+                    name = ""
+                    lat = ""
+                    lon = ""
+                    windSpeed = ""
+                    windType = ""
+                } catch (e: Exception) {
+                    message = "Napaka: ${e.message}"
+                }
+            }
+        }) {
+            Text("Dodaj vetrnico")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        if (message.isNotEmpty()) {
+            Text(message, color = Color.Green)
+        }
+    }
+}
+
 
 
 @Composable

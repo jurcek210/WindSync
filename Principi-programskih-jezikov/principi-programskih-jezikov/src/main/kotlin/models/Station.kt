@@ -2,14 +2,14 @@ package models
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import org.bson.types.ObjectId
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.random.Random
-import java.util.Locale
 
 @Serializable
 data class Station(
-    @Contextual val id: UUID = UUID.randomUUID(),
+    @Contextual val id: ObjectId = ObjectId(),
     var name: String,
     val location: Location,
     var windSpeed: Double? = null,
@@ -18,8 +18,9 @@ data class Station(
     val measurements: List<String> = emptyList(),
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     var windMillType: String? = null,
-    var generated: Boolean = true   // tukaj dodamo polje, default true
-) {
+    var generated: Boolean = true
+)
+{
     fun toggleStatus() {
         status = !status
     }
@@ -42,40 +43,14 @@ data class Station(
     companion object {
         private val windMillTypes = listOf("tipA", "tipB", "tipC", "tipY", "tipZ", "tipW")
         private val windMillNamePrefixes = listOf(
-            "Vetra",
-            "Gora",
-            "Bela",
-            "Sonce",
-            "Zora",
-            "Moc",
-            "Plamen",
-            "Val",
-            "Nebesa",
-            "Sijaj",
-            "Tiha",
-            "Orkan",
-            "Iskra",
-            "Blisk",
-            "Luna"
+            "Vetra", "Gora", "Bela", "Sonce", "Zora", "Moc", "Plamen", "Val",
+            "Nebesa", "Sijaj", "Tiha", "Orkan", "Iskra", "Blisk", "Luna"
+        )
+        private val windMillNameSuffixes = listOf(
+            "1", "2", "X", "Nova", "Prime", "Max", "Aurora", "Echo",
+            "Vihar", "Zvezda", "Legenda", "Spektar", "Brezmejna", "Svetloba", "Horizont"
         )
 
-        private val windMillNameSuffixes = listOf(
-            "1",
-            "2",
-            "X",
-            "Nova",
-            "Prime",
-            "Max",
-            "Aurora",
-            "Echo",
-            "Vihar",
-            "Zvezda",
-            "Legenda",
-            "Spektar",
-            "Brezmejna",
-            "Svetloba",
-            "Horizont"
-        )
         fun randomWindMillType(): String {
             return windMillTypes.random()
         }
@@ -95,7 +70,13 @@ data class Station(
             val loc = location ?: Location()
             val type = windMillType ?: randomWindMillType()
             val stationName = name ?: randomStationName()
-            return Station(name = stationName, location = loc, owner = owner, windMillType = type, generated = true)
+            return Station(
+                name = stationName,
+                location = loc,
+                owner = owner,
+                windMillType = type,
+                generated = true
+            )
         }
 
         fun randomWind(
@@ -109,7 +90,13 @@ data class Station(
             val loc = location ?: Location()
             val type = windMillType ?: randomWindMillType()
             val stationName = name ?: randomStationName()
-            val station = Station(name = stationName, location = loc, owner = owner, windMillType = type, generated = true)
+            val station = Station(
+                name = stationName,
+                location = loc,
+                owner = owner,
+                windMillType = type,
+                generated = true
+            )
             station.randomizeWindSpeed(min, max)
             return station
         }

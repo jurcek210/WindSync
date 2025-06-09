@@ -26,10 +26,10 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:2.3.3")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.slf4j:slf4j-simple:2.0.9")
-    implementation("org.litote.kmongo:kmongo:4.11.0")
-    implementation("org.litote.kmongo:kmongo-serialization:4.9.0")
+    implementation("org.litote.kmongo:kmongo-serialization:4.11.0") // ali tvoja verzija
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3") // ali novejša
+    implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.11.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     implementation("org.jsoup:jsoup:1.20.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
