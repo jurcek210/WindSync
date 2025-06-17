@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         // target: "http://localhost:3001",
-        target: "http://windsync-backend:3001", //za docker na virtualki
+        target: "http://backend:3001", //za docker na virtualki
         changeOrigin: true,
       },
     },
