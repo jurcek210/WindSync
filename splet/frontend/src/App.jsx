@@ -1,24 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
-<<<<<<< HEAD
-import Register from "./components/Register"
-import Home from "./components/Home"
-import "./styles/index.css"
-
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/home" element ={<Home/>}/>
-        <Route path="/login" element={<Login />} />
-=======
 import Register from "./components/Register";
 import Home from "./components/Home";
 import Taskbar from "./components/Taskbar";
 import "./styles/index.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Zanimivosti from './components/Zanimivosti'; // prilagodi pot glede na strukturo
+import Zanimivosti from "./components/Zanimivosti"; // prilagodi pot glede na strukturo
 import WindMils from "./components/WindMils";
 import WindMilsBig from "./components/WindMilsBig";
 import Profile from "./components/Profile";
@@ -63,10 +51,7 @@ function App() {
     checkAuth();
   }, []);
 
-   if (!authChecked) return null;
-
-
-
+  if (!authChecked) return null;
 
   return (
     <Router>
@@ -77,30 +62,28 @@ function App() {
         setUser={setUser}
       />
       <Routes>
-        <Route path="/" element={
-          <Home user={user} loggedIn={loggedIn} />
-        } />
+        <Route path="/" element={<Home user={user} loggedIn={loggedIn} />} />
 
         <Route
           path="/login"
           element={<Login setUser={setUser} setLoggedIn={setLoggedIn} />}
         />
         <Route path="/zanimivosti" element={<Zanimivosti />} />
-        <Route path="/WindMils/:id/:windSpeed/:lat/:lng" element={<WindMils />} />
-        <Route path="/WindMilsBig/:id/:windSpeed/:lat/:lng" element={<WindMilsBig />} />
-        <Route path="/WindMillCreate" element={<WindMillCreate />} />        
+        <Route
+          path="/WindMils/:id/:windSpeed/:lat/:lng"
+          element={<WindMils />}
+        />
+        <Route
+          path="/WindMilsBig/:id/:windSpeed/:lat/:lng"
+          element={<WindMilsBig />}
+        />
+        <Route path="/WindMillCreate" element={<WindMillCreate />} />
         <Route path="/profile" element={<Profile />} />
 
-
->>>>>>> dev
         <Route path="/register" element={<Register />} />
       </Routes>
     </Router>
   );
 }
 
-<<<<<<< HEAD
 export default App;
-=======
-export default App;
->>>>>>> dev
