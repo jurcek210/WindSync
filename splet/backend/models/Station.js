@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const stationSchema = new mongoose.Schema({
+const windmillSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -10,7 +10,7 @@ const stationSchema = new mongoose.Schema({
       type: String,
       enum: ["Point"],
       required: true,
-      default: "Point"
+      default: () => "Point",
     },
     coordinates: {
       type: [Number],
@@ -28,11 +28,25 @@ const stationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
+  measurements: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "WindmillData"
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  windMillType: {
+    type: String,
+    required: false,
+  },
+  generated: {
+    type: Boolean,
+    default: false
+  }
 });
-stationSchema.index({ location: "2dsphere" });
 
-export default mongoose.model("Station", stationSchema);
+
+windmillSchema.index({ location: "2dsphere" });
+
+export default mongoose.model("Windmill", windmillSchema);

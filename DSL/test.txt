@@ -1,0 +1,15 @@
+zelenamreza "test" {
+    let center = point(15.0, 46.0);
+
+    let p1a = point(14.7, 46.2);
+    let p1b = point(14.8, 46.3);
+
+kabel "k1" {
+
+    line(p1a,p1b);
+};
+
+
+
+
+};

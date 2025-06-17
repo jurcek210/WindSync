@@ -1,0 +1,133 @@
+:root {
+  --primary-color: #098eaf;  /* svetlo turkizna */
+  --primary-dark: #bbdefb;   /* svetla modra */
+  --background-gradient: #bbdefb;
+  --white: #ffffff;
+  --border: #ffffff;
+  --text-shadow: 0 0 5px rgba(255, 255, 255, 0.719);
+}
+
+body {
+  background: #aecfeb;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: grey;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  color: grey;
+  padding: 20px;
+  max-width: 800px;
+  margin: 30px auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 30px rgba(9, 142, 175, 0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  font-weight: 900;
+  text-shadow: var(--text-shadow);
+}
+
+.image {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+}
+
+.image:hover {
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* rahla temna senca */
+  filter: none;
+}
+.infoPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.2rem;
+  color: grey;
+  text-shadow: var(--text-shadow);
+}
+
+.infoRow strong {
+  width: 160px;
+  font-weight: 700;
+  color: grey;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  user-select: none;
+}
+
+.highlight {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: grey;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  letter-spacing: 0.15em;
+  text-shadow: var(--text-shadow);
+}
+
+.paybackText {
+  font-style: italic;
+  color: #d32f2f; /* rdeča za opozorilo */
+  font-weight: 700;
+  margin-top: 10px;
+  text-shadow: 0 0 8px #d32f2f;
+}
+
+.graphContainer {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 2px solid var(--primary-dark);
+  box-shadow: 0 0 10px var(--primary-dark);
+  border-radius: 0 0 20px 20px;
+}
+
+/* Tooltip na sliki */
+.image-tooltip {
+  position: relative;
+}
+
+.image-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--primary-dark);
+  color: var(--white);
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  font-size: 1rem;
+  opacity: 0.95;
+  pointer-events: none;
+  box-shadow: 0 0 10px var(--primary-color);
+  transition: opacity 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px;
+  }
+}

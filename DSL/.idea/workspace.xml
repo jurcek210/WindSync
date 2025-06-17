@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a5423908-8665-410b-918e-867a84f7681e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/AST/Bezier.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Principi-programskih-jezikov/principi-programskih-jezikov/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../Principi-programskih-jezikov/principi-programskih-jezikov/src/main/kotlin/Main.kt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="DSLfinal" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;MaticTheCoder&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/jurcek210/WindSync.git&quot;,
+    &quot;accountId&quot;: &quot;a58bc2e8-8e93-4351-8d72-89fb2d1dcc1c&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2xVlDH6zkNON632UZwGgv38JpUN" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Build DSL.executor": "Run",
+    "Gradle.Build DSLfinal.executor": "Run",
+    "Kotlin.MainKt.executor": "Run",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/matic/OneDrive/Namizje/Projects/WindSync",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\matic\DSLfinal\src\main\kotlin" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\matic\DSLfinal" />
+      <recent name="C:\Users\matic\DSLfinal\src\main" />
+      <recent name="C:\Users\matic\DSLfinal\src" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.25659.59" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.25659.59" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a5423908-8665-410b-918e-867a84f7681e" name="Changes" comment="" />
+      <created>1748031002283</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1748031002283</updated>
+      <workItem from="1748031003716" duration="988000" />
+      <workItem from="1748032080911" duration="1303000" />
+      <workItem from="1748033426042" duration="644000" />
+      <workItem from="1748034138326" duration="668000" />
+      <workItem from="1748034850697" duration="222000" />
+      <workItem from="1748035093451" duration="554000" />
+      <workItem from="1748035670324" duration="301000" />
+      <workItem from="1748036002365" duration="498000" />
+      <workItem from="1748036529380" duration="541000" />
+      <workItem from="1748037106669" duration="709000" />
+      <workItem from="1748037874143" duration="716000" />
+      <workItem from="1748038620179" duration="683000" />
+      <workItem from="1748039334112" duration="919000" />
+      <workItem from="1748040283388" duration="90000" />
+      <workItem from="1748040534087" duration="479000" />
+      <workItem from="1748112780391" duration="1665000" />
+      <workItem from="1748114901216" duration="1183000" />
+      <workItem from="1748116128138" duration="801000" />
+      <workItem from="1748116970538" duration="1387000" />
+      <workItem from="1748118400051" duration="616000" />
+      <workItem from="1748119056848" duration="728000" />
+      <workItem from="1748119829236" duration="832000" />
+      <workItem from="1748120703318" duration="336000" />
+      <workItem from="1748160843779" duration="977000" />
+      <workItem from="1748161884298" duration="1653000" />
+      <workItem from="1748332199766" duration="10000" />
+      <workItem from="1748418350878" duration="45000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/Parser.kt</url>
+          <line>713</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

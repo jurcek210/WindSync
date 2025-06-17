@@ -1,0 +1,70 @@
+.zanimivosti-page {
+  background-image: url('/public/photos/vetrna_polja.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  padding: 2rem;
+  color: var(--subtle-text);
+  display: flex;
+  justify-content: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.overlay {
+  background: rgba(255, 255, 255, 0.8); /* prosojna turkizna (var(--primary-color) z alpha) */
+  padding: 2rem;
+  border-radius: 16px;
+  max-width: 1000px;
+  width: 100%;
+  box-shadow: 0 0 15px rgba(9, 142, 175, 0.5);
+}
+
+.overlay h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--subtle-text);
+  text-shadow: var(--text-shadow);
+}
+
+.info-box {
+  background-color: rgba(187, 222, 251, 0.15); /* svetlo modra prosojna (var(--primary-dark)) */
+  padding: 1rem 1.5rem;
+  margin-top: 2rem;
+  border-left: 5px solid var(--primary-color);
+  border-radius: 8px;
+  color: var(--subtle-text);
+  text-shadow: var(--text-shadow);
+}
+
+.info-box h3 {
+  margin-bottom: 0.5rem;
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.info-box li {
+  margin-bottom: 0.5rem;
+}
+
+/* Prilagoditev bar Chart: XAxis & YAxis label barve */
+.recharts-cartesian-axis-tick-value {
+  fill: var(--subtle-text);
+  font-weight: 700;
+}
+
+/* Tooltip barve */
+.recharts-tooltip-wrapper {
+  background-color: var(--subtle-text) !important;
+  color: var(--subtle-text) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 8px rgba(9, 142, 175, 0.6) !important;
+}
+
+
+.custom-bar {
+  fill: var(--subtle-text);
+}
