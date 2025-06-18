@@ -8,8 +8,11 @@ const Home = ({loggedIn}) => {
   return (
   <div className="home-container">
     <Map loggedIn={loggedIn} />
-
+    
+    {/*}
     <NearbyWindmills />
+        {*/}
+
     </div>
         
         

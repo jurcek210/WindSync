@@ -24,11 +24,11 @@ const Login = ({ setUser, setLoggedIn }) => {
       setMessage(data.message);
 
       if (data.success) {
+        localStorage.setItem("token", data.token); 
         setUser(data.user);
         setLoggedIn(true);
         navigate("/");
       }
-
 
     } catch (err) {
       setMessage("Napaka pri prijavi");

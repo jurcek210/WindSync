@@ -5,10 +5,9 @@ import kotlin.random.Random
 
 @Serializable
 class Location(
+    val type: String = "Point",
     val coordinates: List<Double> = generateRandomSlovenianCoordinates()
 ) {
-    val type: String = "Point"
-
     companion object {
         fun fromLatLon(lat: Double, lon: Double): Location {
             return Location(coordinates = listOf(lon, lat))

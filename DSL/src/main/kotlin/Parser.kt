@@ -1,8 +1,9 @@
 import AST.*
+import org.example.Lexer
 
 
 class Parser(
-    private val lex: Scanner,
+    private val lex: Lexer,
     private var currentToken: Token = lex.getToken()
 ) {
 
@@ -177,7 +178,7 @@ class Parser(
                 if (currentToken.symbol != Symbol.RPAREN) {
                     throw Error("Expected ')' at ${currentToken.row}:${currentToken.column}")
                 }
-                currentToken = lex.getToken()  // zelo pomembno, da ne pozabiš premakniti tokena naprej
+                currentToken = lex.getToken()
                 return inner
             }
             Symbol.COUNT -> {
@@ -996,29 +997,66 @@ class Parser(
     }
 
     private fun kabelLine(segments: MutableList<KabelSegment>) {
-        if (currentToken.symbol == Symbol.BEND) {
-            currentToken = lex.getToken()
-            if (currentToken.symbol != Symbol.LPAREN) throw Error("Expected '(' after 'bend'")
-            currentToken = lex.getToken()
-            val from = parsePointExpr()
+        when (currentToken.symbol) {
+            Symbol.BEND -> {
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.LPAREN) throw Error("Expected '(' after 'bend'")
+                currentToken = lex.getToken()
+                val from = parsePointExpr()
 
-            if (currentToken.symbol != Symbol.TO) throw Error("Expected ',' between points")
-            currentToken = lex.getToken()
-            val to = parsePointExpr()
+                if (currentToken.symbol != Symbol.TO) throw Error("Expected ',' between points")
+                currentToken = lex.getToken()
+                val to = parsePointExpr()
 
-            if (currentToken.symbol != Symbol.TO) throw Error("Expected ',' before bend amount")
-            currentToken = lex.getToken()
-            val radiusExpr = additive()
-            val radius = radiusExpr.eval()
+                if (currentToken.symbol != Symbol.TO) throw Error("Expected ',' before bend amount")
+                currentToken = lex.getToken()
+                val radiusExpr = additive()
+                val radius = radiusExpr.eval()
 
-            if (currentToken.symbol != Symbol.RPAREN) throw Error("Expected ')' after bend parameters")
-            currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.RPAREN) throw Error("Expected ')' after bend parameters")
+                currentToken = lex.getToken()
 
-            segments.add(KabelSegment(from, to, radius))
+                segments.add(KabelSegment(from, to, radius))
+            }
 
-        } else {
-            val from = parsePointExpr()
-            kabelCont(from, segments)
+            Symbol.LINE -> {
+                currentToken = lex.getToken()
+                if (currentToken.symbol != Symbol.LPAREN) throw Error("Expected '(' after 'line'")
+                currentToken = lex.getToken()
+
+                val fromName = if (currentToken.symbol == Symbol.VARIABLE) {
+                    val name = currentToken.lexeme
+                    currentToken = lex.getToken()
+                    name
+                } else {
+                    throw Error("Expected variable as first point in line()")
+                }
+
+                if (currentToken.symbol != Symbol.TO) throw Error("Expected ',' between line points")
+                currentToken = lex.getToken()
+
+                val toName = if (currentToken.symbol == Symbol.VARIABLE) {
+                    val name = currentToken.lexeme
+                    currentToken = lex.getToken()
+                    name
+                } else {
+                    throw Error("Expected variable as second point in line()")
+                }
+
+                if (currentToken.symbol != Symbol.RPAREN) throw Error("Expected ')' after line points")
+                currentToken = lex.getToken()
+
+                val fromPoint = vars[fromName] as? Point ?: throw Error("Point '$fromName' not defined or invalid")
+                val toPoint = vars[toName] as? Point ?: throw Error("Point '$toName' not defined or invalid")
+
+                segments.add(KabelSegment(fromPoint, toPoint, 0.0))
+            }
+
+
+            else -> {
+                val from = parsePointExpr()
+                kabelCont(from, segments)
+            }
         }
 
         if (currentToken.symbol == Symbol.SEMICOLON) {
@@ -1027,6 +1065,7 @@ class Parser(
             throw Error("Missing terminator at ${currentToken.row}:${currentToken.column}")
         }
     }
+
 
     private fun kabelCont(fromStart: Point, segments: MutableList<KabelSegment>) {
         var from = fromStart
@@ -1136,6 +1175,8 @@ class Parser(
                 }
                 throw Error("Invalid line syntax")
             }
+
+
             Symbol.BOX -> {
                 currentToken = lex.getToken()
                 if (currentToken.symbol == Symbol.LPAREN) {
