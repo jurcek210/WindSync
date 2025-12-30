@@ -7,6 +7,10 @@ import connectDB from './config/db.js'
 import cookieParser from "cookie-parser"
 import authRoute from "./routes/authRoutes.js"
 import windmillRoute from "./routes/windmillRoutes.js"
+import imageRecognitionRoutes from "./routes/imageRecognitionRoutes.js"; //za api če delamo z http
+import "./mqtt.js";
+
+
 
 dotenv.config();
 connectDB();
@@ -53,3 +57,6 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+//app.use("/api/image", imageRecognitionRoutes); //za api če delamo s http
+
