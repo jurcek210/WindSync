@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.Net;
 import si.um.feri.maprri.api.WindmillApi;
 
+
+
 public class VectorMap extends ApplicationAdapter {
 
     private VectorMapRenderer map;
@@ -26,23 +28,12 @@ public class VectorMap extends ApplicationAdapter {
         camera.update();
 
         WindmillApi api = new WindmillApi("http://localhost:3001/api");
-        api.fetchAll(new Net.HttpResponseListener() {
-            @Override
-            public void handleHttpResponse(Net.HttpResponse httpResponse) {
-                System.out.println("API RESPONSE:");
-                System.out.println(httpResponse.getResultAsString());
-            }
-
-            @Override
-            public void failed(Throwable t) {
-                t.printStackTrace();
-            }
-
-            @Override
-            public void cancelled() {
-            }
+        api.fetchAll(windmills -> {
+            map.setWindmills(windmills);
+            System.out.println("Windmills loaded: " + windmills.size());
         });
     }
+
 
     @Override
     public void render() {
