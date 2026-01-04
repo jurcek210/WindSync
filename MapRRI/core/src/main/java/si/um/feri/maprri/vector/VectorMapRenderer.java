@@ -8,9 +8,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import si.um.feri.maprri.model.WindmillMarker;
-import java.util.List;
-import java.util.ArrayList;
-
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,25 +18,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VectorMapRenderer {
+
     private float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
     private float minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
 
     public final ShapeRenderer shapeRenderer;
+
     private final List<float[]> roads = new ArrayList<>();
     private final List<float[]> buildings = new ArrayList<>();
-    private List<WindmillMarker> windmills = new ArrayList<>();
+    private final List<String> buildingNames = new ArrayList<>();
 
+    private List<WindmillMarker> windmills = new ArrayList<>();
 
     public OrthographicCamera camera;
     public Viewport viewport;
 
-    // Camera offset & scale for zoom/pan
-    public float scale = 0.0023f;
+    public float scale = 0.0016f;
     public float offsetX = 0f, offsetY = 0f;
 
     public VectorMapRenderer(OrthographicCamera camera, float screenWidth, float screenHeight) {
         shapeRenderer = new ShapeRenderer();
-        // Setup camera + viewport
         this.camera = camera;
         viewport = new FitViewport(screenWidth, screenHeight, camera);
         viewport.apply();
@@ -57,32 +55,28 @@ public class VectorMapRenderer {
 
             for (int i = 0; i < features.length(); i++) {
                 JSONObject feature = features.getJSONObject(i);
+                JSONObject properties = feature.getJSONObject("properties");
                 JSONObject geometry = feature.getJSONObject("geometry");
+
+                String name = properties.optString("name", "");
                 String type = geometry.getString("type");
 
                 if (type.equals("LineString")) {
                     roads.add(parseCoordinates(geometry.getJSONArray("coordinates")));
                 } else if (type.equals("Polygon")) {
                     buildings.add(parsePolygon(geometry.getJSONArray("coordinates")));
+                    buildingNames.add(name);
                 } else if (type.equals("MultiPolygon")) {
                     JSONArray polys = geometry.getJSONArray("coordinates");
                     for (int j = 0; j < polys.length(); j++) {
                         buildings.add(parsePolygon(polys.getJSONArray(j)));
+                        buildingNames.add(name);
                     }
                 }
             }
 
-            // Center the map on load
             offsetX = (minX + maxX) / 2f;
             offsetY = (minY + maxY) / 2f;
-
-            System.out.println("Map centered at offset (" + offsetX + ", " + offsetY + "), scale=" + scale);
-
-            System.out.println("Loaded: " + roads.size() + " roads, " + buildings.size() + " buildings");
-
-            System.out.println("Bounds:");
-            System.out.println("X range: " + minX + " → " + maxX);
-            System.out.println("Y range: " + minY + " → " + maxY);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,7 +91,6 @@ public class VectorMapRenderer {
             verts[i * 2] = p.x;
             verts[i * 2 + 1] = p.y;
 
-            // track bounds
             if (p.x < minX) minX = p.x;
             if (p.x > maxX) maxX = p.x;
             if (p.y < minY) minY = p.y;
@@ -107,16 +100,13 @@ public class VectorMapRenderer {
     }
 
     private float[] parsePolygon(JSONArray polyCoords) {
-        // Polygons in GeoJSON are an array of linear rings
         return parseCoordinates(polyCoords.getJSONArray(0));
     }
-    //windmill setter
+
     public void setWindmills(List<WindmillMarker> windmills) {
         this.windmills = windmills;
     }
 
-
-    // Web Mercator projection (EPSG:3857)
     public static Vector2 lonLatToMeters(double lon, double lat) {
         double x = lon * 20037508.34 / 180.0;
         double y = Math.log(Math.tan((90.0 + lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
@@ -125,31 +115,76 @@ public class VectorMapRenderer {
     }
 
     public void render() {
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 
-        // Draw buildings
-        shapeRenderer.setColor(Color.SKY);
-        for (float[] verts : buildings) {
-            drawPolygon(verts);
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        for (int i = 0; i < buildings.size(); i++) {
+            String n = buildingNames.get(i);
+            if (
+                "Ljubljana".equalsIgnoreCase(n) ||
+                    "Maribor".equalsIgnoreCase(n) ||
+                    n.toLowerCase().contains("koper") ||
+                    "Celje".equalsIgnoreCase(n)
+            ) {
+                shapeRenderer.setColor(Color.SKY);
+                drawFilledPolygon(buildings.get(i));
+            }
         }
 
-        // Draw roads
+        shapeRenderer.end();
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+        for (int i = 0; i < buildings.size(); i++) {
+            String n = buildingNames.get(i);
+            if (
+                "Ljubljana".equalsIgnoreCase(n) ||
+                    "Maribor".equalsIgnoreCase(n) ||
+                    n.toLowerCase().contains("koper") ||
+                    "Celje".equalsIgnoreCase(n)
+            ) {
+                shapeRenderer.setColor(Color.SKY);
+            } else {
+                shapeRenderer.setColor(Color.LIGHT_GRAY);
+            }
+            drawPolygon(buildings.get(i));
+        }
+
         shapeRenderer.setColor(Color.DARK_GRAY);
         for (float[] verts : roads) {
             drawLineString(verts);
         }
-        //Draw windmills
-        shapeRenderer.setColor(Color.GREEN);
+
+        shapeRenderer.setColor(Color.RED);
         for (WindmillMarker w : windmills) {
             Vector2 p = lonLatToMeters(w.lon, w.lat);
             float x = (p.x - offsetX) * scale;
             float y = (p.y - offsetY) * scale;
-            shapeRenderer.circle(x, y, 6);
+
+            shapeRenderer.circle(x, y + 6, 6);
+            shapeRenderer.triangle(
+                x - 4, y + 4,
+                x + 4, y + 4,
+                x, y - 6
+            );
         }
 
 
         shapeRenderer.end();
+    }
+
+    private void drawFilledPolygon(float[] verts) {
+        for (int i = 1; i < verts.length / 2 - 1; i++) {
+            shapeRenderer.triangle(
+                (verts[0] - offsetX) * scale,
+                (verts[1] - offsetY) * scale,
+                (verts[i * 2] - offsetX) * scale,
+                (verts[i * 2 + 1] - offsetY) * scale,
+                (verts[(i + 1) * 2] - offsetX) * scale,
+                (verts[(i + 1) * 2 + 1] - offsetY) * scale
+            );
+        }
     }
 
     private void drawPolygon(float[] verts) {

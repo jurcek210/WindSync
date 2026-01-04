@@ -13,7 +13,7 @@ gradle-app.setting
 /headless/build/
 /server/build/
 /shared/build/
-
+Keys.java
 ## Java:
 *.class
 *.war
