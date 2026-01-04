@@ -7,6 +7,10 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import si.um.feri.maprri.model.WindmillMarker;
+import java.util.List;
+import java.util.ArrayList;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,12 +27,14 @@ public class VectorMapRenderer {
     public final ShapeRenderer shapeRenderer;
     private final List<float[]> roads = new ArrayList<>();
     private final List<float[]> buildings = new ArrayList<>();
+    private List<WindmillMarker> windmills = new ArrayList<>();
+
 
     public OrthographicCamera camera;
     public Viewport viewport;
 
     // Camera offset & scale for zoom/pan
-    public float scale = 0.5f;
+    public float scale = 0.0023f;
     public float offsetX = 0f, offsetY = 0f;
 
     public VectorMapRenderer(OrthographicCamera camera, float screenWidth, float screenHeight) {
@@ -104,6 +110,11 @@ public class VectorMapRenderer {
         // Polygons in GeoJSON are an array of linear rings
         return parseCoordinates(polyCoords.getJSONArray(0));
     }
+    //windmill setter
+    public void setWindmills(List<WindmillMarker> windmills) {
+        this.windmills = windmills;
+    }
+
 
     // Web Mercator projection (EPSG:3857)
     public static Vector2 lonLatToMeters(double lon, double lat) {
@@ -128,6 +139,15 @@ public class VectorMapRenderer {
         for (float[] verts : roads) {
             drawLineString(verts);
         }
+        //Draw windmills
+        shapeRenderer.setColor(Color.GREEN);
+        for (WindmillMarker w : windmills) {
+            Vector2 p = lonLatToMeters(w.lon, w.lat);
+            float x = (p.x - offsetX) * scale;
+            float y = (p.y - offsetY) * scale;
+            shapeRenderer.circle(x, y, 6);
+        }
+
 
         shapeRenderer.end();
     }

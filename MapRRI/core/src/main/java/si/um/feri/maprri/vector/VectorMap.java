@@ -3,12 +3,16 @@ package si.um.feri.maprri.vector;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.Net;
+import si.um.feri.maprri.api.WindmillApi;
+
+
 
 public class VectorMap extends ApplicationAdapter {
+
     private VectorMapRenderer map;
     OrthographicCamera camera;
     ShapeRenderer shapeRenderer;
@@ -22,7 +26,14 @@ public class VectorMap extends ApplicationAdapter {
         map = new VectorMapRenderer(camera, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(0, 0, 0);
         camera.update();
+
+        WindmillApi api = new WindmillApi("http://localhost:3001/api");
+        api.fetchAll(windmills -> {
+            map.setWindmills(windmills);
+            System.out.println("Windmills loaded: " + windmills.size());
+        });
     }
+
 
     @Override
     public void render() {
@@ -41,8 +52,8 @@ public class VectorMap extends ApplicationAdapter {
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) map.offsetX += moveSpeed;
         if (Gdx.input.isKeyPressed(Input.Keys.UP))    map.offsetY += moveSpeed;
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN))  map.offsetY -= moveSpeed;
-        if (Gdx.input.isKeyPressed(Input.Keys.A))  map.scale *= (1 + zoomSpeed);
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) map.scale *= (1 - zoomSpeed);
+        if (Gdx.input.isKeyPressed(Input.Keys.A))     map.scale *= (1 + zoomSpeed);
+        if (Gdx.input.isKeyPressed(Input.Keys.S))     map.scale *= (1 - zoomSpeed);
     }
 
     @Override
