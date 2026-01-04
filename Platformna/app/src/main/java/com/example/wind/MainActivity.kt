@@ -30,14 +30,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnTestApi.isEnabled = false
-
         mqttManager = MqttManager(
+            context = this,
             serverUri = "tcp://192.168.1.6:1883",
             resultTopic = "windsync/result",
             imageTopic = "windsync/image",
             onResult = { handleResult(it) },
-            onStatus = { updateStatus(it) }
+            onStatus = { showStatus(it) }
         )
 
         mqttManager.connect()
@@ -47,12 +46,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateStatus(text: String) {
+    // ===============================
+    // UI helperji
+    // ===============================
+    private fun showStatus(text: String) {
         runOnUiThread {
             binding.txtResult.text = text
-            if (text.contains("MQTT povezan")) {
-                binding.btnTestApi.isEnabled = true
-            }
         }
     }
 
@@ -65,7 +64,7 @@ class MainActivity : AppCompatActivity() {
             val isWind = json.getBoolean("is_wind_turbine")
             val confidence = json.getDouble("confidence")
 
-            val resultText = if (!isWind) {
+            val text = if (!isWind) {
                 "❌ NI vetrnica\nZanesljivost: ${(confidence * 100).toInt()} %"
             } else {
                 val blades = json.getString("blades")
@@ -77,10 +76,10 @@ class MainActivity : AppCompatActivity() {
                         "Krakov conf: ${(bladesConf * 100).toInt()} %"
             }
 
-            updateStatus(resultText)
+            showStatus(text)
 
         } catch (e: Exception) {
-            updateStatus("❌ Napaka pri branju rezultata")
+            showStatus("❌ Napaka pri branju rezultata")
         }
     }
 
