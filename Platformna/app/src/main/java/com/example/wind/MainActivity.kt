@@ -12,16 +12,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.wind.databinding.ActivityMainBinding
-import org.eclipse.paho.client.mqttv3.*
+import com.example.wind.mqtt.MqttManager
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.util.UUID
-import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var mqttClient: MqttClient
+    private lateinit var mqttManager: MqttManager
 
     private val REQUEST_CAMERA = 1
     private val TAKE_PHOTO = 2
@@ -32,62 +30,28 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // MQTT nastavitve
-        val serverUri = "tcp://192.168.1.6:1883"
-        val clientId = UUID.randomUUID().toString()
-        mqttClient = MqttClient(serverUri, clientId, null)
+        binding.btnTestApi.isEnabled = false
 
-        connectMqtt()
+        mqttManager = MqttManager(
+            serverUri = "tcp://192.168.1.6:1883",
+            resultTopic = "windsync/result",
+            imageTopic = "windsync/image",
+            onResult = { handleResult(it) },
+            onStatus = { updateStatus(it) }
+        )
+
+        mqttManager.connect()
 
         binding.btnTestApi.setOnClickListener {
             checkCameraPermissionAndOpen()
         }
     }
 
-    // ===============================
-    // MQTT
-    // ===============================
-    private fun connectMqtt() {
-        thread {
-            try {
-                mqttClient.setCallback(object : MqttCallback {
-                    override fun connectionLost(cause: Throwable?) {
-                        runOnUiThread {
-                            Toast.makeText(
-                                this@MainActivity,
-                                "MQTT povezava izgubljena – reconnecting...",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-
-                    override fun messageArrived(topic: String?, message: MqttMessage?) {
-                        if (topic == "windsync/result") {
-                            handleResult(message.toString())
-                        }
-                    }
-
-                    override fun deliveryComplete(token: IMqttDeliveryToken?) {}
-                })
-
-                val options = MqttConnectOptions().apply {
-                    isCleanSession = false
-                    isAutomaticReconnect = true
-                    connectionTimeout = 10
-                    keepAliveInterval = 20
-                }
-
-                mqttClient.connect(options)
-                mqttClient.subscribe("windsync/result")
-
-                runOnUiThread {
-                    Toast.makeText(this, "MQTT povezan", Toast.LENGTH_SHORT).show()
-                }
-
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "MQTT napaka: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+    private fun updateStatus(text: String) {
+        runOnUiThread {
+            binding.txtResult.text = text
+            if (text.contains("MQTT povezan")) {
+                binding.btnTestApi.isEnabled = true
             }
         }
     }
@@ -101,7 +65,7 @@ class MainActivity : AppCompatActivity() {
             val isWind = json.getBoolean("is_wind_turbine")
             val confidence = json.getDouble("confidence")
 
-            val text = if (!isWind) {
+            val resultText = if (!isWind) {
                 "❌ NI vetrnica\nZanesljivost: ${(confidence * 100).toInt()} %"
             } else {
                 val blades = json.getString("blades")
@@ -113,14 +77,10 @@ class MainActivity : AppCompatActivity() {
                         "Krakov conf: ${(bladesConf * 100).toInt()} %"
             }
 
-            runOnUiThread {
-                binding.txtResult.text = text
-            }
+            updateStatus(resultText)
 
         } catch (e: Exception) {
-            runOnUiThread {
-                binding.txtResult.text = "Napaka pri branju rezultata"
-            }
+            updateStatus("❌ Napaka pri branju rezultata")
         }
     }
 
@@ -173,35 +133,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendBitmap(bitmap: Bitmap) {
-        thread {
-            try {
-                val stream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                val bytes = stream.toByteArray()
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        val bytes = stream.toByteArray()
 
-                val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-
-                mqttClient.publish(
-                    "windsync/image",
-                    MqttMessage(base64.toByteArray())
-                )
-
-                runOnUiThread {
-                    binding.txtResult.text = "📤 Slika poslana, čakam rezultat..."
-                }
-
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Napaka: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+        mqttManager.publishImage(base64)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            if (mqttClient.isConnected) mqttClient.disconnect()
-        } catch (_: Exception) {}
+        mqttManager.disconnect()
     }
 }
