@@ -3,3 +3,10 @@ DSL/.gradle/8.10/fileHashes/fileHashes.lock
 /.idea
 /Principi-programskih-jezikov/principi-programskih-jezikov/.gradle
 Principi-programskih-jezikov/principi-programskih-jezikov/.env
+
+# WindSync - Python virtual environment
+windsync_env/
+
+# Python cache
+__pycache__/
+*.pyc
