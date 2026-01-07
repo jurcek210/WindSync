@@ -21,7 +21,11 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import si.um.feri.maprri.api.WindmillApi;
+import si.um.feri.maprri.model.WindmillMarker;
 import si.um.feri.maprri.raster.utils.Constants;
 import si.um.feri.maprri.raster.utils.Geolocation;
 import si.um.feri.maprri.raster.utils.MapRasterTiles;
@@ -35,53 +39,106 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
     private OrthographicCamera camera;
+    private List<WindmillMarker> windmills = new ArrayList<>();
+    private WindmillApi windmillApi;
 
-    private Texture[] mapTiles;
-    private ZoomXY beginTile;   // top left tile
+    private ZoomXY beginTile;
 
-    // center geolocation
+    private int tilesX;
+    private int tilesY;
+
     private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.557314, 15.637771);
-
-    // test marker
     private final Geolocation MARKER_GEOLOCATION = new Geolocation(46.559070, 15.638100);
 
     @Override
     public void create() {
         shapeRenderer = new ShapeRenderer();
 
+        windmillApi = new WindmillApi("http://localhost:3001/api");
+        windmillApi.fetchAll(list -> windmills = list);
+
+
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
-        camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
-        camera.viewportWidth = Constants.MAP_WIDTH / 2f;
-        camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
-        camera.zoom = 2f;
-        camera.update();
+        camera.setToOrtho(false, Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
+        camera.viewportWidth = Constants.VIEWPORT_WIDTH;
+        camera.viewportHeight = Constants.VIEWPORT_HEIGHT;
+        camera.zoom = 5f;
 
         touchPosition = new Vector3();
 
+        Texture[][] tiles;
+
         try {
-            //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
-            ZoomXY centerTile = MapRasterTiles.getTileNumber(CENTER_GEOLOCATION.lat, CENTER_GEOLOCATION.lng, Constants.ZOOM);
-            mapTiles = MapRasterTiles.getRasterTileZone(centerTile, Constants.NUM_TILES);
-            //you need the beginning tile (tile on the top left corner) to convert geolocation to a location in pixels.
-            beginTile = new ZoomXY(Constants.ZOOM, centerTile.x - ((Constants.NUM_TILES - 1) / 2), centerTile.y - ((Constants.NUM_TILES - 1) / 2));
+            double LAT_NORTH = 46.88;
+            double LAT_SOUTH = 45.42;
+            double LON_WEST = 13.38;
+            double LON_EAST = 16.60;
+
+            tiles = MapRasterTiles.getRasterTilesForBoundingBox(
+                LAT_NORTH,
+                LAT_SOUTH,
+                LON_WEST,
+                LON_EAST,
+                Constants.ZOOM
+            );
+
+            beginTile = MapRasterTiles.getTileNumber(
+                LAT_NORTH,
+                LON_WEST,
+                Constants.ZOOM
+            );
+
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
+
+        this.tilesX = tiles.length;
+        this.tilesY = tiles[0].length;
+
+
+        float worldWidth = tilesX * MapRasterTiles.TILE_SIZE;
+        float worldHeight = tilesY * MapRasterTiles.TILE_SIZE;
+
+        float zoomX = worldWidth / camera.viewportWidth;
+        float zoomY = worldHeight / camera.viewportHeight;
+
+        camera.zoom = Math.max(zoomX, zoomY);
+
+        camera.position.set(
+            worldWidth / 2f,
+            worldHeight / 2f,
+            0
+        );
+        camera.update();
+
+
+
+        camera.position.set(
+            worldWidth / 2f,
+            worldHeight * 0.8f,
+            0
+        );
+        camera.update();
 
         tiledMap = new TiledMap();
         MapLayers layers = tiledMap.getLayers();
 
-        TiledMapTileLayer layer = new TiledMapTileLayer(Constants.NUM_TILES, Constants.NUM_TILES, MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE);
-        int index = 0;
-        for (int j = Constants.NUM_TILES - 1; j >= 0; j--) {
-            for (int i = 0; i < Constants.NUM_TILES; i++) {
+        TiledMapTileLayer layer = new TiledMapTileLayer(
+            tilesX,
+            tilesY,
+            MapRasterTiles.TILE_SIZE,
+            MapRasterTiles.TILE_SIZE
+        );
+
+        for (int x = 0; x < tilesX; x++) {
+            for (int y = 0; y < tilesY; y++) {
                 TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
-                cell.setTile(new StaticTiledMapTile(new TextureRegion(mapTiles[index], MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE)));
-                layer.setCell(i, j, cell);
-                index++;
+                cell.setTile(new StaticTiledMapTile(new TextureRegion(tiles[x][y])));
+                layer.setCell(x, tilesY - 1 - y, cell);
             }
         }
+
         layers.add(layer);
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
@@ -93,7 +150,11 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
         handleInput();
 
+        camera.position.x = Math.round(camera.position.x);
+        camera.position.y = Math.round(camera.position.y);
         camera.update();
+
+
 
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
@@ -101,15 +162,64 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         drawMarkers();
     }
 
-    private void drawMarkers() {
-        Vector2 marker = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION.lat, MARKER_GEOLOCATION.lng, beginTile.x, beginTile.y);
+    private void drawWindmill(float x, float y, float size) {
+        shapeRenderer.setColor(Color.SKY);
 
+        float towerHeight = size * 1.6f;
+        float towerWidth = size * 0.25f;
+
+        shapeRenderer.rect(
+            x - towerWidth / 2f,
+            y - towerHeight,
+            towerWidth,
+            towerHeight
+        );
+
+        float hubRadius = size * 0.25f;
+        shapeRenderer.circle(x, y, hubRadius);
+
+        for (int i = 0; i < 3; i++) {
+            float angle = i * 120f;
+            float rad = (float) Math.toRadians(angle);
+
+            float bladeLen = size;
+            float bx = x + (float) Math.cos(rad) * hubRadius;
+            float by = y + (float) Math.sin(rad) * hubRadius;
+
+            shapeRenderer.triangle(
+                bx, by,
+                bx + (float) Math.cos(rad + 0.15f) * bladeLen,
+                by + (float) Math.sin(rad + 0.15f) * bladeLen,
+                bx + (float) Math.cos(rad - 0.15f) * bladeLen,
+                by + (float) Math.sin(rad - 0.15f) * bladeLen
+            );
+        }
+    }
+
+
+    private void drawMarkers() {
         shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setColor(Color.RED);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.circle(marker.x, marker.y, 10);
+
+        for (WindmillMarker w : windmills) {
+            Vector2 p = MapRasterTiles.getPixelPosition(
+                w.lat,
+                w.lon,
+                MapRasterTiles.TILE_SIZE,
+                Constants.ZOOM,
+                beginTile.x,
+                beginTile.y,
+                tilesY * MapRasterTiles.TILE_SIZE
+            );
+
+            float size = 18f;
+            drawWindmill(p.x, p.y, size);
+        }
+
         shapeRenderer.end();
     }
+
+
 
     @Override
     public void dispose() {
@@ -123,77 +233,55 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         return false;
     }
 
-    @Override
-    public boolean tap(float x, float y, int count, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean longPress(float x, float y) {
-        return false;
-    }
-
-    @Override
-    public boolean fling(float velocityX, float velocityY, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean pan(float x, float y, float deltaX, float deltaY) {
-        camera.translate(-deltaX, deltaY);
-        return false;
-    }
-
-    @Override
-    public boolean panStop(float x, float y, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean zoom(float initialDistance, float distance) {
-        if (initialDistance >= distance)
-            camera.zoom += 0.02;
-        else
-            camera.zoom -= 0.02;
-        return false;
-    }
-
-    @Override
-    public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
-        return false;
-    }
-
-    @Override
-    public void pinchStop() {
-
-    }
+    @Override public boolean tap(float x, float y, int count, int button) { return false; }
+    @Override public boolean longPress(float x, float y) { return false; }
+    @Override public boolean fling(float velocityX, float velocityY, int button) { return false; }
+    @Override public boolean pan(float x, float y, float deltaX, float deltaY) { return false; }
+    @Override public boolean panStop(float x, float y, int pointer, int button) { return false; }
+    @Override public boolean zoom(float initialDistance, float distance) { return false; }
+    @Override public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) { return false; }
+    @Override public void pinchStop() {}
 
     private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            camera.zoom += 0.02;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
-            camera.zoom -= 0.02;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            camera.translate(-3, 0, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            camera.translate(3, 0, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            camera.translate(0, -3, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            camera.translate(0, 3, 0);
+        float moveSpeed = 600 * Gdx.graphics.getDeltaTime();
+
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) camera.translate(-moveSpeed, 0);
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) camera.translate(moveSpeed, 0);
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) camera.translate(0, moveSpeed);
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) camera.translate(0, -moveSpeed);
+
+        if (Gdx.input.isKeyPressed(Input.Keys.Q)) camera.zoom -= 0.02f;
+        if (Gdx.input.isKeyPressed(Input.Keys.E)) camera.zoom += 0.02f;
+
+        camera.zoom = MathUtils.clamp(camera.zoom, 0.2f, 1.2f);
+
+        float worldWidth = tilesX * MapRasterTiles.TILE_SIZE;
+        float worldHeight = tilesY * MapRasterTiles.TILE_SIZE;
+
+        float viewW = camera.viewportWidth * camera.zoom;
+        float viewH = camera.viewportHeight * camera.zoom;
+
+        if (viewW < worldWidth) {
+            float halfW = viewW / 2f;
+            camera.position.x = MathUtils.clamp(
+                camera.position.x,
+                halfW,
+                worldWidth - halfW
+            );
+        } else {
+            camera.position.x = worldWidth / 2f;
         }
 
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 2f);
+        if (viewH < worldHeight) {
+            float halfH = viewH / 2f;
+            camera.position.y = MathUtils.clamp(
+                camera.position.y,
+                halfH,
+                worldHeight - halfH
+            );
+        } else {
+            camera.position.y = worldHeight / 2f;
+        }
 
-        float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
-        float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
-
-        camera.position.x = MathUtils.clamp(camera.position.x, effectiveViewportWidth / 2f, Constants.MAP_WIDTH - effectiveViewportWidth / 2f);
-        camera.position.y = MathUtils.clamp(camera.position.y, effectiveViewportHeight / 2f, Constants.MAP_HEIGHT - effectiveViewportHeight / 2f);
     }
 }
