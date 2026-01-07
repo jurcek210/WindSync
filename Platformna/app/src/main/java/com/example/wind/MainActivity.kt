@@ -1,6 +1,5 @@
 package com.example.wind
 
-
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -13,15 +12,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.wind.databinding.ActivityMainBinding
-import org.eclipse.paho.client.mqttv3.*
+import com.example.wind.mqtt.MqttManager
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.util.UUID
-import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var mqttClient: MqttClient
+    private lateinit var mqttManager: MqttManager
 
     private val REQUEST_CAMERA = 1
     private val TAKE_PHOTO = 2
@@ -32,38 +30,65 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // MQTT
-        val serverUri = "tcp://192.168.1.6:1883"
-        val clientId = UUID.randomUUID().toString()
-        mqttClient = MqttClient(serverUri, clientId, null)
+        mqttManager = MqttManager(
+            context = this,
+            serverUri = "tcp://192.168.1.6:1883",
+            resultTopic = "windsync/result",
+            imageTopic = "windsync/image",
+            onResult = { handleResult(it) },
+            onStatus = { showStatus(it) }
+        )
 
-        thread {
-            try {
-                mqttClient.connect(MqttConnectOptions().apply {
-                    isCleanSession = true
-                })
-
-                runOnUiThread {
-                    Toast.makeText(this, "MQTT povezan", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "MQTT napaka: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        mqttManager.connect()
 
         binding.btnTestApi.setOnClickListener {
             checkCameraPermissionAndOpen()
         }
     }
 
+    // ===============================
+    // UI helperji
+    // ===============================
+    private fun showStatus(text: String) {
+        runOnUiThread {
+            binding.txtResult.text = text
+        }
+    }
 
+    // ===============================
+    // OBDELAVA REZULTATA
+    // ===============================
+    private fun handleResult(payload: String) {
+        try {
+            val json = JSONObject(payload)
+            val isWind = json.getBoolean("is_wind_turbine")
+            val confidence = json.getDouble("confidence")
+
+            val text = if (!isWind) {
+                "❌ NI vetrnica\nZanesljivost: ${(confidence * 100).toInt()} %"
+            } else {
+                val blades = json.getString("blades")
+                val bladesConf = json.getDouble("blades_confidence")
+
+                "✅ JE vetrnica\n" +
+                        "Krakov: $blades\n" +
+                        "Zanesljivost: ${(confidence * 100).toInt()} %\n" +
+                        "Krakov conf: ${(bladesConf * 100).toInt()} %"
+            }
+
+            showStatus(text)
+
+        } catch (e: Exception) {
+            showStatus("❌ Napaka pri branju rezultata")
+        }
+    }
+
+    // ===============================
+    // KAMERA
+    // ===============================
     private fun checkCameraPermissionAndOpen() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
                 this,
@@ -82,8 +107,9 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == REQUEST_CAMERA && grantResults.isNotEmpty()
-            && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        if (requestCode == REQUEST_CAMERA &&
+            grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
             openCamera()
         } else {
@@ -106,34 +132,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendBitmap(bitmap: Bitmap) {
-        thread {
-            try {
-                val stream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                val bytes = stream.toByteArray()
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        val bytes = stream.toByteArray()
 
-                val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-
-                mqttClient.publish(
-                    "windsync/image",
-                    MqttMessage(base64.toByteArray())
-                )
-
-                runOnUiThread {
-                    Toast.makeText(this, "Slika poslana", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Napaka: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+        mqttManager.publishImage(base64)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            if (mqttClient.isConnected) mqttClient.disconnect()
-        } catch (_: Exception) {}
+        mqttManager.disconnect()
     }
 }
