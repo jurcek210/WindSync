@@ -29,7 +29,7 @@ public class Lwjgl3LauncherRasterMap {
         //// useful for testing performance, but can also be very stressful to some hardware.
         //// You may also need to configure GPU drivers to fully disable Vsync; this can cause screen tearing.
 
-        configuration.setWindowedMode(900, 900);
+        configuration.setWindowedMode(1400, 1000);
         configuration.setResizable(false);
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
@@ -40,7 +40,6 @@ public class Lwjgl3LauncherRasterMap {
         //// This uses the dependency `com.badlogicgames.gdx:gdx-lwjgl3-angle` to function.
         //// You can choose to remove the following line and the mentioned dependency if you want; they
         //// are not intended for games that use GL30 (which is compatibility with OpenGL ES 3.0).
-        configuration.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.ANGLE_GLES20, 0, 0);
 
         return configuration;
     }
