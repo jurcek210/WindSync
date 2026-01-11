@@ -11,7 +11,7 @@ struct Block
     std::string Data;
     std::string PreviousHash;
     std::string Hash;
-    int Nonce = 0;
+    uint64_t Nonce;
     int Difficulty = 0;
     std::string Owner;
 

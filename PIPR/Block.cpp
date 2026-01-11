@@ -104,7 +104,7 @@ Block Block::MineBlockParallel(const Block &previousBlock,
         while (!found.load(std::memory_order_relaxed))
         {
             uint64_t n = nonce.fetch_add(1, std::memory_order_relaxed);
-            local.Nonce = (int)(n & 0x7fffffff);
+            local.Nonce = n;
 
             local.Hash = local.CalculateHash();
 

@@ -15,7 +15,6 @@ using json = nlohmann::json;
 // parse ISO8601 UTC -> time_t (poenostavljeno)
 static std::time_t parse_iso8601_utc_to_time_t(const std::string &iso)
 {
-    // vzamemo prvih 19 znakov: YYYY-MM-DDTHH:MM:SS
     std::string core = iso;
     if (core.size() >= 19)
         core = core.substr(0, 19);
@@ -224,10 +223,9 @@ std::vector<Block> Blockchain::DeserializeChain(const std::string &serializedCha
 
 Block Blockchain::CreateGenesisBlock() const
 {
-    // Genesis hash izračunamo iz polj (Difficulty = 0, Nonce = 0)
     Block g;
     g.Index = 0;
-    g.Timestamp = "1970-01-01T00:00:00Z"; // stabilen genesis (lahko tudi "now", kot v C#)
+    g.Timestamp = "1970-01-01T00:00:00Z";
     g.Data = "Genesis Block";
     g.PreviousHash = "0";
     g.Nonce = 0;
@@ -250,7 +248,7 @@ int Blockchain::CalculateNewDifficulty() const
         parse_iso8601_utc_to_time_t(latest.Timestamp),
         parse_iso8601_utc_to_time_t(prevAdjust.Timestamp));
 
-    int prevDiff = prevAdjust.Difficulty;
+    int prevDiff = Difficulty;
 
     if (timeTakenSeconds < (timeExpected / 2.0))
         return prevDiff + 1;

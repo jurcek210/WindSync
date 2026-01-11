@@ -25,7 +25,7 @@ int main()
     std::cout << "Threads: " << threads << "\n";
     std::cout << "Initial Difficulty: " << bc.Difficulty << "\n\n";
 
-    for (int i = 1; i <= 40; ++i)
+    for (int i = 1; i <= 110; ++i)
     {
         std::string data = "Stress block " + std::to_string(i);
 
