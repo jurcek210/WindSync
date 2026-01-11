@@ -35,11 +35,12 @@ public class WindmillApi {
 
                     double lon = c.getDouble(0);
                     double lat = c.getDouble(1);
+                    float windSpeed = (float) o.optDouble("windSpeed", 1.0);
 
                     boolean status = o.optBoolean("status", true);
                     String name = o.optString("name", "");
 
-                    result.add(new WindmillMarker(lon, lat, status, name));
+                    result.add(new WindmillMarker(lon, lat, status, windSpeed, name));
                 }
 
                 Gdx.app.postRunnable(() -> onSuccess.accept(result));

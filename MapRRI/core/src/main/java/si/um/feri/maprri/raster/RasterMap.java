@@ -29,6 +29,7 @@ import java.util.List;
 
 import si.um.feri.maprri.api.WindmillApi;
 import si.um.feri.maprri.model.WindmillMarker;
+import si.um.feri.maprri.raster.render.WindmillRenderer;
 import si.um.feri.maprri.raster.utils.Constants;
 import si.um.feri.maprri.raster.utils.Geolocation;
 import si.um.feri.maprri.raster.utils.MapRasterTiles;
@@ -45,10 +46,12 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private List<WindmillMarker> windmills = new ArrayList<>();
     private WindmillApi windmillApi;
     private boolean showWindmills = true;
-    private Texture windmillTexture;
     private SpriteBatch batch;
     private Stage uiStage;
     private Skin skin;
+
+    private WindmillRenderer windmillRenderer;
+
 
     private ZoomXY beginTile;
 
@@ -67,7 +70,11 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     public void create() {
         shapeRenderer = new ShapeRenderer();
         batch = new SpriteBatch();
-        windmillTexture = new Texture("windmill.png");
+
+        System.out.println(
+            "windmill sheet exists = " +
+                Gdx.files.internal("windmill/eolico_sheet.png").exists()
+        );
 
         windmillApi = new WindmillApi("http://localhost:3001/api");
         windmillApi.fetchAll(list -> windmills = list);
@@ -143,6 +150,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
                 layer.setCell(x, tilesY - 1 - y, cell);
             }
         }
+        windmillRenderer = new WindmillRenderer();
+
 
         layers.add(layer);
 
@@ -163,8 +172,26 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         tiledMapRenderer.render();
 
         if (showWindmills) {
-            drawMarkers();
+            List<float[]> positions = new ArrayList<>();
+
+            for (WindmillMarker w : windmills) {
+                Vector2 p = MapRasterTiles.getPixelPosition(
+                    w.lat,
+                    w.lon,
+                    MapRasterTiles.TILE_SIZE,
+                    Constants.ZOOM,
+                    beginTile.x,
+                    beginTile.y,
+                    tilesY * MapRasterTiles.TILE_SIZE
+                );
+
+                positions.add(new float[]{p.x, p.y});
+            }
+
+            windmillRenderer.render(windmills, camera, positions);
         }
+
+
 
         drawToggleButton();
     }
@@ -213,34 +240,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         }
     }
 
-    private void drawMarkers() {
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
 
-        for (WindmillMarker w : windmills) {
-            Vector2 p = MapRasterTiles.getPixelPosition(
-                w.lat,
-                w.lon,
-                MapRasterTiles.TILE_SIZE,
-                Constants.ZOOM,
-                beginTile.x,
-                beginTile.y,
-                tilesY * MapRasterTiles.TILE_SIZE
-            );
-
-            float size = 32f;
-            batch.draw(
-                windmillTexture,
-                p.x - size / 2f,
-                p.y - size,
-                size,
-                size * 1.5f
-            );
-        }
-
-        batch.end();
-
-    }
 
     @Override
     public void dispose() {
