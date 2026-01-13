@@ -3,6 +3,8 @@ package si.um.feri.maprri.raster.utils;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 
 public class MapRasterTiles {
 
@@ -183,7 +186,7 @@ public class MapRasterTiles {
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                tiles[x][y] = getRasterTile(
+                tiles[x][y] = getCachedOrFetchTile(
                     zoom,
                     topLeft.x + x,
                     topLeft.y + y
@@ -252,5 +255,25 @@ public class MapRasterTiles {
         }
 
         return result;
+    }
+// to je za ono nalogo da se ne ponovno nalagajo ploščice
+    private static Texture getCachedOrFetchTile(int zoom, int x, int y) throws IOException {
+        String path = "tiles/z" + zoom + "_x" + x + "_y" + y + ".png";
+        FileHandle file = Gdx.files.local(path);
+
+        if (file.exists()) {
+            return new Texture(file);
+        }
+
+        URL url = new URL(
+            mapServiceUrl + tilesetId + "/" + zoom + "/" + x + "/" + y + format + token
+        );
+
+        ByteArrayOutputStream bis = fetchTile(url);
+
+        file.parent().mkdirs();
+        file.writeBytes(bis.toByteArray(), false);
+
+        return new Texture(file);
     }
 }
