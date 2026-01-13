@@ -14,6 +14,8 @@ public class WindmillRenderer {
     private final SpriteBatch batch;
     private final Animation<TextureRegion> animation;
 
+    private static final float WINDMILL_SIZE = 128f;
+
     public WindmillRenderer() {
         batch = new SpriteBatch();
 
@@ -51,27 +53,22 @@ public class WindmillRenderer {
             if (w.working) {
                 w.animationTime += delta * w.windSpeed;
                 batch.setColor(Color.WHITE);
-            }
-            else {
+            } else {
                 batch.setColor(1f, 0f, 0f, 1f);
             }
 
             TextureRegion frame = animation.getKeyFrame(w.animationTime);
 
-            float baseSize = 128f;
-            float size = baseSize / camera.zoom;
-
             batch.draw(
                 frame,
-                x - size / 2f,
+                x - WINDMILL_SIZE / 2f,
                 y,
-                size,
-                size
+                WINDMILL_SIZE,
+                WINDMILL_SIZE
             );
         }
 
         batch.setColor(Color.WHITE);
-
         batch.end();
     }
 
