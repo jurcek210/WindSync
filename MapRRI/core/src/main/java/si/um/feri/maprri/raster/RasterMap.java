@@ -21,6 +21,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.List;
 
 import si.um.feri.maprri.api.WindmillApi;
 import si.um.feri.maprri.model.WindmillMarker;
+import si.um.feri.maprri.raster.interaction.WindmillClickHandler;
 import si.um.feri.maprri.raster.render.WindmillRenderer;
 import si.um.feri.maprri.raster.utils.Constants;
 import si.um.feri.maprri.raster.utils.Geolocation;
@@ -49,6 +51,11 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private SpriteBatch batch;
     private Stage uiStage;
     private Skin skin;
+    private WindmillClickHandler windmillClickHandler;
+
+
+    private Window windmillWindow;
+
 
     private WindmillRenderer windmillRenderer;
 
@@ -77,7 +84,15 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         );
 
         windmillApi = new WindmillApi("http://localhost:3001/api");
-        windmillApi.fetchAll(list -> windmills = list);
+        windmillApi.fetchAll(list -> {
+            windmills = list;
+            windmillClickHandler = new WindmillClickHandler(
+                windmills,
+                beginTile.x,
+                beginTile.y,
+                tilesY * MapRasterTiles.TILE_SIZE
+            );
+        });
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
@@ -115,6 +130,13 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             e.printStackTrace();
             return;
         }
+
+        windmillClickHandler = new WindmillClickHandler(
+            windmills,
+            beginTile.x,
+            beginTile.y,
+            tilesY * MapRasterTiles.TILE_SIZE
+        );
 
         this.tilesX = tiles.length;
         this.tilesY = tiles[0].length;
@@ -156,6 +178,18 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         layers.add(layer);
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+
+        uiStage = new Stage();
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        createWindmillWindow();
+
+        Gdx.input.setInputProcessor(
+            new com.badlogic.gdx.InputMultiplexer(
+                uiStage,
+                new GestureDetector(this)
+            )
+        );
     }
 
     @Override
@@ -194,6 +228,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
 
         drawToggleButton();
+        uiStage.act(Gdx.graphics.getDeltaTime());
+        uiStage.draw();
     }
 
     private void drawToggleButton() {
@@ -249,6 +285,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
+
         float screenY = Gdx.graphics.getHeight() - y;
 
         float bx = Gdx.graphics.getWidth() - BUTTON_W - BUTTON_MARGIN;
@@ -258,8 +295,67 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             showWindmills = !showWindmills;
             return true;
         }
+
+        if (!showWindmills || windmillClickHandler == null) return false;
+
+        Vector3 worldClick = new Vector3(x, y, 0);
+        camera.unproject(worldClick);
+
+        WindmillMarker clicked =
+            windmillClickHandler.getClickedWindmill(worldClick.x, worldClick.y);
+
+        if (clicked != null) {
+            showWindmillInfo(clicked);
+            return true;
+        }
+        if (windmillWindow != null) {
+            windmillWindow.setVisible(false);
+        }
+
         return false;
     }
+
+    private void createWindmillWindow() {
+        windmillWindow = new Window("Windmill info", skin);
+        windmillWindow.setSize(300, 180);
+        windmillWindow.setVisible(false);
+        windmillWindow.setMovable(true);
+        windmillWindow.setResizable(false);
+
+        float margin = 20f;
+
+        windmillWindow.setPosition(
+            Gdx.graphics.getWidth() - windmillWindow.getWidth() - margin,
+            (Gdx.graphics.getHeight() - windmillWindow.getHeight()) / 2f
+        );
+
+        uiStage.addActor(windmillWindow);
+    }
+
+    private void showWindmillInfo(WindmillMarker w) {
+        windmillWindow.clearChildren();
+
+        windmillWindow.add("Name: ").left();
+        windmillWindow.add(w.name).left().row();
+
+        windmillWindow.add("Latitude: ").left();
+        windmillWindow.add(String.valueOf(w.lat)).left().row();
+
+        windmillWindow.add("Longitude: ").left();
+        windmillWindow.add(String.valueOf(w.lon)).left().row();
+
+        windmillWindow.add("Working: ").left();
+        windmillWindow.add(w.working ? "Yes" : "No").left().row();
+
+        windmillWindow.add("Wind speed: ").left();
+        windmillWindow.add(w.windSpeed + " m/s").left().row();
+
+        windmillWindow.pack();
+        windmillWindow.setVisible(true);
+    }
+
+
+
 
     @Override public boolean tap(float x, float y, int count, int button) { return false; }
     @Override public boolean longPress(float x, float y) { return false; }
