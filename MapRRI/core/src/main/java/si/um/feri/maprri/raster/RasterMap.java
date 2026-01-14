@@ -22,7 +22,16 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.utils.ObjectMap;
+
+
+
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,7 +63,10 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private WindmillClickHandler windmillClickHandler;
 
 
-    private Window windmillWindow;
+    private Array<Window> windmillWindows = new Array<>();
+    private ObjectMap<WindmillMarker, Window> openWindowsByWindmill = new ObjectMap<>();
+
+
 
 
     private WindmillRenderer windmillRenderer;
@@ -182,8 +194,6 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         uiStage = new Stage();
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        createWindmillWindow();
-
         Gdx.input.setInputProcessor(
             new com.badlogic.gdx.InputMultiplexer(
                 uiStage,
@@ -285,6 +295,11 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
+        Vector2 stageCoords = uiStage.screenToStageCoordinates(new Vector2(x, y));
+        if (uiStage.hit(stageCoords.x, stageCoords.y, true) != null) {
+            return true;
+        }
+
 
         float screenY = Gdx.graphics.getHeight() - y;
 
@@ -305,54 +320,97 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             windmillClickHandler.getClickedWindmill(worldClick.x, worldClick.y);
 
         if (clicked != null) {
-            showWindmillInfo(clicked);
+            if (openWindowsByWindmill.containsKey(clicked)) {
+                return true;
+            }
+            createAndShowWindmillWindow(clicked, (int) x, (int) y);
             return true;
-        }
-        if (windmillWindow != null) {
-            windmillWindow.setVisible(false);
         }
 
         return false;
     }
 
-    private void createWindmillWindow() {
-        windmillWindow = new Window("Windmill info", skin);
-        windmillWindow.setSize(300, 180);
-        windmillWindow.setVisible(false);
-        windmillWindow.setMovable(true);
-        windmillWindow.setResizable(false);
+    private void createAndShowWindmillWindow(WindmillMarker w, int screenX, int screenY) {
+        Window window = new Window("Windmill info", skin);
+        window.setMovable(true);
+        window.setResizable(false);
 
-        float margin = 20f;
+        TextButton closeBtn = new TextButton("X", skin);
 
-        windmillWindow.setPosition(
-            Gdx.graphics.getWidth() - windmillWindow.getWidth() - margin,
-            (Gdx.graphics.getHeight() - windmillWindow.getHeight()) / 2f
-        );
+        closeBtn.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                window.remove();
+                windmillWindows.removeValue(window, true);
+                openWindowsByWindmill.remove(w);
+                return true;
+            }
+        });
+        window.getTitleTable().add(closeBtn).padLeft(8f);
 
-        uiStage.addActor(windmillWindow);
+        fillWindmillWindow(window, w);
+        window.pack();
+        window.setKeepWithinStage(true);
+
+        Vector2 stagePos = uiStage.screenToStageCoordinates(new Vector2(screenX, screenY));
+        float margin = 10f;
+        float x = stagePos.x + margin;
+        float y = stagePos.y - window.getHeight() - margin;
+
+        x = Math.max(0, Math.min(x, uiStage.getWidth() - window.getWidth()));
+        y = Math.max(0, Math.min(y, uiStage.getHeight() - window.getHeight()));
+
+        window.setPosition(x, y);
+
+        uiStage.addActor(window);
+        windmillWindows.add(window);
+        openWindowsByWindmill.put(w, window);
+        window.toFront();
     }
 
-    private void showWindmillInfo(WindmillMarker w) {
-        windmillWindow.clearChildren();
+    private void fillWindmillWindow(Window window, WindmillMarker w) {
 
-        windmillWindow.add("Name: ").left();
-        windmillWindow.add(w.name).left().row();
+        window.add("Name: ").left();
+        window.add(w.name).left().row();
 
-        windmillWindow.add("Latitude: ").left();
-        windmillWindow.add(String.valueOf(w.lat)).left().row();
+        window.add("Latitude: ").left();
+        window.add(String.valueOf(w.lat)).left().row();
 
-        windmillWindow.add("Longitude: ").left();
-        windmillWindow.add(String.valueOf(w.lon)).left().row();
+        window.add("Longitude: ").left();
+        window.add(String.valueOf(w.lon)).left().row();
 
-        windmillWindow.add("Working: ").left();
-        windmillWindow.add(w.working ? "Yes" : "No").left().row();
+        window.add("Working: ").left();
+        window.add(w.working ? "Yes" : "No").left().row();
 
-        windmillWindow.add("Wind speed: ").left();
-        windmillWindow.add(w.windSpeed + " m/s").left().row();
+        window.add("Wind speed: ").left();
+        window.add(w.windSpeed + " m/s").left().row();
 
-        windmillWindow.pack();
-        windmillWindow.setVisible(true);
+        float kWhPerHour = estimateEnergyKWhPerHour(w.windSpeed, w.working);
+        float kWhPerDay = kWhPerHour * 24f;
+
+        window.add("Est. energy (1h): ").left();
+        window.add(String.format(java.util.Locale.US, "%.1f kWh", kWhPerHour)).left().row();
+
+        window.add("Est. energy (24h): ").left();
+        window.add(String.format(java.util.Locale.US, "%.1f kWh", kWhPerDay)).left().row();
     }
+
+
+    private float estimateEnergyKWhPerHour(float windSpeed, boolean working) {
+        if (!working) return 0f;
+
+        float v = Math.max(0f, windSpeed);
+        float rho = 1.225f;
+        float D = 80f;
+        float A = (float) (Math.PI * Math.pow(D / 2f, 2));
+        float Cp = 0.40f;
+
+        float powerW = 0.5f * rho * A * Cp * v * v * v;
+        float powerKW = powerW / 1000f;
+        return powerKW;
+    }
+
 
 
 
