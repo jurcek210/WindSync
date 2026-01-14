@@ -29,6 +29,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
 
 
@@ -94,6 +95,15 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private final float SIM_H = 40;
     private final float SIM_GAP = 10;
 
+    private static class InfoRefs {
+        Label working;
+        Label windSpeed;
+        Label kwh1h;
+        Label kwh24h;
+    }
+    private ObjectMap<WindmillMarker, InfoRefs> infoRefsByWindmill = new ObjectMap<>();
+
+
 
     @Override
     public void create() {
@@ -107,7 +117,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
         windmillApi = new WindmillApi("http://localhost:3001/api");
         windmillApi.fetchAll(list -> {
-            windmills = list;
+            windmills.clear();
+            windmills.addAll(list);
             windmillClickHandler = new WindmillClickHandler(
                 windmills,
                 beginTile.x,
@@ -437,52 +448,13 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     }
 
     private void updateAllOpenInfoWindows() {
-        for (WindmillMarker w : openWindowsByWindmill.keys()) {
-            Window win = openWindowsByWindmill.get(w);
-            if (win == null) continue;
-            float px = win.getX();
-            float py = win.getY();
+        Array<WindmillMarker> keys = new Array<>();
+        for (WindmillMarker w : openWindowsByWindmill.keys()) keys.add(w);
 
-            win.remove();
-            createAndShowWindmillWindowAt(w, px, py);
+        for (WindmillMarker w : keys) {
+            updateInfoWindowFor(w);
         }
     }
-
-    private void createAndShowWindmillWindowAt(WindmillMarker w, float stageX, float stageY) {
-        Window window = new Window("Windmill info", skin);
-        window.setMovable(true);
-        window.setResizable(false);
-
-        TextButton closeBtn = new TextButton("X", skin);
-        closeBtn.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                event.stop();
-                window.remove();
-                windmillWindows.removeValue(window, true);
-                openWindowsByWindmill.remove(w);
-                return true;
-            }
-        });
-        window.getTitleTable().add(closeBtn).padLeft(8f);
-
-        fillWindmillWindow(window, w);
-        window.pack();
-        window.setKeepWithinStage(true);
-
-        window.setPosition(stageX, stageY);
-
-        uiStage.addActor(window);
-
-        windmillWindows.add(window);
-        openWindowsByWindmill.put(w, window);
-
-        window.toFront();
-    }
-
-
-
-
     private void createAndShowWindmillWindow(WindmillMarker w, int screenX, int screenY) {
         Window window = new Window("Windmill info", skin);
         window.setMovable(true);
@@ -497,6 +469,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
                 window.remove();
                 windmillWindows.removeValue(window, true);
                 openWindowsByWindmill.remove(w);
+                infoRefsByWindmill.remove(w);
                 return true;
             }
         });
@@ -533,21 +506,48 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         window.add("Longitude: ").left();
         window.add(String.valueOf(w.lon)).left().row();
 
+        InfoRefs refs = new InfoRefs();
+
         window.add("Working: ").left();
-        window.add(w.working ? "Yes" : "No").left().row();
+        refs.working = new Label(w.working ? "Yes" : "No", skin);
+        window.add(refs.working).left().row();
 
         window.add("Wind speed: ").left();
-        window.add(w.windSpeed + " m/s").left().row();
+        refs.windSpeed = new Label(String.format(java.util.Locale.US, "%.2f m/s", w.windSpeed), skin);
+        window.add(refs.windSpeed).left().row();
 
         float kWhPerHour = estimateEnergyKWhPerHour(w.windSpeed, w.working);
         float kWhPerDay = kWhPerHour * 24f;
 
         window.add("Est. energy (1h): ").left();
-        window.add(String.format(java.util.Locale.US, "%.1f kWh", kWhPerHour)).left().row();
+        refs.kwh1h = new Label(String.format(java.util.Locale.US, "%.1f kWh", kWhPerHour), skin);
+        window.add(refs.kwh1h).left().row();
 
         window.add("Est. energy (24h): ").left();
-        window.add(String.format(java.util.Locale.US, "%.1f kWh", kWhPerDay)).left().row();
+        refs.kwh24h = new Label(String.format(java.util.Locale.US, "%.1f kWh", kWhPerDay), skin);
+        window.add(refs.kwh24h).left().row();
+
+        infoRefsByWindmill.put(w, refs);
     }
+
+    private void updateInfoWindowFor(WindmillMarker w) {
+        if (!openWindowsByWindmill.containsKey(w)) return;
+        InfoRefs refs = infoRefsByWindmill.get(w);
+        if (refs == null) return;
+
+        refs.working.setText(w.working ? "Yes" : "No");
+        refs.windSpeed.setText(String.format(java.util.Locale.US, "%.2f m/s", w.windSpeed));
+
+        float kWhPerHour = estimateEnergyKWhPerHour(w.windSpeed, w.working);
+        float kWhPerDay = kWhPerHour * 24f;
+
+        refs.kwh1h.setText(String.format(java.util.Locale.US, "%.1f kWh", kWhPerHour));
+        refs.kwh24h.setText(String.format(java.util.Locale.US, "%.1f kWh", kWhPerDay));
+
+        openWindowsByWindmill.get(w).pack();
+    }
+
+
 
 
     private float estimateEnergyKWhPerHour(float windSpeed, boolean working) {

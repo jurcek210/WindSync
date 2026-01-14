@@ -23,6 +23,7 @@ public class WindSimulationController {
         void onWindmillsChanged();
     }
 
+    private static final float CUT_OUT_WIND_MS = 25f;
 
     private boolean areaLocked = false;
 
@@ -144,7 +145,7 @@ public class WindSimulationController {
                 if (!originalWorking.containsKey(w)) originalWorking.put(w, w.working);
 
                 w.windSpeed = simulatedWind;
-                w.working = true;
+                w.working = simulatedWind <= CUT_OUT_WIND_MS;
             } else {
                 if (originalWind.containsKey(w)) w.windSpeed = originalWind.get(w);
                 if (originalWorking.containsKey(w)) w.working = originalWorking.get(w);
@@ -174,10 +175,17 @@ public class WindSimulationController {
         speedField.setTextFieldFilter((tf, c) -> (c >= '0' && c <= '9'));
         speedField.setTextFieldListener((tf, c) -> {
             if (c == '\n' || c == '\r') {
-                try { setSimulatedWind(Float.parseFloat(tf.getText().trim())); }
-                catch (Exception ignored) {}
+                try {
+                    float v = Float.parseFloat(tf.getText().trim());
+                    setSimulatedWind(v);
+
+                    tf.setText(String.valueOf((int) simulatedWind));
+
+                    uiStage.setKeyboardFocus(null);
+                } catch (Exception ignored) {}
             }
         });
+
 
         minus.addListener(new InputListener() {
             @Override public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
