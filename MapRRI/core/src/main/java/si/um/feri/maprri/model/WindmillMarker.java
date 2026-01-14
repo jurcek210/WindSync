@@ -1,15 +1,17 @@
 package si.um.feri.maprri.model;
 
 public class WindmillMarker {
-    public final double lon;
-    public final double lat;
+    public String id;
+    public double lon;
+    public double lat;
     public boolean working;
     public float windSpeed;
-    public final String name;
+    public String name;
 
     public float animationTime = 0f;
 
-    public WindmillMarker(double lon, double lat, boolean working, float windSpeed, String name) {
+    public WindmillMarker(String id, double lon, double lat, boolean working, float windSpeed, String name) {
+        this.id = id;
         this.lon = lon;
         this.lat = lat;
         this.working = working;

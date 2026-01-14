@@ -21,6 +21,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -100,6 +101,17 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         Label windSpeed;
         Label kwh1h;
         Label kwh24h;
+
+        Label nameLabel;
+        TextField nameField;
+
+        TextButton editBtn;
+        TextButton deleteBtn;
+
+        boolean editing = false;
+
+        boolean originalWorking;
+        String originalName;
     }
     private ObjectMap<WindmillMarker, InfoRefs> infoRefsByWindmill = new ObjectMap<>();
 
@@ -497,8 +509,28 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     private void fillWindmillWindow(Window window, WindmillMarker w) {
 
+        InfoRefs refs = new InfoRefs();
+        infoRefsByWindmill.put(w, refs);
+
         window.add("Name: ").left();
-        window.add(w.name).left().row();
+
+        com.badlogic.gdx.scenes.scene2d.ui.Table nameRow = new com.badlogic.gdx.scenes.scene2d.ui.Table();
+        refs.nameLabel = new Label(w.name, skin);
+
+        refs.nameField = new TextField(w.name, skin);
+        refs.nameField.setVisible(false);
+        refs.nameField.setDisabled(true);
+
+        refs.nameField.setTextFieldListener((tf, c) -> {
+            if (c == '\n' || c == '\r') {
+                confirmEdit(w);
+            }
+        });
+
+        nameRow.add(refs.nameLabel).left();
+        nameRow.add(refs.nameField).width(200).left();
+
+        window.add(nameRow).left().row();
 
         window.add("Latitude: ").left();
         window.add(String.valueOf(w.lat)).left().row();
@@ -506,10 +538,21 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         window.add("Longitude: ").left();
         window.add(String.valueOf(w.lon)).left().row();
 
-        InfoRefs refs = new InfoRefs();
-
         window.add("Working: ").left();
         refs.working = new Label(w.working ? "Yes" : "No", skin);
+        refs.working.addListener(new InputListener() {
+            @Override public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+
+                if (!refs.editing) {
+                    return true;
+                }
+
+                w.working = !w.working;
+                updateInfoWindowFor(w);
+                return true;
+            }
+        });
         window.add(refs.working).left().row();
 
         window.add("Wind speed: ").left();
@@ -527,8 +570,130 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         refs.kwh24h = new Label(String.format(java.util.Locale.US, "%.1f kWh", kWhPerDay), skin);
         window.add(refs.kwh24h).left().row();
 
-        infoRefsByWindmill.put(w, refs);
+        refs.editBtn = new TextButton("EDIT", skin);
+        refs.deleteBtn = new TextButton("DELETE", skin);
+
+        refs.editBtn.addListener(new InputListener() {
+            @Override public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                if (!refs.editing) {
+                    setEditMode(w, true);
+                } else {
+                    confirmEdit(w);
+                }
+                return true;
+            }
+        });
+
+        refs.deleteBtn.addListener(new InputListener() {
+            @Override public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                deleteWindmillLocalAndServer(w);
+                return true;
+            }
+        });
+
+        window.row();
+        window.add(refs.editBtn).padTop(8).left();
+        window.add(refs.deleteBtn).padTop(8).right();
     }
+
+
+    private void setEditMode(WindmillMarker w, boolean editing) {
+        InfoRefs refs = infoRefsByWindmill.get(w);
+        if (refs == null) return;
+
+        if (editing && !refs.editing) {
+            refs.originalWorking = w.working;
+            refs.originalName = w.name;
+        }
+
+        refs.editing = editing;
+
+        if (refs.nameLabel != null) refs.nameLabel.setVisible(!editing);
+        if (refs.nameField != null) {
+            refs.nameField.setVisible(editing);
+            refs.nameField.setDisabled(!editing);
+            if (editing) {
+                refs.nameField.setText(w.name);
+                uiStage.setKeyboardFocus(refs.nameField);
+                refs.nameField.selectAll();
+            } else {
+                uiStage.setKeyboardFocus(null);
+            }
+        }
+
+        if (refs.editBtn != null) refs.editBtn.setText(editing ? "CONFIRM" : "EDIT");
+
+        Window win = openWindowsByWindmill.get(w);
+        if (win != null) win.pack();
+    }
+
+    private void deleteWindmillLocalAndServer(WindmillMarker w) {
+
+        Window win = openWindowsByWindmill.get(w);
+        if (win != null) {
+            win.remove();
+            windmillWindows.removeValue(win, true);
+        }
+
+        openWindowsByWindmill.remove(w);
+        infoRefsByWindmill.remove(w);
+
+        windmills.remove(w);
+
+        windmillClickHandler = new WindmillClickHandler(
+            windmills, beginTile.x, beginTile.y, tilesY * MapRasterTiles.TILE_SIZE
+        );
+
+        if (w.id != null) {
+            windmillApi.deleteWindmill(w.id, () -> {});
+        }
+    }
+
+    private void confirmEdit(WindmillMarker w) {
+        InfoRefs refs = infoRefsByWindmill.get(w);
+        if (refs == null) return;
+
+        String newName = (refs.nameField != null) ? refs.nameField.getText().trim() : w.name;
+        if (newName.isEmpty()) newName = w.name;
+
+        boolean nameChanged = refs.originalName != null && !newName.equals(refs.originalName);
+        boolean workingChanged = (w.working != refs.originalWorking);
+
+        if (!nameChanged && !workingChanged) {
+            setEditMode(w, false);
+            return;
+        }
+
+        w.name = newName;
+        if (refs.nameLabel != null) refs.nameLabel.setText(newName);
+
+        if (w.id == null) {
+            setEditMode(w, false);
+            updateInfoWindowFor(w);
+            return;
+        }
+
+        String oldId = w.id;
+
+        windmillApi.deleteWindmill(oldId, () -> {
+            windmillApi.createWindmill(w, created -> {
+                w.id = created.id;
+
+                windmillClickHandler = new WindmillClickHandler(
+                    windmills, beginTile.x, beginTile.y, tilesY * MapRasterTiles.TILE_SIZE
+                );
+
+                setEditMode(w, false);
+                updateInfoWindowFor(w);
+            });
+        });
+    }
+
+
+
+
 
     private void updateInfoWindowFor(WindmillMarker w) {
         if (!openWindowsByWindmill.containsKey(w)) return;

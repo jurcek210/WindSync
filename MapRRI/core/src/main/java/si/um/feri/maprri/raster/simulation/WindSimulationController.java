@@ -23,7 +23,7 @@ public class WindSimulationController {
         void onWindmillsChanged();
     }
 
-    private static final float CUT_OUT_WIND_MS = 25f;
+    private static final float CUT_OUT_WIND_MS = 150f;
 
     private boolean areaLocked = false;
 
