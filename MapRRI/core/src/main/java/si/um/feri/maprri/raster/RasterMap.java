@@ -41,6 +41,7 @@ import si.um.feri.maprri.api.WindmillApi;
 import si.um.feri.maprri.model.WindmillMarker;
 import si.um.feri.maprri.raster.interaction.WindmillClickHandler;
 import si.um.feri.maprri.raster.render.WindmillRenderer;
+import si.um.feri.maprri.raster.simulation.WindSimulationController;
 import si.um.feri.maprri.raster.utils.Constants;
 import si.um.feri.maprri.raster.utils.Geolocation;
 import si.um.feri.maprri.raster.utils.MapRasterTiles;
@@ -50,6 +51,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     private ShapeRenderer shapeRenderer;
     private Vector3 touchPosition;
+
+    private WindSimulationController simController;
 
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
@@ -84,6 +87,13 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.557314, 15.637771);
     private final Geolocation MARKER_GEOLOCATION = new Geolocation(46.559070, 15.638100);
+
+    private TextButton simulateBtn;
+
+    private final float SIM_W = 160;
+    private final float SIM_H = 40;
+    private final float SIM_GAP = 10;
+
 
     @Override
     public void create() {
@@ -194,6 +204,43 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         uiStage = new Stage();
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
+        simulateBtn = new TextButton("SIMULATE", skin);
+        simulateBtn.setSize(160, 40);
+        simulateBtn.setPosition(
+            Gdx.graphics.getWidth() - 160 - BUTTON_MARGIN,
+            Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN - 40 - 10
+        );
+        simulateBtn.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                if (simController != null) {
+                    simController.toggle();
+                    simulateBtn.setText(simController.isEnabled() ? "EXIT" : "SIMULATE");
+                }
+                return true;
+            }
+        });
+        uiStage.addActor(simulateBtn);
+
+
+        simController = new si.um.feri.maprri.raster.simulation.WindSimulationController(
+            uiStage,
+            skin,
+            windmills,
+            (WindmillMarker w) -> MapRasterTiles.getPixelPosition(
+                w.lat, w.lon,
+                MapRasterTiles.TILE_SIZE,
+                Constants.ZOOM,
+                beginTile.x, beginTile.y,
+                tilesY * MapRasterTiles.TILE_SIZE
+            ),
+            () -> {
+                updateAllOpenInfoWindows();
+            }
+        );
+
+
         Gdx.input.setInputProcessor(
             new com.badlogic.gdx.InputMultiplexer(
                 uiStage,
@@ -238,6 +285,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
 
         drawToggleButton();
+        drawSimSelectionRect();
         uiStage.act(Gdx.graphics.getDeltaTime());
         uiStage.draw();
     }
@@ -256,6 +304,22 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         shapeRenderer.rect(x, y, BUTTON_W, BUTTON_H);
         shapeRenderer.end();
     }
+
+    private void drawSimulateButton() {
+        shapeRenderer.setProjectionMatrix(
+            new com.badlogic.gdx.math.Matrix4()
+                .setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+        );
+
+        float x = Gdx.graphics.getWidth() - SIM_W - BUTTON_MARGIN;
+        float y = Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN - SIM_H - SIM_GAP;
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(simController != null && simController.isEnabled() ? Color.ORANGE : Color.GRAY);
+        shapeRenderer.rect(x, y, SIM_W, SIM_H);
+        shapeRenderer.end();
+    }
+
 
     private void drawWindmill(float x, float y, float size) {
         shapeRenderer.setColor(Color.SKY);
@@ -311,13 +375,30 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             return true;
         }
 
-        if (!showWindmills || windmillClickHandler == null) return false;
-
         Vector3 worldClick = new Vector3(x, y, 0);
         camera.unproject(worldClick);
 
+
+        if (simController != null && simController.isEnabled() && !simController.hasSelectedArea()) {
+            Vector3 wc = new Vector3(x, y, 0);
+            camera.unproject(wc);
+            simController.handleMapClick(wc.x, wc.y);
+            return true;
+        }
+
+        if (!showWindmills || windmillClickHandler == null) return false;
+
+
         WindmillMarker clicked =
             windmillClickHandler.getClickedWindmill(worldClick.x, worldClick.y);
+
+        float simBx = Gdx.graphics.getWidth() - SIM_W - BUTTON_MARGIN;
+        float simBy = Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN - SIM_H - SIM_GAP;
+
+        if (x >= simBx && x <= simBx + SIM_W && screenY >= simBy && screenY <= simBy + SIM_H) {
+            if (simController != null) simController.toggle();
+            return true;
+        }
 
         if (clicked != null) {
             if (openWindowsByWindmill.containsKey(clicked)) {
@@ -329,6 +410,78 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
         return false;
     }
+
+    private void drawSimSelectionRect() {
+        if (simController == null || !simController.isEnabled()) return;
+        if (simController.getStart() == null) return;
+
+        Vector2 a = simController.getStart();
+        Vector2 b = simController.getEndOrNull();
+
+        if (b == null) {
+            Vector3 tmp = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            camera.unproject(tmp);
+            b = new Vector2(tmp.x, tmp.y);
+        }
+
+        float rx = Math.min(a.x, b.x);
+        float ry = Math.min(a.y, b.y);
+        float rw = Math.abs(a.x - b.x);
+        float rh = Math.abs(a.y - b.y);
+
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.rect(rx, ry, rw, rh);
+        shapeRenderer.end();
+    }
+
+    private void updateAllOpenInfoWindows() {
+        for (WindmillMarker w : openWindowsByWindmill.keys()) {
+            Window win = openWindowsByWindmill.get(w);
+            if (win == null) continue;
+            float px = win.getX();
+            float py = win.getY();
+
+            win.remove();
+            createAndShowWindmillWindowAt(w, px, py);
+        }
+    }
+
+    private void createAndShowWindmillWindowAt(WindmillMarker w, float stageX, float stageY) {
+        Window window = new Window("Windmill info", skin);
+        window.setMovable(true);
+        window.setResizable(false);
+
+        TextButton closeBtn = new TextButton("X", skin);
+        closeBtn.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                window.remove();
+                windmillWindows.removeValue(window, true);
+                openWindowsByWindmill.remove(w);
+                return true;
+            }
+        });
+        window.getTitleTable().add(closeBtn).padLeft(8f);
+
+        fillWindmillWindow(window, w);
+        window.pack();
+        window.setKeepWithinStage(true);
+
+        window.setPosition(stageX, stageY);
+
+        uiStage.addActor(window);
+
+        windmillWindows.add(window);
+        openWindowsByWindmill.put(w, window);
+
+        window.toFront();
+    }
+
+
+
 
     private void createAndShowWindmillWindow(WindmillMarker w, int screenX, int screenY) {
         Window window = new Window("Windmill info", skin);
