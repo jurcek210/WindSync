@@ -9,6 +9,8 @@ import authRoute from "./routes/authRoutes.js"
 import windmillRoute from "./routes/windmillRoutes.js"
 import imageRecognitionRoutes from "./routes/imageRecognitionRoutes.js"; //za api če delamo z http
 import "./mqtt.js";
+import eventRoutes from "./routes/eventRoutes.js";
+
 
 
 
@@ -44,6 +46,7 @@ app.get('/', (req, res) => {
 
 app.use("/api", authRoute);
 app.use("/api/windmills", windmillRoute);
+app.use("/api/events", eventRoutes);
 
 io.on("connection", (socket) => {
   console.log("Nova socket povezava:", socket.id);
