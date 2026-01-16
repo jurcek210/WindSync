@@ -44,6 +44,15 @@ class MainActivity : AppCompatActivity() {
         binding.btnTestApi.setOnClickListener {
             checkCameraPermissionAndOpen()
         }
+
+        binding.btnMessage.setOnClickListener {
+            startActivity(Intent(this, MessageActivity::class.java))
+        }
+
+        binding.btnEvents.setOnClickListener {
+            startActivity(Intent(this, EventsListActivity::class.java))
+        }
+
     }
 
     // ===============================

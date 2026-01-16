@@ -9,10 +9,10 @@ import {toggleWindmillStatus} from "../controllers/windmillController.js";
 const router = express.Router();
 
 router.get("/", listWindmills);
-router.post("/", protect, createWindmill);
+router.post("/", createWindmill);
 router.get("/nearby", getNearbyWindmills);
-router.get("/my", protect, getMyWindmills);
-router.delete("/:id", protect, deleteWindmill);
+router.get("/my", getMyWindmills);
+router.delete("/:id", deleteWindmill);
 router.put("/:id/toggle-status", protect, toggleWindmillStatus);
 
 export default router;

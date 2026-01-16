@@ -5,7 +5,6 @@ export const createWindmill = async (req, res) => {
   try {
     const windmill = await Windmill.create({
       ...req.body,
-      owner: req.user.id
     });
 
     res.status(201).json(windmill);
@@ -44,10 +43,6 @@ export const deleteWindmill = async (req, res) => {
       return res.status(404).json({ message: "Veternica ne obstaja" });
     }
 
-    if (windmill.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Ni dovoljeno" });
-    }
-
     await windmill.deleteOne();
 
     res.status(200).json({ message: "Veternica izbrisana" });
@@ -64,13 +59,10 @@ export const deleteWindmill = async (req, res) => {
 
 export const toggleWindmillStatus = async (req, res) => {
   try {
+    console.log("STATUS CHANGE TRIGER");
     const windmill = await Windmill.findById(req.params.id);
     if (!windmill) {
       return res.status(404).json({ message: "Veternica ni bila najdena." });
-    }
-
-    if (windmill.owner.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Ni dovoljenja za urejanje." });
     }
 
     windmill.status = req.body.status;
