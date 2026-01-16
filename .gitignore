@@ -10,3 +10,7 @@ windsync_env/
 # Python cache
 __pycache__/
 *.pyc
+/MapRRI/tiles
+images/image_1767645486167.jpg
+/images
+Vid/a.jpg

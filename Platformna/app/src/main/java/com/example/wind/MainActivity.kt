@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
         mqttManager = MqttManager(
             context = this,
-            serverUri = "tcp://192.168.1.6:1883",
+            serverUri = "tcp://192.168.1.10:1883",
             resultTopic = "windsync/result",
             imageTopic = "windsync/image",
             onResult = { handleResult(it) },
