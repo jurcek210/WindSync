@@ -23,9 +23,19 @@ class EventAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val e = events[position]
+
         holder.binding.tvTopic.text = e.topic
         holder.binding.tvMessage.text = e.message
-        holder.binding.tvMeta.text = "${formatTime(e.timestamp)} • ${"%.5f".format(e.lat)}, ${"%.5f".format(e.lon)}"
+        holder.binding.tvMeta.text =
+            "${formatTime(e.timestamp)} • ${"%.5f".format(e.lat)}, ${"%.5f".format(e.lon)}"
+
+        val iconRes = if (e.topic.startsWith("veter/")) {
+            R.drawable.wind
+        } else {
+            R.drawable.windmill
+        }
+
+        holder.binding.imgType.setImageResource(iconRes)
     }
 
     override fun getItemCount(): Int = events.size

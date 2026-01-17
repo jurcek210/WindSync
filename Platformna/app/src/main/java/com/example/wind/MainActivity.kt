@@ -65,6 +65,10 @@ class MainActivity : AppCompatActivity() {
         nav.btnNavMap.setOnClickListener {
             startActivity(Intent(this, MapActivity::class.java) )
         }
+        binding.btnGenerateEvent.setOnClickListener {
+            generateRandomExtremeEvent()
+        }
+
 
 
         loadEvents()
@@ -149,6 +153,52 @@ class MainActivity : AppCompatActivity() {
             showStatus("❌ Napaka pri branju rezultata")
         }
     }
+
+    private val extremeTopics = listOf(
+        "veter/prevec",
+        "veter/premalo",
+        "veternica/okvara",
+        "veternica/servis"
+    )
+
+    private fun randomSloveniaLocation(): Pair<Double, Double> {
+        val lat = (45.4..46.9).random()
+        val lon = (13.3..16.6).random()
+        return lat to lon
+    }
+
+    private fun generateRandomExtremeEvent() {
+        val topic = extremeTopics.random()
+
+        val message = when (topic) {
+            "veter/prevec" -> "Ekstremen veter zaznan"
+            "veter/premalo" -> "Nenavadno mirno – ni vetra"
+            "veternica/okvara" -> "Napaka na vetrnici"
+            "veternica/servis" -> "Vetrnica potrebuje servis"
+            else -> "Ekstremen dogodek"
+        }
+
+        val (lat, lon) = randomSloveniaLocation()
+
+        lifecycleScope.launch {
+            val res = ApiService.postEvent(topic, message, lat, lon)
+            if (res.isSuccess) {
+                loadEvents()
+            } else {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Napaka pri generiranju dogodka",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+
+    private fun ClosedFloatingPointRange<Double>.random() =
+        start + Math.random() * (endInclusive - start)
+
+
 
     private fun checkCameraPermissionAndOpen() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)

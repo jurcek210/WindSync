@@ -5,6 +5,14 @@
     android:layout_width="match_parent"
 
     android:layout_height="match_parent">
+    <Button
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/btnGenerateEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Generiraj ekstremen dogodek"
+        android:layout_margin="12dp" />
+
 
     <TextView
         android:id="@+id/txtResult"
@@ -20,7 +28,7 @@
         android:id="@+id/rvEvents"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/txtResult"
+        app:layout_constraintTop_toBottomOf="@id/btnGenerateEvent"
         app:layout_constraintBottom_toTopOf="@id/bottomNav"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>

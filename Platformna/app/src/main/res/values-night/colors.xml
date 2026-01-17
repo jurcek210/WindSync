@@ -1,0 +1,29 @@
+<resources>
+
+    <!-- Primary -->
+    <color name="colorPrimary">#38BDF8</color>
+    <color name="colorPrimaryDark">#0284C7</color>
+    <color name="colorPrimaryLight">#7DD3FC</color>
+
+    <!-- Accent -->
+    <color name="colorAccent">#22C55E</color>
+
+    <!-- Backgrounds -->
+    <color name="colorBackground">#020617</color>
+    <color name="colorSurface">#020617</color>
+
+    <!-- Text -->
+    <color name="colorTextPrimary">#E5E7EB</color>
+    <color name="colorTextSecondary">#94A3B8</color>
+
+    <!-- Navbar -->
+    <color name="nav_bg">#020617</color>
+    <color name="nav_icon">#E5E7EB</color>
+
+    <color name="card_bg">#020617</color>
+    <color name="text_primary">#E5E7EB</color>
+    <color name="text_secondary">#CBD5E1</color>
+    <color name="text_hint">#94A3B8</color>
+
+
+</resources>

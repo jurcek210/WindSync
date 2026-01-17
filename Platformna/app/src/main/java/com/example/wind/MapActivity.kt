@@ -44,16 +44,36 @@ class MapActivity : AppCompatActivity() {
                     "icon-windmill",
                     androidx.core.content.ContextCompat.getDrawable(
                         this,
-                        R.drawable.windmill_marker
+                        R.drawable.windmill
+                    )!!
+                )
+                style.addImage(
+                    "icon-wind",
+                    androidx.core.content.ContextCompat.getDrawable(
+                        this,
+                        R.drawable.wind
                     )!!
                 )
                 loadEvents(style)
             }
 
-            map.addOnMapClickListener {
-                showAddEventDialog(it.latitude, it.longitude)
+            map.addOnMapClickListener { latLng ->
+                val screenPoint = map.projection.toScreenLocation(latLng)
+
+                val features = map.queryRenderedFeatures(
+                    screenPoint,
+                    "veter-layer",
+                    "veternica-layer"
+                )
+
+                if (features.isNotEmpty()) {
+                    showEventDetailsDialog(features[0])
+                } else {
+                    showAddEventDialog(latLng.latitude, latLng.longitude)
+                }
                 true
             }
+
         }
 
         binding.bottomNav.btnNavMap.isSelected = true
@@ -73,6 +93,39 @@ class MapActivity : AppCompatActivity() {
             drawLayers(style, features)
         }
     }
+    private fun showEventDetailsDialog(feature: Feature) {
+        val type = feature.getStringProperty("type")
+        val topic = feature.getStringProperty("topic")
+        val message = feature.getStringProperty("message")
+        val timestamp = feature.getStringProperty("timestamp")
+
+        val point = feature.geometry() as Point
+        val lat = point.latitude()
+        val lon = point.longitude()
+
+        val icon = if (type == "veternica") "Veternica" else " Veter"
+
+        val text = """
+        $icon
+        Tema: $topic
+        
+        Sporočilo:
+        $message
+        
+        Čas:
+        $timestamp
+        
+        Lokacija:
+        ${"%.5f".format(lat)}, ${"%.5f".format(lon)}
+    """.trimIndent()
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Dogodek")
+            .setMessage(text)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
 
     private fun parseToFeatures(json: String): List<Feature> {
         val arr = JSONArray(json)
@@ -85,6 +138,9 @@ class MapActivity : AppCompatActivity() {
 
             val lon = coords.optDouble(0)
             val lat = coords.optDouble(1)
+            val message = o.optString("message")
+            val timestamp = o.optString("timestamp")
+
 
             val type = when {
                 topic.startsWith("veter/") -> "veter"
@@ -94,6 +150,9 @@ class MapActivity : AppCompatActivity() {
 
             val f = Feature.fromGeometry(Point.fromLngLat(lon, lat))
             f.addStringProperty("type", type)
+            f.addStringProperty("topic", topic)
+            f.addStringProperty("message", message)
+            f.addStringProperty("timestamp", timestamp)
             out.add(f)
         }
         return out
@@ -112,11 +171,20 @@ class MapActivity : AppCompatActivity() {
         )
 
         style.addLayer(
-            CircleLayer("veter-layer", "events-source")
+            SymbolLayer("vete-layer", "events-source")
                 .withFilter(eq(get("type"), literal("veter")))
                 .withProperties(
-                    circleColor("#000000"),
-                    circleRadius(6f)
+                    iconImage("icon-wind"),
+                    iconAllowOverlap(true),
+                    iconOffset(arrayOf(0f, -40f)),
+                    iconSize(
+                        interpolate(
+                            linear(), zoom(),
+                            literal(6), literal(0.05f),
+                            literal(10), literal(0.1f),
+                            literal(14), literal(0.18f)
+                        )
+                    )
                 )
         )
 
