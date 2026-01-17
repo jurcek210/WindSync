@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         nav.btnNavMap.setOnClickListener {
-            Toast.makeText(this, "Mapa še ni implementirana", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, MapActivity::class.java) )
         }
 
 
