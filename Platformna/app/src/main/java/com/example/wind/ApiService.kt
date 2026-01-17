@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiService {
 
-    private const val BASE_URL = "http://[ IP ]:3001" //TVOJ IP ZAMENJAJ
+    private const val BASE_URL = "http://192.168.0.30:3001"
+
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)

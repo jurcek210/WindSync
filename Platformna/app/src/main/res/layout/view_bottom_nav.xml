@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:background="#111111">
+
+
+
+    <ImageButton
+        android:id="@+id/btnNavAdd"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@android:color/transparent"
+        android:src="@android:drawable/ic_input_add"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnNavCamera"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:tint="@android:color/white" />
+
+    <ImageButton
+        android:id="@+id/btnNavCamera"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_camera_button"
+        android:src="@android:drawable/ic_menu_camera"
+        app:layout_constraintStart_toEndOf="@id/btnNavAdd"
+        app:layout_constraintEnd_toStartOf="@id/btnNavMap"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:tint="@android:color/white" />
+
+    <ImageButton
+        android:id="@+id/btnNavMap"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@android:color/transparent"
+        android:src="@android:drawable/ic_dialog_map"
+        app:layout_constraintStart_toEndOf="@id/btnNavCamera"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:tint="@android:color/white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

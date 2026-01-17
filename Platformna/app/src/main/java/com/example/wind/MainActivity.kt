@@ -11,8 +11,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wind.databinding.ActivityMainBinding
 import com.example.wind.mqtt.MqttManager
+import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
@@ -20,6 +24,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var mqttManager: MqttManager
+    private lateinit var adapter: EventAdapter
+
+    private var allEvents: List<EventItem> = emptyList()
 
     private val REQUEST_CAMERA = 1
     private val TAKE_PHOTO = 2
@@ -29,6 +36,12 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val nav = binding.bottomNav
+
+        adapter = EventAdapter(mutableListOf())
+        binding.rvEvents.layoutManager = LinearLayoutManager(this)
+        binding.rvEvents.adapter = adapter
 
         mqttManager = MqttManager(
             context = this,
@@ -41,32 +54,78 @@ class MainActivity : AppCompatActivity() {
 
         mqttManager.connect()
 
-        binding.btnTestApi.setOnClickListener {
+        nav.btnNavCamera.setOnClickListener {
             checkCameraPermissionAndOpen()
         }
 
-        binding.btnMessage.setOnClickListener {
+        nav.btnNavAdd.setOnClickListener {
             startActivity(Intent(this, MessageActivity::class.java))
         }
 
-        binding.btnEvents.setOnClickListener {
-            startActivity(Intent(this, EventsListActivity::class.java))
+        nav.btnNavMap.setOnClickListener {
+            Toast.makeText(this, "Mapa še ni implementirana", Toast.LENGTH_SHORT).show()
         }
 
+
+        loadEvents()
     }
 
-    // ===============================
-    // UI helperji
-    // ===============================
+    override fun onResume() {
+        super.onResume()
+        loadEvents()
+    }
+
+    private fun loadEvents() {
+        lifecycleScope.launch {
+            val res = ApiService.getEvents(null)
+            if (res.isFailure) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Napaka: ${res.exceptionOrNull()?.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+
+            val json = res.getOrNull().orEmpty()
+            allEvents = parseEvents(json)
+            adapter.updateData(allEvents)
+        }
+    }
+
+    private fun parseEvents(json: String): List<EventItem> {
+        return try {
+            val arr = JSONArray(json)
+            val out = mutableListOf<EventItem>()
+
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+
+                val id = o.optString("_id", "")
+                val topic = o.optString("topic", "")
+                val message = o.optString("message", "")
+                val timestamp = o.optString("timestamp", "")
+
+                val loc = o.optJSONObject("location") ?: JSONObject()
+                val coords = loc.optJSONArray("coordinates")
+
+                val lon = coords?.optDouble(0) ?: 0.0
+                val lat = coords?.optDouble(1) ?: 0.0
+
+                out.add(EventItem(id, topic, message, timestamp, lat, lon))
+            }
+            out
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     private fun showStatus(text: String) {
         runOnUiThread {
             binding.txtResult.text = text
         }
     }
 
-    // ===============================
-    // OBDELAVA REZULTATA
-    // ===============================
     private fun handleResult(payload: String) {
         try {
             val json = JSONObject(payload)
@@ -86,15 +145,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             showStatus(text)
-
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             showStatus("❌ Napaka pri branju rezultata")
         }
     }
 
-    // ===============================
-    // KAMERA
-    // ===============================
     private fun checkCameraPermissionAndOpen() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             != PackageManager.PERMISSION_GRANTED
@@ -108,6 +163,7 @@ class MainActivity : AppCompatActivity() {
             openCamera()
         }
     }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
