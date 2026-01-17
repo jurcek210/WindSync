@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, MapActivity::class.java) )
         }
         binding.btnGenerateEvent.setOnClickListener {
-            generateRandomExtremeEvent()
+            startActivity(Intent(this, SimulationActivity::class.java))
         }
 
 

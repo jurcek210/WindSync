@@ -39,6 +39,9 @@
         <activity
             android:name=".MapActivity"
             android:exported="false" />
+        <activity
+            android:name=".SimulationActivity"
+            android:exported="false" />
 
     </application>
 
