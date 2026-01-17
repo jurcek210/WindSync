@@ -62,6 +62,11 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private WindmillApi windmillApi;
     private boolean showWindmills = true;
     private SpriteBatch batch;
+    private boolean exitingDetail = false;
+    private float exitProgress = 0f;
+    private float exitDuration = 0.5f;
+    private float exitZoomFrom;
+
     private Stage uiStage;
     private Skin skin;
     private WindmillClickHandler windmillClickHandler;
@@ -184,6 +189,9 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         uiStage = new Stage();
         skin = new Skin(Gdx.files.internal("flat-earth-ui.json"));
 
+        createToggleWindmillsButton();
+
+
         openWeatherApi = new si.um.feri.maprri.api.openweather.OpenWeatherApi("fc630787973cb99d455abfba28768f83");
         addBtn = new TextButton("+", skin);
         addBtn.setSize(40, 40);
@@ -259,6 +267,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     }
     private void renderMap() {
         animateZoomAndTilt();
+        animateExitDetail();
+
 
         ScreenUtils.clear(0, 0, 0, 1);
         handleInput();
@@ -342,6 +352,34 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     }
 
 
+    private void animateExitDetail() {
+        if (!exitingDetail) return;
+
+        exitProgress += Gdx.graphics.getDeltaTime();
+        float t = Math.min(exitProgress / exitDuration, 1f);
+        t = t * t * (3f - 2f * t);
+
+        camera.zoom = MathUtils.lerp(exitZoomFrom, zoomStart, t);
+        camera.up.set(0, MathUtils.cosDeg(tiltTarget * (1f - t)), MathUtils.sinDeg(tiltTarget * (1f - t)));
+
+        if (sideCard != null) {
+            sideCard.getColor().a = 1f - t;
+        }
+
+        if (t >= 1f) {
+            exitingDetail = false;
+            viewMode = ViewMode.MAP;
+            selectedWindmill = null;
+
+            camera.up.set(0, 1, 0);
+            camera.zoom = zoomStart;
+
+            if (sideCard != null) {
+                sideCard.remove();
+                sideCard = null;
+            }
+        }
+    }
 
 
 
@@ -390,6 +428,9 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
+        if (isAnyEditActive()) {
+            return true;
+        }
 
         if (viewMode == ViewMode.DETAIL) {
             viewMode = ViewMode.MAP;
@@ -475,7 +516,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     }
 
     private void animateZoomAndTilt() {
-        if (!zooming || selectedWindmill == null) return;
+        if (!zooming || selectedWindmill == null || isAnyEditActive()) return;
+
         float focusOffsetX = camera.viewportWidth * camera.zoom * 0.25f;
 
         zoomProgress += Gdx.graphics.getDeltaTime();
@@ -547,6 +589,9 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             Gdx.graphics.getWidth() - BUTTON_W - BUTTON_MARGIN,
             Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN
         );
+        toggleWindmillsBtn.getLabelCell().pad(0);
+        toggleWindmillsBtn.pad(0);
+
 
         toggleWindmillsBtn.addListener(new InputListener() {
             @Override
@@ -568,116 +613,191 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
         InfoRefs refs = new InfoRefs();
         infoRefsByWindmill.put(w, refs);
+        openWindowsByWindmill.put(w, window);
 
-        Label title = new Label(w.name, skin);
-        title.setFontScale(1.8f);
-        title.setColor(Color.BLACK);
-        window.add(title).colspan(2).padBottom(24).row();
+        refs.nameLabel = new Label(w.name, skin);
+        refs.nameLabel.setFontScale(1.8f);
 
-        window.add("Latitude").left();
-        window.add(String.valueOf(w.lat)).left().row();
+        refs.nameField = new TextField(w.name, skin);
+        refs.nameField.setVisible(false);
 
-        window.add("Longitude").left();
-        window.add(String.valueOf(w.lon)).left().row();
+        window.add(refs.nameLabel).colspan(2).padBottom(12).row();
+        window.add(refs.nameField).colspan(2).width(300).padBottom(12).row();
 
-        window.add("Working").left();
+        window.add("Latitude");
+        window.add(String.valueOf(w.lat)).row();
+
+        window.add("Longitude");
+        window.add(String.valueOf(w.lon)).row();
+
+        window.add("Working");
         refs.working = new Label(w.working ? "Yes" : "No", skin);
-        window.add(refs.working).left().row();
+        window.add(refs.working).row();
 
-        window.add("Wind speed").left();
+        window.add("Wind speed");
         refs.windSpeed = new Label(String.format("%.2f m/s", w.windSpeed), skin);
-        window.add(refs.windSpeed).left().row();
+        window.add(refs.windSpeed).row();
 
-        float kWh1h = estimateEnergyKWhPerHour(w.windSpeed, w.working);
-        float kWh24h = kWh1h * 24f;
+        float k1 = estimateEnergyKWhPerHour(w.windSpeed, w.working);
+        float k24 = k1 * 24f;
 
-        window.add("Energy (1h)").left();
-        refs.kwh1h = new Label(String.format("%.1f kWh", kWh1h), skin);
-        window.add(refs.kwh1h).left().row();
+        window.add("Energy (1h)");
+        refs.kwh1h = new Label(String.format("%.1f kWh", k1), skin);
+        window.add(refs.kwh1h).row();
 
-        window.add("Energy (24h)").left();
-        refs.kwh24h = new Label(String.format("%.1f kWh", kWh24h), skin);
-        window.add(refs.kwh24h).left().row();
+        window.add("Energy (24h)");
+        refs.kwh24h = new Label(String.format("%.1f kWh", k24), skin);
+        window.add(refs.kwh24h).row();
 
         window.add().expandY().row();
 
         refs.editBtn = new TextButton("EDIT", skin);
         refs.deleteBtn = new TextButton("DELETE", skin);
 
+        refs.editBtn.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                if (!refs.editing) setEditMode(w, true);
+                else confirmEdit(w);
+                return true;
+            }
+        });
+
+        refs.deleteBtn.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                deleteWindmillLocalAndServer(w);
+
+                return true;
+            }
+        });
+
         window.add(refs.editBtn).expandX().left().padTop(24);
         window.add(refs.deleteBtn).expandX().right().padTop(24);
+    }
+
+    private void startExitDetailAnimation() {
+        exitingDetail = true;
+        exitProgress = 0f;
+        exitZoomFrom = camera.zoom;
     }
 
 
     private void setEditMode(WindmillMarker w, boolean editing) {
         InfoRefs refs = infoRefsByWindmill.get(w);
         if (refs == null) return;
+
         if (editing && !refs.editing) {
-            refs.originalWorking = w.working;
             refs.originalName = w.name;
+            refs.originalWorking = w.working;
         }
+
         refs.editing = editing;
-        if (refs.nameLabel != null) refs.nameLabel.setVisible(!editing);
-        if (refs.nameField != null) {
-            refs.nameField.setVisible(editing);
-            refs.nameField.setDisabled(!editing);
-            if (editing) {
-                refs.nameField.setText(w.name);
-                uiStage.setKeyboardFocus(refs.nameField);
-                refs.nameField.selectAll();
-            } else {
-                uiStage.setKeyboardFocus(null);
-            }
+
+        refs.nameLabel.setVisible(!editing);
+        refs.nameField.setVisible(editing);
+
+        if (editing) {
+            refs.nameField.setText(w.name);
+            uiStage.setKeyboardFocus(refs.nameField);
+            refs.nameField.selectAll();
+        } else {
+            uiStage.setKeyboardFocus(null);
         }
-        if (refs.editBtn != null) refs.editBtn.setText(editing ? "CONFIRM" : "EDIT");
+
+        refs.editBtn.setText(editing ? "CONFIRM" : "EDIT");
+
         Window win = openWindowsByWindmill.get(w);
         if (win != null) win.pack();
     }
+    private void exitDetailMode() {
+        selectedWindmill = null;
+        zooming = false;
+        viewMode = ViewMode.MAP;
+
+        camera.up.set(0, 1, 0);
+        camera.zoom = zoomStart;
+
+        if (sideCard != null) {
+            sideCard.remove();
+            sideCard = null;
+        }
+    }
+
+
 
     private void deleteWindmillLocalAndServer(WindmillMarker w) {
+
+        if (w == selectedWindmill) {
+            startExitDetailAnimation();
+        }
+
         Window win = openWindowsByWindmill.get(w);
         if (win != null) {
             win.remove();
             windmillWindows.removeValue(win, true);
         }
+
         openWindowsByWindmill.remove(w);
         infoRefsByWindmill.remove(w);
         windmills.remove(w);
-        windmillClickHandler = new WindmillClickHandler(windmills, beginTile.x, beginTile.y, tilesY * MapRasterTiles.TILE_SIZE);
+
+        windmillClickHandler = new WindmillClickHandler(
+            windmills,
+            beginTile.x,
+            beginTile.y,
+            tilesY * MapRasterTiles.TILE_SIZE
+        );
+
         if (w.id != null) {
-            windmillApi.deleteWindmill(w.id, () -> {
-            });
+            windmillApi.deleteWindmill(w.id, () -> {});
         }
     }
+
 
     private void confirmEdit(WindmillMarker w) {
         InfoRefs refs = infoRefsByWindmill.get(w);
         if (refs == null) return;
-        String newName = (refs.nameField != null) ? refs.nameField.getText().trim() : w.name;
+
+        String newName = refs.nameField.getText().trim();
         if (newName.isEmpty()) newName = w.name;
-        boolean nameChanged = refs.originalName != null && !newName.equals(refs.originalName);
-        boolean workingChanged = (w.working != refs.originalWorking);
-        if (!nameChanged && !workingChanged) {
-            setEditMode(w, false);
-            return;
-        }
+
+        boolean changed = !newName.equals(refs.originalName);
+
         w.name = newName;
-        if (refs.nameLabel != null) refs.nameLabel.setText(newName);
-        if (w.id == null) {
+        refs.nameLabel.setText(newName);
+
+        if (!changed || w.id == null) {
             setEditMode(w, false);
             updateInfoWindowFor(w);
             return;
         }
+
         String oldId = w.id;
-        windmillApi.deleteWindmill(oldId, () -> {
+        windmillApi.deleteWindmill(oldId, () ->
             windmillApi.createWindmill(w, created -> {
                 w.id = created.id;
-                windmillClickHandler = new WindmillClickHandler(windmills, beginTile.x, beginTile.y, tilesY * MapRasterTiles.TILE_SIZE);
+                windmillClickHandler = new WindmillClickHandler(
+                    windmills,
+                    beginTile.x,
+                    beginTile.y,
+                    tilesY * MapRasterTiles.TILE_SIZE
+                );
                 setEditMode(w, false);
                 updateInfoWindowFor(w);
-            });
-        });
+            })
+        );
     }
+
+    private boolean isAnyEditActive() {
+        for (InfoRefs refs : infoRefsByWindmill.values()) {
+            if (refs.editing) return true;
+        }
+        return false;
+    }
+
 
     private void openCreateWindmillWindow(double lat, double lon, int screenX, int screenY) {
         if (createWindmillWindow != null) {
@@ -840,18 +960,24 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     private void handleInput() {
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && selectedWindmill != null) {
-            selectedWindmill = null;
-            zooming = false;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
 
-            camera.up.set(0, 1, 0);
-            camera.zoom = zoomStart;
+            for (InfoRefs refs : infoRefsByWindmill.values()) {
+                if (refs.editing) {
+                    setEditMode(selectedWindmill, false);
+                    return;
+                }
+            }
 
-            if (sideCard != null) {
-                sideCard.remove();
-                sideCard = null;
+            if (selectedWindmill != null && !exitingDetail) {
+                startExitDetailAnimation();
+                return;
             }
         }
+        if (isAnyEditActive() || exitingDetail || viewMode == ViewMode.DETAIL) {
+            return;
+        }
+
 
 
 
