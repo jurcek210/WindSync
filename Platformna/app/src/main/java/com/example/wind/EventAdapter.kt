@@ -6,11 +6,23 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.wind.databinding.RecyclerViewRowEventBinding
 
 class EventAdapter(
-    private val events: MutableList<EventItem>
+    private val events: MutableList<EventItem>,
+    private val onEdit: (EventItem) -> Unit
 ) : RecyclerView.Adapter<EventAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: RecyclerViewRowEventBinding) :
-        RecyclerView.ViewHolder(binding.root)
+        RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.root.setOnLongClickListener {
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    onEdit(events[pos])
+                }
+                true
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = RecyclerViewRowEventBinding.inflate(
@@ -50,4 +62,6 @@ class EventAdapter(
         return if (iso.length >= 16) iso.substring(0, 16).replace("T", " ")
         else iso
     }
+    fun getItem(position: Int): EventItem = events[position]
+
 }

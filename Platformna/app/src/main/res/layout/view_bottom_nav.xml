@@ -12,12 +12,12 @@
         android:layout_height="48dp"
         android:background="@android:color/transparent"
         android:src="@android:drawable/ic_input_add"
+        android:scaleType="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnNavCamera"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_chainStyle="spread"
-        app:tint="@color/nav_icon" />
+        app:layout_constraintHorizontal_chainStyle="spread"/>
 
     <ImageButton
         android:id="@+id/btnNavCamera"
@@ -25,11 +25,11 @@
         android:layout_height="64dp"
         android:background="@drawable/bg_camera_button"
         android:src="@android:drawable/ic_menu_camera"
+        android:scaleType="center"
         app:layout_constraintStart_toEndOf="@id/btnNavAdd"
         app:layout_constraintEnd_toStartOf="@id/btnNavMap"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:tint="@color/nav_icon" />
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <ImageButton
         android:id="@+id/btnNavMap"
@@ -37,10 +37,10 @@
         android:layout_height="48dp"
         android:background="@android:color/transparent"
         android:src="@android:drawable/ic_dialog_map"
+        android:scaleType="center"
         app:layout_constraintStart_toEndOf="@id/btnNavCamera"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:tint="@color/nav_icon" />
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

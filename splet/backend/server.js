@@ -48,6 +48,7 @@ app.use("/api", authRoute);
 app.use("/api/windmills", windmillRoute);
 app.use("/api/events", eventRoutes);
 
+
 io.on("connection", (socket) => {
   console.log("Nova socket povezava:", socket.id);
 

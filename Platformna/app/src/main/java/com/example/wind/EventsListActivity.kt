@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wind.databinding.ActivityEventsListBinding
+import com.example.wind.databinding.DialogAddEventBinding
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -29,7 +31,10 @@ class EventsListActivity : AppCompatActivity() {
         binding = ActivityEventsListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = EventAdapter(mutableListOf())
+        class EventAdapter(
+            private val events: MutableList<EventItem>
+        )
+
         binding.rvEvents.layoutManager = LinearLayoutManager(this)
         binding.rvEvents.adapter = adapter
 
@@ -56,6 +61,7 @@ class EventsListActivity : AppCompatActivity() {
             applyFilter()
         }
     }
+
 
     private fun android.widget.Spinner.setOnItemSelectedListener(
         onSelected: (parent: android.widget.AdapterView<*>, view: android.view.View?, pos: Int, id: Long) -> Unit
@@ -90,6 +96,7 @@ class EventsListActivity : AppCompatActivity() {
         }
         adapter.updateData(filtered)
     }
+
 
     private fun parseEvents(json: String): List<EventItem> {
         return try {

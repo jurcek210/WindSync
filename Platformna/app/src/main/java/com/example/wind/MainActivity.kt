@@ -7,18 +7,26 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
+import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wind.databinding.ActivityMainBinding
+import com.example.wind.databinding.DialogAddEventBinding
 import com.example.wind.mqtt.MqttManager
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,12 +44,38 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setContentView(binding.root)
 
         val nav = binding.bottomNav
 
-        adapter = EventAdapter(mutableListOf())
-        binding.rvEvents.layoutManager = LinearLayoutManager(this)
+        adapter = EventAdapter(mutableListOf()) { event ->
+            showEditEventDialog(event)
+        }
+
         binding.rvEvents.adapter = adapter
+
+        binding.rvEvents.layoutManager = LinearLayoutManager(this)
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val event = allEvents[position]
+
+                showDeleteConfirmDialog(event, position)
+            }
+
+        }
+
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.rvEvents)
+
 
         mqttManager = MqttManager(
             context = this,
@@ -78,6 +112,43 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         loadEvents()
     }
+
+    private fun showDeleteConfirmDialog(event: EventItem, position: Int) {
+        AlertDialog.Builder(this)
+            .setTitle("Izbriši dogodek")
+            .setMessage(
+                "Ali ste prepričani, da želite izbrisati dogodek?\n\n" +
+                        event.message
+            )
+            .setPositiveButton("Izbriši") { _, _ ->
+                lifecycleScope.launch {
+                    val res = ApiService.deleteEvent(event.id)
+                    if (res.isSuccess) {
+                        loadEvents()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Dogodek izbrisan",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Napaka pri brisanju",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        adapter.notifyItemChanged(position)
+                    }
+                }
+            }
+            .setNegativeButton("Prekliči") { _, _ ->
+                adapter.notifyItemChanged(position)
+            }
+            .setOnCancelListener {
+                adapter.notifyItemChanged(position)
+            }
+            .show()
+    }
+
 
     private fun loadEvents() {
         lifecycleScope.launch {
@@ -193,6 +264,51 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    private fun showEditEventDialog(event: EventItem) {
+        val topics = arrayOf(
+            "veter/prevec",
+            "veter/premalo",
+            "veternica/okvara",
+            "veternica/servis"
+        )
+
+        val dialogBinding = DialogAddEventBinding.inflate(layoutInflater)
+
+        dialogBinding.etMessage.setText(event.message)
+
+        dialogBinding.spinnerTopic.adapter =
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                topics
+            )
+
+        val index = topics.indexOfFirst { it == event.topic }
+        if (index >= 0) dialogBinding.spinnerTopic.setSelection(index)
+
+        AlertDialog.Builder(this)
+            .setTitle("Uredi dogodek")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Shrani") { _, _ ->
+                val newTopic = dialogBinding.spinnerTopic.selectedItem.toString()
+                val newMessage = dialogBinding.etMessage.text.toString()
+
+                if (newMessage.isBlank()) return@setPositiveButton
+
+                lifecycleScope.launch {
+                    ApiService.postEvent(
+                        newTopic,
+                        newMessage,
+                        event.lat,
+                        event.lon
+                    )
+                    loadEvents()
+                }
+            }
+            .setNegativeButton("Prekliči", null)
+            .show()
+    }
+
 
 
     private fun ClosedFloatingPointRange<Double>.random() =

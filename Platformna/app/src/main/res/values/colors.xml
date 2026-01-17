@@ -25,5 +25,9 @@
     <color name="text_secondary">#334155</color>
     <color name="text_hint">#64748B</color>
 
+    <color name="sky_blue_light">#E0F2FE</color>
+    <color name="sky_blue">#38BDF8</color>
+    <color name="sky_blue_dark">#0284C7</color>
+
 
 </resources>

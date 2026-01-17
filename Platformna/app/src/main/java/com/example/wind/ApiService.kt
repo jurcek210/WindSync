@@ -68,4 +68,22 @@ object ApiService {
             }
         }
     }
+    suspend fun deleteEvent(id: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$BASE_URL/api/events/$id")
+                    .delete()
+                    .build()
+
+                client.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) Result.success(Unit)
+                    else Result.failure(Exception("HTTP ${resp.code}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
 }
