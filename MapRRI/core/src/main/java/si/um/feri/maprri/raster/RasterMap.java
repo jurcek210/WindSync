@@ -3,9 +3,7 @@ package si.um.feri.maprri.raster;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -31,6 +29,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.Environment;
+
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,6 +84,19 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private final float SIM_W = 160;
     private final float SIM_H = 40;
     private final float SIM_GAP = 10;
+    private PerspectiveCamera detailCamera;
+    private ModelBatch modelBatch;
+    private Environment environment;
+    private Model windmillModel;
+    private ModelInstance windmillInstance;
+    private boolean zooming = false;
+    private float zoomStart;
+    private float zoomTarget = 13f;
+    private float zoomProgress = 0f;
+
+    private float tiltStart = 0f;
+    private float tiltTarget = 35f;
+
 
     private static class InfoRefs {
         Label working;
@@ -94,6 +111,15 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         boolean originalWorking;
         String originalName;
     }
+
+    private enum ViewMode {
+        MAP,
+        DETAIL
+    }
+
+    private ViewMode viewMode = ViewMode.MAP;
+    private WindmillMarker selectedWindmill = null;
+
 
     private ObjectMap<WindmillMarker, InfoRefs> infoRefsByWindmill = new ObjectMap<>();
 
@@ -158,26 +184,10 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         addBtn = new TextButton("+", skin);
         addBtn.setSize(40, 40);
         addBtn.setPosition(Gdx.graphics.getWidth() - 40 - BUTTON_MARGIN, Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN - 40 - 10 - 40 - 10);
+
         addBtn.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                event.stop();
-
-                addMode = !addMode;
-
-                if (!addMode) {
-                    if (createWindmillWindow != null) {
-                        createWindmillWindow.remove();
-                        createWindmillWindow = null;
-                    }
-                    addBtn.setText("+");
-                } else {
-                    addBtn.setText("x");
-                }
-
-                return true;
-            }
         });
+
         uiStage.addActor(addBtn);
         simulateBtn = new TextButton("SIMULATE", skin);
         simulateBtn.setSize(160, 40);
@@ -198,10 +208,42 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             updateAllOpenInfoWindows();
         });
         Gdx.input.setInputProcessor(new com.badlogic.gdx.InputMultiplexer(uiStage, new GestureDetector(this)));
+        modelBatch = new ModelBatch();
+
+        detailCamera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        detailCamera.position.set(0f, 6f, 12f);
+        detailCamera.lookAt(0f, 4f, 0f);
+        detailCamera.near = 0.1f;
+        detailCamera.far = 100f;
+        detailCamera.update();
+        ModelBuilder mb = new ModelBuilder();
+        windmillModel = mb.createCylinder(
+            0.4f, 6f, 0.4f, 20,
+            new Material(ColorAttribute.createDiffuse(Color.WHITE)),
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+        );
+
+        windmillInstance = new ModelInstance(windmillModel);
+        windmillInstance.transform.setToTranslation(0f, 3f, 0f);
+
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
+        environment.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
+
     }
 
     @Override
     public void render() {
+        if (viewMode == ViewMode.MAP) {
+            renderMap();
+        } else {
+            renderDetail();
+        }
+
+    }
+    private void renderMap() {
+        animateZoomAndTilt();
+
         ScreenUtils.clear(0, 0, 0, 1);
         handleInput();
         camera.position.x = Math.round(camera.position.x);
@@ -222,6 +264,23 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         uiStage.act(Gdx.graphics.getDeltaTime());
         uiStage.draw();
     }
+    private void renderDetail() {
+        renderMap();
+
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+
+        detailCamera.update();
+
+        modelBatch.begin(detailCamera);
+        modelBatch.render(windmillInstance, environment);
+        modelBatch.end();
+    }
+
+
+
+
+
 
     private void drawToggleButton() {
         shapeRenderer.setProjectionMatrix(new com.badlogic.gdx.math.Matrix4().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
@@ -267,13 +326,20 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
+
+        if (viewMode == ViewMode.DETAIL) {
+            viewMode = ViewMode.MAP;
+            selectedWindmill = null;
+            return true;
+        }
+
         Vector2 stageCoords = uiStage.screenToStageCoordinates(new Vector2(x, y));
         if (uiStage.hit(stageCoords.x, stageCoords.y, true) != null) return true;
 
         float screenY = Gdx.graphics.getHeight() - y;
-
         float bx = Gdx.graphics.getWidth() - BUTTON_W - BUTTON_MARGIN;
         float by = Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN;
+
         if (x >= bx && x <= bx + BUTTON_W && screenY >= by && screenY <= by + BUTTON_H) {
             showWindmills = !showWindmills;
             return true;
@@ -295,15 +361,21 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
         if (!showWindmills || windmillClickHandler == null) return false;
 
-        WindmillMarker clicked = windmillClickHandler.getClickedWindmill(worldClick.x, worldClick.y);
+        WindmillMarker clicked =
+            windmillClickHandler.getClickedWindmill(worldClick.x, worldClick.y);
+
         if (clicked != null) {
-            if (openWindowsByWindmill.containsKey(clicked)) return true;
-            createAndShowWindmillWindow(clicked, (int) x, (int) y);
+            selectedWindmill = clicked;
+            zooming = true;
+            zoomProgress = 0f;
+            zoomStart = camera.zoom;
             return true;
         }
 
+
         return false;
     }
+
 
 
     private void drawSimSelectionRect() {
@@ -334,6 +406,37 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             updateInfoWindowFor(w);
         }
     }
+
+    private void animateZoomAndTilt() {
+        if (!zooming || selectedWindmill == null) return;
+
+        zoomProgress += Gdx.graphics.getDeltaTime();
+        float t = Math.min(zoomProgress / 0.8f, 1f);
+        t = t * t * (3f - 2f * t);
+
+        camera.zoom = MathUtils.lerp(zoomStart, 1f / zoomTarget, t);
+
+        Vector2 p = MapRasterTiles.getPixelPosition(
+            selectedWindmill.lat,
+            selectedWindmill.lon,
+            MapRasterTiles.TILE_SIZE,
+            Constants.ZOOM,
+            beginTile.x,
+            beginTile.y,
+            tilesY * MapRasterTiles.TILE_SIZE
+        );
+
+        camera.position.x = MathUtils.lerp(camera.position.x, p.x, t);
+        camera.position.y = MathUtils.lerp(camera.position.y, p.y, t);
+
+        camera.up.set(0, MathUtils.cosDeg(tiltTarget * t), MathUtils.sinDeg(tiltTarget * t));
+        camera.direction.set(0, 0, -1).nor();
+
+        if (t >= 1f) {
+            zooming = false;
+        }
+    }
+
 
     private void createAndShowWindmillWindow(WindmillMarker w, int screenX, int screenY) {
         Window window = new Window("Windmill info", skin);
@@ -672,6 +775,20 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     }
 
     private void handleInput() {
+
+        if (viewMode == ViewMode.DETAIL && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            viewMode = ViewMode.MAP;
+            selectedWindmill = null;
+        }
+
+        if (selectedWindmill != null && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            selectedWindmill = null;
+            zooming = false;
+            camera.up.set(0, 1, 0);
+            camera.zoom = zoomStart;
+        }
+
+
         float moveSpeed = 600 * Gdx.graphics.getDeltaTime();
         if (Gdx.input.isKeyPressed(Input.Keys.A)) camera.translate(-moveSpeed, 0);
         if (Gdx.input.isKeyPressed(Input.Keys.D)) camera.translate(moveSpeed, 0);
