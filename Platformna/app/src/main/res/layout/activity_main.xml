@@ -13,13 +13,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="16dp"
         android:text="SIMULACIJA"
-        app:layout_constraintBottom_toTopOf="@+id/rvEvents"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/txtResult"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtResult" />
 
     <TextView
         android:id="@+id/txtResult"
@@ -28,7 +25,6 @@
         android:layout_marginTop="24dp"
         android:padding="8dp"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@+id/btnGenerateEvent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,7 +50,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtResult" />
+        app:layout_constraintTop_toBottomOf="@+id/btnGenerateEvent" />
 
     <include
         android:id="@+id/bottomNav"

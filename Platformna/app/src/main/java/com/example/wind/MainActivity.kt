@@ -58,11 +58,11 @@ class MainActivity : AppCompatActivity() {
     private fun setupMqtt() {
         mqttManager = MqttManager(
             context = this,
-            serverUri = "tcp://192.168.1.10:1883",
+            serverUri = "tcp://10.189.108.208:1883",
             resultTopic = "windsync/result",
             imageTopic = "windsync/image",
             onResult = { handleResult(it) },
-            onStatus = { } // ne uporabljamo več text statusa
+            onStatus = { }
         )
 
         mqttManager.connect()
