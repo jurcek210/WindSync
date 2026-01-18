@@ -7,15 +7,17 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Base64
-import android.util.Log
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.wind.databinding.ActivityMainBinding
 import com.example.wind.databinding.DialogAddEventBinding
 import com.example.wind.mqtt.MqttManager
@@ -23,10 +25,6 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,66 +42,10 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setContentView(binding.root)
 
-        val nav = binding.bottomNav
-
-        adapter = EventAdapter(mutableListOf()) { event ->
-            showEditEventDialog(event)
-        }
-
-        binding.rvEvents.adapter = adapter
-
-        binding.rvEvents.layoutManager = LinearLayoutManager(this)
-        val swipeCallback = object : ItemTouchHelper.SimpleCallback(
-            0,
-            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-        ) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ) = false
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                val event = allEvents[position]
-
-                showDeleteConfirmDialog(event, position)
-            }
-
-        }
-
-        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.rvEvents)
-
-
-        mqttManager = MqttManager(
-            context = this,
-            serverUri = "tcp://192.168.1.10:1883",
-            resultTopic = "windsync/result",
-            imageTopic = "windsync/image",
-            onResult = { handleResult(it) },
-            onStatus = { showStatus(it) }
-        )
-
-        mqttManager.connect()
-
-        nav.btnNavCamera.setOnClickListener {
-            checkCameraPermissionAndOpen()
-        }
-
-        nav.btnNavAdd.setOnClickListener {
-            startActivity(Intent(this, MessageActivity::class.java))
-        }
-
-        nav.btnNavMap.setOnClickListener {
-            startActivity(Intent(this, MapActivity::class.java) )
-        }
-        binding.btnGenerateEvent.setOnClickListener {
-            startActivity(Intent(this, SimulationActivity::class.java))
-        }
-
-
+        setupRecycler()
+        setupMqtt()
+        setupButtons()
 
         loadEvents()
     }
@@ -113,46 +55,120 @@ class MainActivity : AppCompatActivity() {
         loadEvents()
     }
 
-    private fun showDeleteConfirmDialog(event: EventItem, position: Int) {
-        AlertDialog.Builder(this)
-            .setTitle("Izbriši dogodek")
-            .setMessage(
-                "Ali ste prepričani, da želite izbrisati dogodek?\n\n" +
-                        event.message
-            )
-            .setPositiveButton("Izbriši") { _, _ ->
-                lifecycleScope.launch {
-                    val res = ApiService.deleteEvent(event.id)
-                    if (res.isSuccess) {
-                        loadEvents()
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Dogodek izbrisan",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Napaka pri brisanju",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        adapter.notifyItemChanged(position)
-                    }
+    private fun setupMqtt() {
+        mqttManager = MqttManager(
+            context = this,
+            serverUri = "tcp://192.168.1.10:1883",
+            resultTopic = "windsync/result",
+            imageTopic = "windsync/image",
+            onResult = { handleResult(it) },
+            onStatus = { } // ne uporabljamo več text statusa
+        )
+
+        mqttManager.connect()
+    }
+
+    private fun handleResult(payload: String) {
+        try {
+            val json = JSONObject(payload)
+
+            val isWind = json.getBoolean("is_wind_turbine")
+            val confidence = json.getDouble("confidence")
+
+            runOnUiThread {
+                if (isWind) {
+                    val blades = json.getString("blades")
+                    val bladesConf = json.getDouble("blades_confidence")
+
+                    showResultCard(true, confidence, blades, bladesConf)
+                } else {
+                    showResultCard(false, confidence)
                 }
             }
-            .setNegativeButton("Prekliči") { _, _ ->
-                adapter.notifyItemChanged(position)
+
+        } catch (e: Exception) {
+            runOnUiThread {
+                Toast.makeText(this, "Napaka pri rezultatu", Toast.LENGTH_SHORT).show()
             }
-            .setOnCancelListener {
-                adapter.notifyItemChanged(position)
+        }
+    }
+
+
+    private fun showResultCard(
+        isWind: Boolean,
+        confidence: Double,
+        blades: String? = null,
+        bladesConf: Double? = null
+    ) {
+        val card = binding.resultCardView
+
+        val title = card.txtTitle
+        val txtBlades = card.txtBlades
+        val txtConfidence = card.txtConfidence
+
+        if (isWind) {
+            title.text = "JE vetrnica"
+            txtBlades.text = "Krakov: $blades"
+        } else {
+            title.text = "NI vetrnica"
+            txtBlades.text = ""
+        }
+
+        txtConfidence.text = "Zanesljivost: ${(confidence * 100).toInt()} %"
+
+        card.root.visibility = android.view.View.VISIBLE
+        card.root.alpha = 0f
+
+        card.root.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .start()
+
+        card.root.postDelayed({
+            card.root.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction {
+                    card.root.visibility = android.view.View.GONE
+                }
+                .start()
+        }, 3000)
+    }
+
+
+    private fun setupRecycler() {
+
+        adapter = EventAdapter(mutableListOf()) { event ->
+            showEditEventDialog(event)
+        }
+
+        binding.rvEvents.layoutManager = LinearLayoutManager(this)
+        binding.rvEvents.adapter = adapter
+
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val event = allEvents[position]
+                showDeleteConfirmDialog(event, position)
             }
-            .show()
+        }
+
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.rvEvents)
     }
 
 
     private fun loadEvents() {
         lifecycleScope.launch {
             val res = ApiService.getEvents(null)
+
             if (res.isFailure) {
                 Toast.makeText(
                     this@MainActivity,
@@ -162,8 +178,7 @@ class MainActivity : AppCompatActivity() {
                 return@launch
             }
 
-            val json = res.getOrNull().orEmpty()
-            allEvents = parseEvents(json)
+            allEvents = parseEvents(res.getOrNull().orEmpty())
             adapter.updateData(allEvents)
         }
     }
@@ -171,100 +186,61 @@ class MainActivity : AppCompatActivity() {
     private fun parseEvents(json: String): List<EventItem> {
         return try {
             val arr = JSONArray(json)
-            val out = mutableListOf<EventItem>()
+            val list = mutableListOf<EventItem>()
 
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
 
-                val id = o.optString("_id", "")
-                val topic = o.optString("topic", "")
-                val message = o.optString("message", "")
-                val timestamp = o.optString("timestamp", "")
+                val loc = o.optJSONObject("location")
+                val coords = loc?.optJSONArray("coordinates")
 
-                val loc = o.optJSONObject("location") ?: JSONObject()
-                val coords = loc.optJSONArray("coordinates")
-
-                val lon = coords?.optDouble(0) ?: 0.0
-                val lat = coords?.optDouble(1) ?: 0.0
-
-                out.add(EventItem(id, topic, message, timestamp, lat, lon))
+                list.add(
+                    EventItem(
+                        o.optString("_id"),
+                        o.optString("topic"),
+                        o.optString("message"),
+                        o.optString("timestamp"),
+                        coords?.optDouble(1) ?: 0.0,
+                        coords?.optDouble(0) ?: 0.0
+                    )
+                )
             }
-            out
-        } catch (_: Exception) {
+            list
+
+        } catch (e: Exception) {
             emptyList()
         }
     }
 
-    private fun showStatus(text: String) {
-        runOnUiThread {
-            binding.txtResult.text = text
-        }
-    }
 
-    private fun handleResult(payload: String) {
-        try {
-            val json = JSONObject(payload)
-            val isWind = json.getBoolean("is_wind_turbine")
-            val confidence = json.getDouble("confidence")
+    private fun showDeleteConfirmDialog(event: EventItem, position: Int) {
 
-            val text = if (!isWind) {
-                "❌ NI vetrnica\nZanesljivost: ${(confidence * 100).toInt()} %"
-            } else {
-                val blades = json.getString("blades")
-                val bladesConf = json.getDouble("blades_confidence")
+        AlertDialog.Builder(this)
+            .setTitle("Izbriši dogodek")
+            .setMessage(event.message)
+            .setPositiveButton("Izbriši") { _, _ ->
 
-                "✅ JE vetrnica\n" +
-                        "Krakov: $blades\n" +
-                        "Zanesljivost: ${(confidence * 100).toInt()} %\n" +
-                        "Krakov conf: ${(bladesConf * 100).toInt()} %"
+                lifecycleScope.launch {
+                    val res = ApiService.deleteEvent(event.id)
+
+                    if (res.isSuccess) {
+                        loadEvents()
+                    } else {
+                        adapter.notifyItemChanged(position)
+                        Toast.makeText(this@MainActivity,
+                            "Napaka pri brisanju", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-
-            showStatus(text)
-        } catch (_: Exception) {
-            showStatus("❌ Napaka pri branju rezultata")
-        }
-    }
-
-    private val extremeTopics = listOf(
-        "veter/prevec",
-        "veter/premalo",
-        "veternica/okvara",
-        "veternica/servis"
-    )
-
-    private fun randomSloveniaLocation(): Pair<Double, Double> {
-        val lat = (45.4..46.9).random()
-        val lon = (13.3..16.6).random()
-        return lat to lon
-    }
-
-    private fun generateRandomExtremeEvent() {
-        val topic = extremeTopics.random()
-
-        val message = when (topic) {
-            "veter/prevec" -> "Ekstremen veter zaznan"
-            "veter/premalo" -> "Nenavadno mirno – ni vetra"
-            "veternica/okvara" -> "Napaka na vetrnici"
-            "veternica/servis" -> "Vetrnica potrebuje servis"
-            else -> "Ekstremen dogodek"
-        }
-
-        val (lat, lon) = randomSloveniaLocation()
-
-        lifecycleScope.launch {
-            val res = ApiService.postEvent(topic, message, lat, lon)
-            if (res.isSuccess) {
-                loadEvents()
-            } else {
-                Toast.makeText(
-                    this@MainActivity,
-                    "Napaka pri generiranju dogodka",
-                    Toast.LENGTH_SHORT
-                ).show()
+            .setNegativeButton("Prekliči") { _, _ ->
+                adapter.notifyItemChanged(position)
             }
-        }
+            .show()
     }
+
+
     private fun showEditEventDialog(event: EventItem) {
+
         val topics = arrayOf(
             "veter/prevec",
             "veter/premalo",
@@ -277,28 +253,21 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.etMessage.setText(event.message)
 
         dialogBinding.spinnerTopic.adapter =
-            ArrayAdapter(
-                this,
-                android.R.layout.simple_spinner_dropdown_item,
-                topics
-            )
+            ArrayAdapter(this,
+                android.R.layout.simple_spinner_dropdown_item, topics)
 
-        val index = topics.indexOfFirst { it == event.topic }
+        val index = topics.indexOf(event.topic)
         if (index >= 0) dialogBinding.spinnerTopic.setSelection(index)
 
         AlertDialog.Builder(this)
             .setTitle("Uredi dogodek")
             .setView(dialogBinding.root)
             .setPositiveButton("Shrani") { _, _ ->
-                val newTopic = dialogBinding.spinnerTopic.selectedItem.toString()
-                val newMessage = dialogBinding.etMessage.text.toString()
-
-                if (newMessage.isBlank()) return@setPositiveButton
 
                 lifecycleScope.launch {
                     ApiService.postEvent(
-                        newTopic,
-                        newMessage,
+                        dialogBinding.spinnerTopic.selectedItem.toString(),
+                        dialogBinding.etMessage.text.toString(),
                         event.lat,
                         event.lon
                     )
@@ -309,48 +278,41 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun setupButtons() {
 
+        val nav = binding.bottomNav
 
-    private fun ClosedFloatingPointRange<Double>.random() =
-        start + Math.random() * (endInclusive - start)
+        nav.btnNavCamera.setOnClickListener { checkCameraPermissionAndOpen() }
 
+        nav.btnNavAdd.setOnClickListener {
+            startActivity(Intent(this, MessageActivity::class.java))
+        }
 
+        nav.btnNavMap.setOnClickListener {
+            startActivity(Intent(this, MapActivity::class.java))
+        }
+
+        binding.btnGenerateEvent.setOnClickListener {
+            startActivity(Intent(this, SimulationActivity::class.java))
+        }
+    }
 
     private fun checkCameraPermissionAndOpen() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
+            != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.CAMERA),
-                REQUEST_CAMERA
-            )
-        } else {
-            openCamera()
-        }
-    }
+                REQUEST_CAMERA)
 
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == REQUEST_CAMERA &&
-            grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
-            openCamera()
-        } else {
-            Toast.makeText(this, "Kamera ni dovoljena", Toast.LENGTH_SHORT).show()
-        }
+        } else openCamera()
     }
 
     private fun openCamera() {
-        val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
-        startActivityForResult(intent, TAKE_PHOTO)
+        startActivityForResult(
+            Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE),
+            TAKE_PHOTO
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -365,14 +327,14 @@ class MainActivity : AppCompatActivity() {
     private fun sendBitmap(bitmap: Bitmap) {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-        val bytes = stream.toByteArray()
 
-        val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-        mqttManager.publishImage(base64)
+        mqttManager.publishImage(
+            Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+        )
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         mqttManager.disconnect()
+        super.onDestroy()
     }
 }

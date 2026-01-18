@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiService {
 
-    private const val BASE_URL = "http://192.168.0.30:3001"
+    private const val BASE_URL = "http://192.168.1.10:3001"
 
 
     private val client = OkHttpClient.Builder()
