@@ -25,7 +25,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -34,7 +33,6 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.Environment;
-
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +63,6 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private boolean showWindmills = true;
     private SpriteBatch batch;
     private boolean exitingDetail = false;
-    private float exitProgress = 0f;
     private float exitDuration = 0.5f;
     private float exitZoomFrom;
 
@@ -90,9 +87,6 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private final float BUTTON_MARGIN = 20;
 
     private TextButton simulateBtn;
-    private final float SIM_W = 160;
-    private final float SIM_H = 40;
-    private final float SIM_GAP = 10;
     private PerspectiveCamera detailCamera;
     private ModelBatch modelBatch;
     private Environment environment;
@@ -108,16 +102,11 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     private WindmillDetailView detailView;
 
 
-
     private static class InfoRefs {
         Label working;
         Label windSpeed;
         Label kwh1h;
         Label kwh24h;
-        Label nameLabel;
-        TextField nameField;
-        TextButton editBtn;
-        TextButton deleteBtn;
         boolean editing = false;
         boolean originalWorking;
         String originalName;
@@ -191,7 +180,6 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         uiStage = new Stage();
         skin = new Skin(Gdx.files.internal("flat-earth-ui.json"));
-
         detailView = new WindmillDetailView(
             uiStage,
             skin,
@@ -200,6 +188,9 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             modelBatch,
             windmillInstance,
             environment,
+            windmillApi,
+            openWeatherApi,
+            windmills,
             BUTTON_W,
             BUTTON_H,
             BUTTON_MARGIN
@@ -281,6 +272,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         }
 
     }
+
     private void renderMap() {
         animateZoomAndTilt();
         if (exitingDetail) {
@@ -330,51 +322,12 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             windmillRenderer.render(toRender, camera, positions);
         }
 
-        drawToggleButton();
+        detailView.drawToggleButton(showWindmills);
         drawSimSelectionRect();
         uiStage.act(Gdx.graphics.getDeltaTime());
         uiStage.draw();
     }
 
-
-
-
-    private void drawToggleButton() {
-        shapeRenderer.setProjectionMatrix(new com.badlogic.gdx.math.Matrix4().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
-        float x = Gdx.graphics.getWidth() - BUTTON_W - BUTTON_MARGIN;
-        float y = Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN;
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(showWindmills ? Color.SKY : Color.DARK_GRAY);
-        shapeRenderer.rect(x, y, BUTTON_W, BUTTON_H);
-        shapeRenderer.end();
-    }
-
-    private void drawSimulateButton() {
-        shapeRenderer.setProjectionMatrix(new com.badlogic.gdx.math.Matrix4().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
-        float x = Gdx.graphics.getWidth() - SIM_W - BUTTON_MARGIN;
-        float y = Gdx.graphics.getHeight() - BUTTON_H - BUTTON_MARGIN - SIM_H - SIM_GAP;
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(simController != null && simController.isEnabled() ? Color.ORANGE : Color.GRAY);
-        shapeRenderer.rect(x, y, SIM_W, SIM_H);
-        shapeRenderer.end();
-    }
-
-    private void drawWindmill(float x, float y, float size) {
-        shapeRenderer.setColor(Color.SKY);
-        float towerHeight = size * 1.6f;
-        float towerWidth = size * 0.25f;
-        shapeRenderer.rect(x - towerWidth / 2f, y - towerHeight, towerWidth, towerHeight);
-        float hubRadius = size * 0.25f;
-        shapeRenderer.circle(x, y, hubRadius);
-        for (int i = 0; i < 3; i++) {
-            float angle = i * 120f;
-            float rad = (float) Math.toRadians(angle);
-            float bladeLen = size;
-            float bx = x + (float) Math.cos(rad) * hubRadius;
-            float by = y + (float) Math.sin(rad) * hubRadius;
-            shapeRenderer.triangle(bx, by, bx + (float) Math.cos(rad + 0.15f) * bladeLen, by + (float) Math.sin(rad + 0.15f) * bladeLen, bx + (float) Math.cos(rad - 0.15f) * bladeLen, by + (float) Math.sin(rad - 0.15f) * bladeLen);
-        }
-    }
 
     @Override
     public void dispose() {
@@ -383,9 +336,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
-        if (isAnyEditActive()) {
-            return true;
-        }
+        if (detailView.isAnyEditActive()) return true;
 
         if (viewMode == ViewMode.DETAIL) {
             viewMode = ViewMode.MAP;
@@ -430,8 +381,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
             zooming = true;
             zoomProgress = 0f;
-            detailView.showSideCard(clicked, this::fillWindmillWindow);
-            zoomStart = camera.zoom;
+            detailView.showSideCard(clicked);
+             zoomStart = camera.zoom;
             return true;
         }
 
@@ -469,7 +420,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
     }
 
     private void animateZoomAndTilt() {
-        if (!zooming || selectedWindmill == null || isAnyEditActive()) return;
+        if (!zooming || selectedWindmill == null || detailView.isAnyEditActive()) return;
 
         float focusOffsetX = camera.viewportWidth * camera.zoom * 0.25f;
 
@@ -526,182 +477,12 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
         uiStage.addActor(toggleWindmillsBtn);
     }
 
-
-    private void fillWindmillWindow(Window window, WindmillMarker w) {
-        window.clear();
-        window.defaults().pad(16).left();
-
-        InfoRefs refs = new InfoRefs();
-        infoRefsByWindmill.put(w, refs);
-        openWindowsByWindmill.put(w, window);
-
-        refs.nameLabel = new Label(w.name, skin);
-        refs.nameLabel.setFontScale(1.8f);
-
-        refs.nameField = new TextField(w.name, skin);
-        refs.nameField.setVisible(false);
-
-        window.add(refs.nameLabel).colspan(2).padBottom(12).row();
-        window.add(refs.nameField).colspan(2).width(300).padBottom(12).row();
-
-        window.add("Latitude");
-        window.add(String.valueOf(w.lat)).row();
-
-        window.add("Longitude");
-        window.add(String.valueOf(w.lon)).row();
-
-        window.add("Working");
-        refs.working = new Label(w.working ? "Yes" : "No", skin);
-        window.add(refs.working).row();
-
-        window.add("Wind speed");
-        refs.windSpeed = new Label(String.format("%.2f m/s", w.windSpeed), skin);
-        window.add(refs.windSpeed).row();
-
-        float k1 = estimateEnergyKWhPerHour(w.windSpeed, w.working);
-        float k24 = k1 * 24f;
-
-        window.add("Energy (1h)");
-        refs.kwh1h = new Label(String.format("%.1f kWh", k1), skin);
-        window.add(refs.kwh1h).row();
-
-        window.add("Energy (24h)");
-        refs.kwh24h = new Label(String.format("%.1f kWh", k24), skin);
-        window.add(refs.kwh24h).row();
-
-        window.add().expandY().row();
-
-        refs.editBtn = new TextButton("EDIT", skin);
-        refs.deleteBtn = new TextButton("DELETE", skin);
-
-        refs.editBtn.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                event.stop();
-                if (!refs.editing) setEditMode(w, true);
-                else confirmEdit(w);
-                return true;
-            }
-        });
-
-        refs.deleteBtn.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                event.stop();
-                deleteWindmillLocalAndServer(w);
-
-                return true;
-            }
-        });
-
-        window.add(refs.editBtn).expandX().left().padTop(24);
-        window.add(refs.deleteBtn).expandX().right().padTop(24);
-    }
-
     private void startExitDetailAnimation() {
         exitingDetail = true;
-        exitProgress = 0f;
+        float exitProgress = 0f;
         exitZoomFrom = camera.zoom;
     }
 
-
-    private void setEditMode(WindmillMarker w, boolean editing) {
-        InfoRefs refs = infoRefsByWindmill.get(w);
-        if (refs == null) return;
-
-        if (editing && !refs.editing) {
-            refs.originalName = w.name;
-            refs.originalWorking = w.working;
-        }
-
-        refs.editing = editing;
-
-        refs.nameLabel.setVisible(!editing);
-        refs.nameField.setVisible(editing);
-
-        if (editing) {
-            refs.nameField.setText(w.name);
-            uiStage.setKeyboardFocus(refs.nameField);
-            refs.nameField.selectAll();
-        } else {
-            uiStage.setKeyboardFocus(null);
-        }
-
-        refs.editBtn.setText(editing ? "CONFIRM" : "EDIT");
-
-        Window win = openWindowsByWindmill.get(w);
-        if (win != null) win.pack();
-    }
-
-    private void deleteWindmillLocalAndServer(WindmillMarker w) {
-
-        if (w == selectedWindmill) {
-            startExitDetailAnimation();
-        }
-
-        Window win = openWindowsByWindmill.get(w);
-        if (win != null) {
-            win.remove();
-            windmillWindows.removeValue(win, true);
-        }
-
-        openWindowsByWindmill.remove(w);
-        infoRefsByWindmill.remove(w);
-        windmills.remove(w);
-
-        windmillClickHandler = new WindmillClickHandler(
-            windmills,
-            beginTile.x,
-            beginTile.y,
-            tilesY * MapRasterTiles.TILE_SIZE
-        );
-
-        if (w.id != null) {
-            windmillApi.deleteWindmill(w.id, () -> {});
-        }
-    }
-
-
-    private void confirmEdit(WindmillMarker w) {
-        InfoRefs refs = infoRefsByWindmill.get(w);
-        if (refs == null) return;
-
-        String newName = refs.nameField.getText().trim();
-        if (newName.isEmpty()) newName = w.name;
-
-        boolean changed = !newName.equals(refs.originalName);
-
-        w.name = newName;
-        refs.nameLabel.setText(newName);
-
-        if (!changed || w.id == null) {
-            setEditMode(w, false);
-            updateInfoWindowFor(w);
-            return;
-        }
-
-        String oldId = w.id;
-        windmillApi.deleteWindmill(oldId, () ->
-            windmillApi.createWindmill(w, created -> {
-                w.id = created.id;
-                windmillClickHandler = new WindmillClickHandler(
-                    windmills,
-                    beginTile.x,
-                    beginTile.y,
-                    tilesY * MapRasterTiles.TILE_SIZE
-                );
-                setEditMode(w, false);
-                updateInfoWindowFor(w);
-            })
-        );
-    }
-
-    private boolean isAnyEditActive() {
-        for (InfoRefs refs : infoRefsByWindmill.values()) {
-            if (refs.editing) return true;
-        }
-        return false;
-    }
 
 
     private void openCreateWindmillWindow(double lat, double lon, int screenX, int screenY) {
@@ -757,7 +538,7 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 event.stop();
                 final String name = nameField.getText().trim();
-                if (name == ""){
+                if (name == "") {
                     return false;
                 }
                 openWeatherApi.fetchWindSpeed(lat, lon, windSpeed -> {
@@ -869,8 +650,8 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
 
             for (InfoRefs refs : infoRefsByWindmill.values()) {
                 if (refs.editing) {
-                    setEditMode(selectedWindmill, false);
-                    return;
+                    detailView.isAnyEditActive() ;
+                return;
                 }
             }
 
@@ -879,11 +660,9 @@ public class RasterMap extends ApplicationAdapter implements GestureDetector.Ges
                 return;
             }
         }
-        if (isAnyEditActive() || exitingDetail || viewMode == ViewMode.DETAIL) {
+        if (detailView.isAnyEditActive() || exitingDetail || viewMode == ViewMode.DETAIL) {
             return;
         }
-
-
 
 
         float moveSpeed = 600 * Gdx.graphics.getDeltaTime();
