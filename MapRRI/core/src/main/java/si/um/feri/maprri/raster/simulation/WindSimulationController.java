@@ -23,7 +23,9 @@ public class WindSimulationController {
         void onWindmillsChanged();
     }
 
+
     private static final float CUT_OUT_WIND_MS = 150f;
+    private static final float FIRE_WIND_MS = 20f;
 
     private boolean areaLocked = false;
 
@@ -134,31 +136,72 @@ public class WindSimulationController {
     }
 
     private void applyToWindmills() {
+
         if (!enabled || rect == null) return;
 
         for (WindmillMarker w : windmills) {
+
             Vector2 p = posProvider.getWorldPos(w);
             boolean inside = rect.contains(p);
 
             if (inside) {
-                if (!originalWind.containsKey(w)) originalWind.put(w, w.windSpeed);
-                if (!originalWorking.containsKey(w)) originalWorking.put(w, w.working);
+
+                if (!originalWind.containsKey(w))
+                    originalWind.put(w, w.windSpeed);
+
+                if (!originalWorking.containsKey(w))
+                    originalWorking.put(w, w.working);
 
                 w.windSpeed = simulatedWind;
-                w.working = simulatedWind <= CUT_OUT_WIND_MS;
-            } else {
-                if (originalWind.containsKey(w)) w.windSpeed = originalWind.get(w);
-                if (originalWorking.containsKey(w)) w.working = originalWorking.get(w);
+                w.working = simulatedWind < CUT_OUT_WIND_MS;
+
+
+                if (simulatedWind > FIRE_WIND_MS) {
+
+                    w.state = WindmillMarker.State.BURNING;
+
+                } else {
+
+                    w.state = WindmillMarker.State.NORMAL;
+                    w.burnTime = 0f;
+                    w.destroyed = false;
+                }
+
+            }
+            else {
+
+                if (originalWind.containsKey(w))
+                    w.windSpeed = originalWind.get(w);
+
+                if (originalWorking.containsKey(w))
+                    w.working = originalWorking.get(w);
+
+                w.state = WindmillMarker.State.NORMAL;
+                w.burnTime = 0f;
+                w.destroyed = false;
             }
         }
     }
 
+
     private void restoreOriginals() {
-        for (WindmillMarker w : originalWind.keys()) w.windSpeed = originalWind.get(w);
-        for (WindmillMarker w : originalWorking.keys()) w.working = originalWorking.get(w);
+
+        for (WindmillMarker w : originalWind.keys()) {
+            w.windSpeed = originalWind.get(w);
+
+            w.burnTime = 0f;
+            w.destroyed = false;
+            w.state = WindmillMarker.State.NORMAL;
+        }
+
+        for (WindmillMarker w : originalWorking.keys()) {
+            w.working = originalWorking.get(w);
+        }
+
         originalWind.clear();
         originalWorking.clear();
     }
+
 
     private void openSimWindow() {
         closeSimWindow();

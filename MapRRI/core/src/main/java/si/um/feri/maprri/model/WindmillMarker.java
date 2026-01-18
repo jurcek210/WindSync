@@ -7,8 +7,16 @@ public class WindmillMarker {
     public boolean working;
     public float windSpeed;
     public String name;
+    public float burnTime = 0f;
+    public boolean destroyed = false;
 
     public float animationTime = 0f;
+    public State state = State.NORMAL;
+    public enum State {
+        NORMAL,
+        BURNING
+    }
+
 
     public WindmillMarker(String id, double lon, double lat, boolean working, float windSpeed, String name) {
         this.id = id;
