@@ -67,13 +67,13 @@ bool Blockchain::AddBlock(const Block &newBlock)
         {
             if (BlockchainUpdated)
                 BlockchainUpdated();
-            std::cout << "Dogodek posodobitve blockchaina. Stevec: " << blockCounter << "\n";
+            // std::cout << "Dogodek posodobitve blockchaina. Stevec: " << blockCounter << "\n";
         }
 
         if (static_cast<int>(Chain.size()) % DifficultyAdjustmentInterval == 0)
         {
             Difficulty = CalculateNewDifficulty();
-            std::cout << "Nova tezavnost: " << Difficulty << "\n";
+            // std::cout << "Nova tezavnost: " << Difficulty << "\n";
             if (DifficultyUpdated)
                 DifficultyUpdated();
         }

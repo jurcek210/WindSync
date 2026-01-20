@@ -20,7 +20,6 @@ static void closesock(int fd) { closesocket(fd); }
 static void closesock(int fd) { ::close(fd); }
 #endif
 
-// ---- small socket helpers ----
 static std::string recv_some(int fd)
 {
     char buf[4096];
@@ -36,8 +35,6 @@ static std::string recv_some(int fd)
 
 static int parse_content_length_case_insensitive(const std::string &headers)
 {
-    // tolerant: finds "Content-Length:" regardless of case
-    // (simple approach: search in lowercased copy)
     std::string h = headers;
     for (char &c : h)
         c = (char)std::tolower((unsigned char)c);
@@ -65,7 +62,6 @@ static bool read_http_request(int fd, std::string &outHead, std::string &outBody
     std::string buf;
     buf.reserve(8192);
 
-    // 1) Read until end of headers
     while (true)
     {
         auto chunk = recv_some(fd);
@@ -73,7 +69,6 @@ static bool read_http_request(int fd, std::string &outHead, std::string &outBody
             return false;
         buf += chunk;
 
-        // safeguard (prevent huge header attacks)
         if (buf.size() > 1024 * 1024)
             return false;
 
@@ -89,7 +84,6 @@ static bool read_http_request(int fd, std::string &outHead, std::string &outBody
 
             outBody = rest;
 
-            // 2) Read remaining bytes for body (exactly Content-Length)
             while ((int)outBody.size() < cl)
             {
                 auto more = recv_some(fd);
@@ -97,12 +91,10 @@ static bool read_http_request(int fd, std::string &outHead, std::string &outBody
                     return false;
                 outBody += more;
 
-                // safeguard (limit body)
                 if (outBody.size() > 5 * 1024 * 1024)
                     return false; // 5MB
             }
 
-            // If we read more than cl (e.g. pipelining), keep only cl bytes
             if ((int)outBody.size() > cl)
                 outBody.resize((size_t)cl);
             return true;
@@ -149,8 +141,9 @@ static void status_text(int code, std::string &out)
 }
 
 HttpBlockchainServer::HttpBlockchainServer(Blockchain &bc, uint16_t port,
-                                           std::string owner, int miningThreads)
-    : bc_(bc), port_(port), owner_(std::move(owner))
+                                           std::string owner, int miningThreads,
+                                           MineFn mineFn)
+    : bc_(bc), port_(port), owner_(std::move(owner)), mineFn_(std::move(mineFn))
 {
     if (miningThreads <= 0)
     {
@@ -286,7 +279,17 @@ void HttpBlockchainServer::WorkerLoop()
         try
         {
             std::lock_guard<std::mutex> bcLock(bcMtx_);
-            Block mined = bc_.MineAndAddBlockParallel(item, owner_, miningThreads_);
+            Block mined;
+            if (mineFn_)
+            {
+                // External mining strategy (e.g., MPI coordinator)
+                mined = mineFn_(item, owner_, miningThreads_);
+            }
+            else
+            {
+                // Default: local OpenMP mining
+                mined = bc_.MineAndAddBlockParallel(item, owner_, miningThreads_);
+            }
             std::cout << "Mined block " << mined.Index
                       << " | diff=" << mined.Difficulty
                       << " | nonce=" << mined.Nonce
